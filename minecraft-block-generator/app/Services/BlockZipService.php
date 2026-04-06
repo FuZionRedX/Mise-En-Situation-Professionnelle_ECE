@@ -74,6 +74,7 @@ class BlockZipService
         $zip->addEmptyDir($root . 'resource_pack/');
         $zip->addEmptyDir($root . 'resource_pack/textures/');
         $zip->addEmptyDir($root . 'resource_pack/textures/blocks/');
+        $zip->addEmptyDir($root . 'resource_pack/texts/');
 
         $zip->addFromString(
             $root . 'resource_pack/manifest.json',
@@ -83,6 +84,21 @@ class BlockZipService
         $zip->addFromString(
             $root . 'resource_pack/terrain_texture.json',
             $this->jsonService->encode($this->jsonService->terrainTexture($identifier))
+        );
+
+        $zip->addFromString(
+            $root . 'resource_pack/blocks.json',
+            $this->jsonService->encode($this->jsonService->blocksJson($identifier))
+        );
+
+        $zip->addFromString(
+            $root . 'resource_pack/texts/languages.json',
+            $this->jsonService->encode($this->jsonService->languagesJson())
+        );
+
+        $zip->addFromString(
+            $root . 'resource_pack/texts/en_US.lang',
+            $this->jsonService->textsLang($identifier, $name)
         );
 
         $zip->addFile($texturePath, $root . 'resource_pack/textures/blocks/' . $identifier . '.png');
