@@ -440,12 +440,19 @@
                         return;
                     }
 
-                    // Transparency scan → cross only if >20% of pixels are transparent
-                    let transparent = 0;
+                    // Transparency scan: count fully transparent and partially transparent pixels
+                    let transparent = 0, partialAlpha = 0;
                     for (let i = 3; i < data.length; i += 4) {
-                        if (data[i] < 200) transparent++;
+                        const a = data[i]; // 0=transparent, 255=opaque
+                        if (a < 200) transparent++;
+                        if (a > 5 && a < 250) partialAlpha++; // continuous/partial alpha → blend
                     }
-                    resolve({ shape: (transparent / (w * h)) > 0.20 ? 'cross' : 'cube', faces: null });
+                    const total = w * h;
+                    if (partialAlpha / total > 0.05) {
+                        resolve({ shape: 'glass', faces: null });
+                        return;
+                    }
+                    resolve({ shape: (transparent / total) > 0.20 ? 'cross' : 'cube', faces: null });
                 };
                 img.src = dataUrl;
             });
@@ -456,12 +463,14 @@
                 net:   'bg-yellow-900/40 border border-yellow-600 text-yellow-300',
                 cross: 'bg-blue-900/40 border border-blue-600 text-blue-300',
                 cube:  'bg-green-900/40 border border-green-700 text-green-300',
+                glass: 'bg-cyan-900/40 border border-cyan-600 text-cyan-300',
             };
-            const icons  = { net: '🗺️', cross: '🌿', cube: '🧱' };
+            const icons  = { net: '🗺️', cross: '🌿', cube: '🧱', glass: '🔷' };
             const labels = {
                 net:   'Réseau de faces détecté : textures différentes par face (4×3)',
-                cross: 'Forme complexe détectée : croix / plante (transparence trouvée)',
-                cube:  'Forme détectée : cube plein',
+                cross: 'Transparence binaire détectée : croix / plante (alpha_test)',
+                cube:  'Cube plein détecté (opaque)',
+                glass: 'Transparence continue détectée : bloc transparent (blend)',
             };
             geometryIndicator.className = 'mt-3 flex items-center gap-2 text-sm px-3 py-2 rounded-lg ' + styles[shape];
             geometryIcon.textContent  = icons[shape];
@@ -483,12 +492,17 @@
 
                 const { shape, faces } = await analyzeTexture(dataUrl);
 
+                cubeFaces.forEach(face => face.style.opacity = ''); // reset opacity
                 if (shape === 'net' && faces) {
-                    // Apply each extracted face to the matching cube div
                     for (const [id, faceDataUrl] of Object.entries(faces)) {
                         const el = document.getElementById(id);
                         if (el) el.style.backgroundImage = `url(${faceDataUrl})`;
                     }
+                } else if (shape === 'glass') {
+                    cubeFaces.forEach(face => {
+                        face.style.backgroundImage = `url(${dataUrl})`;
+                        face.style.opacity = '0.55'; // show partial transparency visually
+                    });
                 } else {
                     cubeFaces.forEach(face => face.style.backgroundImage = `url(${dataUrl})`);
                 }
@@ -496,7 +510,7 @@
                 showGeometryIndicator(shape);
                 const previewGeometry = document.getElementById('preview-geometry');
                 if (previewGeometry) {
-                    const labels = { net: '🗺️ Net (6 faces)', cross: '🌿 Croix', cube: '🧱 Cube' };
+                    const labels = { net: '🗺️ Net (6 faces)', cross: '🌿 Croix', cube: '🧱 Cube', glass: '🔷 Transparent' };
                     previewGeometry.textContent = labels[shape] ?? '—';
                 }
             };

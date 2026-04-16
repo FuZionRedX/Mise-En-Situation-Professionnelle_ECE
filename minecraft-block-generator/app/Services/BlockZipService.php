@@ -116,8 +116,8 @@ class BlockZipService
             $zip->addFile($texturePath, $root . 'resource_pack/textures/blocks/' . $identifier . '.png');
         }
 
-        // Geometry file for cross/plant shapes
-        if ($geometry !== 'cube' && $geometry !== 'net') {
+        // Geometry file for non-cube, non-net, non-glass shapes (slab, pillar, plate, cross)
+        if ($geometry !== 'cube' && $geometry !== 'net' && $geometry !== 'glass') {
             $zip->addEmptyDir($root . 'resource_pack/models/');
             $zip->addEmptyDir($root . 'resource_pack/models/blocks/');
             $zip->addFromString(

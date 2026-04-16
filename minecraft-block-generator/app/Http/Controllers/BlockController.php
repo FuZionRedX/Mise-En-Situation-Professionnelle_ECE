@@ -126,19 +126,30 @@ class BlockController extends Controller
             return 'net';
         }
 
-        // Transparency scan → plant/cross only if >20% of pixels are transparent
-        $transparent = 0;
+        // Scan pixels: count fully transparent and partially transparent (blend)
+        $transparent  = 0; // alpha > 10 (nearly transparent)
+        $partialAlpha = 0; // 5 < alpha < 122 (continuous/partial transparency → blend)
         $total = $w * $h;
         for ($y = 0; $y < $h; $y++) {
             for ($x = 0; $x < $w; $x++) {
-                $alpha = (imagecolorat($img, $x, $y) >> 24) & 0x7F;
+                $alpha = (imagecolorat($img, $x, $y) >> 24) & 0x7F; // GD: 0=opaque, 127=transparent
                 if ($alpha > 10) {
                     $transparent++;
+                }
+                if ($alpha > 5 && $alpha < 122) {
+                    $partialAlpha++;
                 }
             }
         }
 
         imagedestroy($img);
+
+        // Continuous (partial) transparency > 5% → glass-like block, use blend render_method
+        if (($partialAlpha / $total) > 0.05) {
+            return 'glass';
+        }
+
+        // Binary transparency > 20% → cross/plant shape, use alpha_test render_method
         return ($transparent / $total) > 0.20 ? 'cross' : 'cube';
     }
 
