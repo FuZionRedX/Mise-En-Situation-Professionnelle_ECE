@@ -8,6 +8,37 @@
     <style>
         .minecraft-font { font-family: 'Courier New', monospace; }
         .drag-over { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+
+        /* 3D cube preview */
+        .cube-scene {
+            width: 96px; height: 96px;
+            perspective: 260px;
+            margin: 0 auto;
+        }
+        .cube-3d {
+            width: 64px; height: 64px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(30deg) rotateY(45deg);
+            margin: 16px auto;
+            cursor: grab;
+        }
+        .cube-3d.dragging { cursor: grabbing; }
+        .cube-face {
+            position: absolute;
+            width: 64px; height: 64px;
+            background-color: #4b5563;
+            background-size: cover;
+            background-position: center;
+            image-rendering: pixelated;
+            border: 1px solid rgba(0,0,0,0.3);
+        }
+        .cube-face-top   { transform: rotateX(90deg) translateZ(32px); filter: brightness(1.25); }
+        .cube-face-front { transform: translateZ(32px);                 filter: brightness(0.9); }
+        .cube-face-right { transform: rotateY(90deg) translateZ(32px);  filter: brightness(0.65); }
+        .cube-face-back  { transform: rotateY(180deg) translateZ(32px); filter: brightness(0.65); }
+        .cube-face-left  { transform: rotateY(-90deg) translateZ(32px); filter: brightness(0.9); }
+        .cube-face-bottom{ transform: rotateX(-90deg) translateZ(32px); filter: brightness(0.5); }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
@@ -132,8 +163,8 @@
                             <div id="upload-placeholder">
                                 <div class="text-5xl mb-3">📁</div>
                                 <p class="text-gray-300 font-medium">Cliquez ou glissez-déposez votre texture</p>
-                                <p class="text-gray-500 text-sm mt-1">PNG uniquement — dimensions carrées — max 512 Ko</p>
-                                <p class="text-gray-600 text-xs mt-1">16×16 · 32×32 · 64×64 · 128×128 pixels</p>
+                                <p class="text-gray-500 text-sm mt-1">PNG uniquement — max 512 Ko</p>
+                                <p class="text-gray-600 text-xs mt-1">Carré (16×16…128×128) ou réseau 4:3 (64×48, 128×96…)</p>
                             </div>
                             <div id="preview-container" class="hidden flex-col items-center gap-3">
                                 <img id="texture-preview" src="" alt="Prévisualisation" class="w-32 h-32 object-contain rounded-lg border-2 border-green-500" style="image-rendering: pixelated;">
@@ -145,6 +176,12 @@
                         @error('texture')
                             <p class="text-red-400 text-xs mt-2">{{ $message }}</p>
                         @enderror
+
+                        <!-- Indicateur de forme détectée -->
+                        <div id="geometry-indicator" class="hidden mt-3 flex items-center gap-2 text-sm px-3 py-2 rounded-lg">
+                            <span id="geometry-icon"></span>
+                            <span id="geometry-label"></span>
+                        </div>
                     </section>
 
                     <!-- Section : Propriétés -->
@@ -242,17 +279,17 @@
                     <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
                         <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font">Aperçu</h2>
 
-                        <!-- Cube 3D isométrique simulé -->
-                        <div class="flex justify-center mb-4">
-                            <div class="relative w-32 h-32" id="cube-preview">
-                                <!-- Face top -->
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <div class="w-20 h-20 rounded-sm shadow-lg border-2 border-gray-600 overflow-hidden" id="cube-face" style="image-rendering: pixelated;">
-                                        <div class="w-full h-full bg-gray-600 flex items-center justify-center text-4xl" id="cube-placeholder">?</div>
-                                        <img id="cube-texture" src="" alt="" class="w-full h-full object-cover hidden" style="image-rendering: pixelated;">
-                                    </div>
-                                </div>
+                        <!-- Cube 3D CSS -->
+                        <div class="cube-scene mb-4" id="cube-preview">
+                            <div class="cube-3d" id="cube-3d">
+                                <div class="cube-face cube-face-top"    id="cube-face-top"></div>
+                                <div class="cube-face cube-face-front"  id="cube-face-front"></div>
+                                <div class="cube-face cube-face-right"  id="cube-face-right"></div>
+                                <div class="cube-face cube-face-back"   id="cube-face-back"></div>
+                                <div class="cube-face cube-face-left"   id="cube-face-left"></div>
+                                <div class="cube-face cube-face-bottom" id="cube-face-bottom"></div>
                             </div>
+                            <p id="cube-placeholder-text" class="text-center text-gray-500 text-xs mt-1">Uploadez une texture</p>
                         </div>
 
                         <!-- Infos -->
@@ -276,6 +313,10 @@
                             <div class="flex justify-between">
                                 <span class="text-gray-400">Résistance</span>
                                 <span id="preview-resistance" class="text-white">3</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Forme</span>
+                                <span id="preview-geometry" class="text-white">—</span>
                             </div>
                         </div>
 
@@ -322,21 +363,142 @@
         const previewContainer  = document.getElementById('preview-container');
         const texturePreview    = document.getElementById('texture-preview');
         const textureName       = document.getElementById('texture-name');
-        const cubeTexture       = document.getElementById('cube-texture');
-        const cubePlaceholder   = document.getElementById('cube-placeholder');
+        const cubeFaces         = document.querySelectorAll('.cube-face');
+        const cubePlaceholderText = document.getElementById('cube-placeholder-text');
+
+        const geometryIndicator = document.getElementById('geometry-indicator');
+        const geometryIcon      = document.getElementById('geometry-icon');
+        const geometryLabel     = document.getElementById('geometry-label');
+
+        // Standard 4:3 cross net layout — width=4C, height=3C
+        //        [top]
+        //  [left][front][right][back]
+        //        [bottom]
+        const NET_FACES = [
+            { id: 'cube-face-top',    sx: (C) => C,       sy: (C) => 0       },
+            { id: 'cube-face-left',   sx: (C) => 0,       sy: (C) => C       },
+            { id: 'cube-face-front',  sx: (C) => C,       sy: (C) => C       },
+            { id: 'cube-face-right',  sx: (C) => 2 * C,   sy: (C) => C       },
+            { id: 'cube-face-back',   sx: (C) => 3 * C,   sy: (C) => C       },
+            { id: 'cube-face-bottom', sx: (C) => C,       sy: (C) => 2 * C   },
+        ];
+
+        function extractFace(img, sx, sy, C) {
+            const c = document.createElement('canvas');
+            c.width = c.height = C;
+            c.getContext('2d').drawImage(img, sx, sy, C, C, 0, 0, C, C);
+            return c.toDataURL();
+        }
+
+        function isNetPattern(data, w, h, C) {
+            function alphaAt(col, row) {
+                const sx = Math.floor((col + 0.5) * C);
+                const sy = Math.floor((row + 0.5) * C);
+                if (sx >= w || sy >= h) return 0;
+                return data[(sy * w + sx) * 4 + 3];
+            }
+            const empty  = (c, r) => alphaAt(c, r) < 128;
+            const opaque = (c, r) => alphaAt(c, r) >= 128;
+            if (!empty(0,0) || !empty(2,0) || !empty(3,0)) return false;
+            if (!empty(0,2) || !empty(2,2) || !empty(3,2)) return false;
+            if (!opaque(1,0)) return false;
+            if (!opaque(0,1) || !opaque(1,1) || !opaque(2,1) || !opaque(3,1)) return false;
+            if (!opaque(1,2)) return false;
+            return true;
+        }
+
+        function analyzeTexture(dataUrl) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => {
+                    const w = img.width, h = img.height;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const data = ctx.getImageData(0, 0, w, h).data;
+
+                    // Net texture: exact 4:3 ratio (e.g. 64×48)
+                    if (h > 0 && w % 4 === 0 && h % 3 === 0 && (w / 4) === (h / 3)) {
+                        const C = w / 4;
+                        const faces = {};
+                        for (const f of NET_FACES) {
+                            faces[f.id] = extractFace(img, f.sx(C), f.sy(C), C);
+                        }
+                        resolve({ shape: 'net', faces });
+                        return;
+                    }
+
+                    // Net cross pattern on any canvas (e.g. square 64×64 with transparent corners)
+                    const C = Math.floor(w / 4);
+                    if (C > 0 && isNetPattern(data, w, h, C)) {
+                        const faces = {};
+                        for (const f of NET_FACES) {
+                            faces[f.id] = extractFace(img, f.sx(C), f.sy(C), C);
+                        }
+                        resolve({ shape: 'net', faces });
+                        return;
+                    }
+
+                    // Transparency scan → cross only if >20% of pixels are transparent
+                    let transparent = 0;
+                    for (let i = 3; i < data.length; i += 4) {
+                        if (data[i] < 200) transparent++;
+                    }
+                    resolve({ shape: (transparent / (w * h)) > 0.20 ? 'cross' : 'cube', faces: null });
+                };
+                img.src = dataUrl;
+            });
+        }
+
+        function showGeometryIndicator(shape) {
+            const styles = {
+                net:   'bg-yellow-900/40 border border-yellow-600 text-yellow-300',
+                cross: 'bg-blue-900/40 border border-blue-600 text-blue-300',
+                cube:  'bg-green-900/40 border border-green-700 text-green-300',
+            };
+            const icons  = { net: '🗺️', cross: '🌿', cube: '🧱' };
+            const labels = {
+                net:   'Réseau de faces détecté : textures différentes par face (4×3)',
+                cross: 'Forme complexe détectée : croix / plante (transparence trouvée)',
+                cube:  'Forme détectée : cube plein',
+            };
+            geometryIndicator.className = 'mt-3 flex items-center gap-2 text-sm px-3 py-2 rounded-lg ' + styles[shape];
+            geometryIcon.textContent  = icons[shape];
+            geometryLabel.textContent = labels[shape];
+            geometryIndicator.classList.remove('hidden');
+        }
 
         function showPreview(file) {
             if (!file || file.type !== 'image/png') return;
             const reader = new FileReader();
-            reader.onload = e => {
-                texturePreview.src = e.target.result;
-                cubeTexture.src    = e.target.result;
+            reader.onload = async e => {
+                const dataUrl = e.target.result;
+                texturePreview.src = dataUrl;
+                if (cubePlaceholderText) cubePlaceholderText.classList.add('hidden');
                 uploadPlaceholder.classList.add('hidden');
                 previewContainer.classList.remove('hidden');
                 previewContainer.classList.add('flex');
-                cubeTexture.classList.remove('hidden');
-                cubePlaceholder.classList.add('hidden');
                 textureName.textContent = file.name;
+
+                const { shape, faces } = await analyzeTexture(dataUrl);
+
+                if (shape === 'net' && faces) {
+                    // Apply each extracted face to the matching cube div
+                    for (const [id, faceDataUrl] of Object.entries(faces)) {
+                        const el = document.getElementById(id);
+                        if (el) el.style.backgroundImage = `url(${faceDataUrl})`;
+                    }
+                } else {
+                    cubeFaces.forEach(face => face.style.backgroundImage = `url(${dataUrl})`);
+                }
+
+                showGeometryIndicator(shape);
+                const previewGeometry = document.getElementById('preview-geometry');
+                if (previewGeometry) {
+                    const labels = { net: '🗺️ Net (6 faces)', cross: '🌿 Croix', cube: '🧱 Cube' };
+                    previewGeometry.textContent = labels[shape] ?? '—';
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -482,6 +644,52 @@
             toast.classList.remove('opacity-100', 'translate-y-0');
             toast.classList.add('opacity-0', '-translate-y-4', 'pointer-events-none');
         }
+
+        // --- 3D cube drag rotation ---
+        const cube3d = document.getElementById('cube-3d');
+        let rotX = 30, rotY = 45;
+        let dragging = false, lastX = 0, lastY = 0;
+
+        cube3d.addEventListener('mousedown', e => {
+            dragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            cube3d.classList.add('dragging');
+            e.preventDefault();
+        });
+        window.addEventListener('mousemove', e => {
+            if (!dragging) return;
+            const dx = e.clientX - lastX;
+            const dy = e.clientY - lastY;
+            rotY += dx * 0.6;
+            rotX -= dy * 0.6;
+            rotX = Math.max(-89, Math.min(89, rotX));
+            cube3d.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            lastX = e.clientX;
+            lastY = e.clientY;
+        });
+        window.addEventListener('mouseup', () => {
+            dragging = false;
+            cube3d.classList.remove('dragging');
+        });
+
+        // Touch support
+        cube3d.addEventListener('touchstart', e => {
+            lastX = e.touches[0].clientX;
+            lastY = e.touches[0].clientY;
+            e.preventDefault();
+        }, { passive: false });
+        cube3d.addEventListener('touchmove', e => {
+            const dx = e.touches[0].clientX - lastX;
+            const dy = e.touches[0].clientY - lastY;
+            rotY += dx * 0.6;
+            rotX -= dy * 0.6;
+            rotX = Math.max(-89, Math.min(89, rotX));
+            cube3d.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            lastX = e.touches[0].clientX;
+            lastY = e.touches[0].clientY;
+            e.preventDefault();
+        }, { passive: false });
 
         // Init
         updatePreview();

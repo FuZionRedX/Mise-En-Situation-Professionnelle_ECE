@@ -16,7 +16,7 @@ class BlockRequest extends FormRequest
         return [
             'name'        => ['required', 'string', 'min:1', 'max:50', 'regex:/^[a-zA-Z0-9 ]+$/'],
             'identifier'  => ['required', 'string', 'regex:/^[a-z0-9_]+$/'],
-            'texture'     => ['required', 'file', 'mimes:png', 'max:512', 'dimensions:ratio=1'],
+            'texture'     => ['required', 'file', 'mimes:png', 'max:512'],
             'solid'       => ['required', 'in:0,1'],
             'destructible'=> ['required', 'in:0,1'],
             'resistance'  => ['required', 'numeric', 'min:0', 'max:100'],
@@ -34,7 +34,7 @@ class BlockRequest extends FormRequest
             'texture.required'     => 'La texture est obligatoire.',
             'texture.mimes'        => 'La texture doit être un fichier PNG.',
             'texture.max'          => 'La texture ne doit pas dépasser 512 Ko.',
-            'texture.dimensions'   => 'La texture doit avoir des dimensions carrées (16×16, 32×32, 64×64, 128×128).',
+            'texture.max'          => 'La texture ne doit pas dépasser 512 Ko.',
             'solid.required'       => 'La solidité est obligatoire.',
             'destructible.required'=> 'La destructibilité est obligatoire.',
             'resistance.required'  => 'La résistance est obligatoire.',

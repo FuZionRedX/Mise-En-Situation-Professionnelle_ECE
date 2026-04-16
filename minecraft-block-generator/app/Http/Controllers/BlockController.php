@@ -33,6 +33,8 @@ class BlockController extends Controller
             $identifier . '_' . time() . '.png'
         );
 
+        $geometry = $this->detectGeometry($request->file('texture')->getRealPath());
+
         // Sauvegarder en base
         Block::create([
             'name'         => $request->input('name'),
@@ -41,6 +43,7 @@ class BlockController extends Controller
             'destructible' => (bool) $request->input('destructible'),
             'resistance'   => (float) $request->input('resistance'),
             'texture_path' => $texturePath,
+            'geometry'     => $geometry,
         ]);
 
         // Générer le ZIP
@@ -51,6 +54,7 @@ class BlockController extends Controller
             destructible: (bool) $request->input('destructible'),
             resistance:   (float) $request->input('resistance'),
             texture:      $request->file('texture'),
+            geometry:     $geometry,
         );
 
         return response()->download($zipPath, $identifier . '_pack.zip', [
@@ -85,11 +89,83 @@ class BlockController extends Controller
             destructible: $block->destructible,
             resistance:   $block->resistance,
             texturePath:  $texturePath,
+            geometry:     $block->geometry ?? 'cube',
         );
 
         return response()->download($zipPath, $block->identifier . '_pack.zip', [
             'Content-Type' => 'application/zip',
         ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Détecte automatiquement la forme du bloc depuis la texture :
+     * - Ratio 4:3 exact (ex: 64×48, 32×24) → réseau de faces "net" (cube déplié)
+     * - Pixels transparents hors format net → croix / plante
+     * - Entièrement opaque → cube plein
+     */
+    private function detectGeometry(string $imagePath): string
+    {
+        $img = @imagecreatefrompng($imagePath);
+        if (!$img) {
+            return 'cube';
+        }
+
+        $w = imagesx($img);
+        $h = imagesy($img);
+
+        // Net texture: exact 4:3 ratio (e.g. 64×48)
+        if ($h > 0 && $w % 4 === 0 && $h % 3 === 0 && ($w / 4) === ($h / 3)) {
+            imagedestroy($img);
+            return 'net';
+        }
+
+        // Net cross pattern on any canvas (e.g. square 64×64 with transparent corners)
+        $C = intval($w / 4);
+        if ($C > 0 && $this->isNetPattern($img, $w, $h, $C)) {
+            imagedestroy($img);
+            return 'net';
+        }
+
+        // Transparency scan → plant/cross only if >20% of pixels are transparent
+        $transparent = 0;
+        $total = $w * $h;
+        for ($y = 0; $y < $h; $y++) {
+            for ($x = 0; $x < $w; $x++) {
+                $alpha = (imagecolorat($img, $x, $y) >> 24) & 0x7F;
+                if ($alpha > 10) {
+                    $transparent++;
+                }
+            }
+        }
+
+        imagedestroy($img);
+        return ($transparent / $total) > 0.20 ? 'cross' : 'cube';
+    }
+
+    private function isNetPattern($img, int $w, int $h, int $C): bool
+    {
+        $emptyAt = function (int $col, int $row) use ($img, $w, $h, $C): bool {
+            $sx = intval(($col + 0.5) * $C);
+            $sy = intval(($row + 0.5) * $C);
+            if ($sx >= $w || $sy >= $h) return true;
+            return (imagecolorat($img, $sx, $sy) >> 24 & 0x7F) > 32;
+        };
+        $opaqueAt = function (int $col, int $row) use ($img, $w, $h, $C): bool {
+            $sx = intval(($col + 0.5) * $C);
+            $sy = intval(($row + 0.5) * $C);
+            if ($sx >= $w || $sy >= $h) return false;
+            return (imagecolorat($img, $sx, $sy) >> 24 & 0x7F) <= 32;
+        };
+
+        // 6 corner cells must be transparent
+        if (!$emptyAt(0, 0) || !$emptyAt(2, 0) || !$emptyAt(3, 0)) return false;
+        if (!$emptyAt(0, 2) || !$emptyAt(2, 2) || !$emptyAt(3, 2)) return false;
+        // 6 face cells must be opaque
+        if (!$opaqueAt(1, 0)) return false;
+        if (!$opaqueAt(0, 1) || !$opaqueAt(1, 1) || !$opaqueAt(2, 1) || !$opaqueAt(3, 1)) return false;
+        if (!$opaqueAt(1, 2)) return false;
+
+        return true;
     }
 
     /**

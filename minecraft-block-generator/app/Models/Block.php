@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Block extends Model
 {
-    protected $fillable = ['name', 'identifier', 'solid', 'destructible', 'resistance', 'texture_path'];
+    protected $fillable = ['name', 'identifier', 'solid', 'destructible', 'resistance', 'texture_path', 'geometry'];
 
     protected $casts = [
         'solid'        => 'boolean',
