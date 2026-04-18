@@ -9,32 +9,28 @@ class BlockZipService
 {
     public function __construct(private BlockJsonService $jsonService) {}
 
-    /**
-     * Génère le ZIP depuis un upload (première création).
-     */
     public function generate(
         string       $name,
         string       $identifier,
         bool         $solid,
         bool         $destructible,
         float        $resistance,
-        UploadedFile $texture
+        UploadedFile $texture,
+        string       $geometry = 'cube'
     ): string {
-        return $this->buildZip($name, $identifier, $solid, $destructible, $resistance, $texture->getRealPath());
+        return $this->buildZip($name, $identifier, $solid, $destructible, $resistance, $texture->getRealPath(), $geometry);
     }
 
-    /**
-     * Régénère le ZIP depuis une texture déjà stockée (re-téléchargement historique).
-     */
     public function generateFromPath(
         string $name,
         string $identifier,
         bool   $solid,
         bool   $destructible,
         float  $resistance,
-        string $texturePath
+        string $texturePath,
+        string $geometry = 'cube'
     ): string {
-        return $this->buildZip($name, $identifier, $solid, $destructible, $resistance, $texturePath);
+        return $this->buildZip($name, $identifier, $solid, $destructible, $resistance, $texturePath, $geometry);
     }
 
     private function buildZip(
@@ -43,7 +39,8 @@ class BlockZipService
         bool   $solid,
         bool   $destructible,
         float  $resistance,
-        string $texturePath
+        string $texturePath,
+        string $geometry = 'cube'
     ): string {
         $zipPath = tempnam(sys_get_temp_dir(), 'mc_block_') . '.zip';
 
@@ -66,7 +63,7 @@ class BlockZipService
         $zip->addFromString(
             $root . 'behavior_pack/blocks/' . $identifier . '.json',
             $this->jsonService->encode(
-                $this->jsonService->blockBehavior($identifier, $solid, $destructible, $resistance)
+                $this->jsonService->blockBehavior($identifier, $solid, $destructible, $resistance, $geometry)
             )
         );
 
@@ -83,7 +80,7 @@ class BlockZipService
 
         $zip->addFromString(
             $root . 'resource_pack/terrain_texture.json',
-            $this->jsonService->encode($this->jsonService->terrainTexture($identifier))
+            $this->jsonService->encode($this->jsonService->terrainTexture($identifier, $geometry))
         );
 
         $zip->addFromString(
@@ -101,10 +98,76 @@ class BlockZipService
             $this->jsonService->textsLang($identifier, $name)
         );
 
-        $zip->addFile($texturePath, $root . 'resource_pack/textures/blocks/' . $identifier . '.png');
+        // Textures: split net into 6 faces, or add single texture
+        if ($geometry === 'net') {
+            $facePaths = $this->splitNetTexture($texturePath, $identifier);
+            foreach ($facePaths as $face => $facePath) {
+                $zip->addFile($facePath, $root . "resource_pack/textures/blocks/{$identifier}_{$face}.png");
+            }
+            // Clean up temp face files after ZIP is closed
+            register_shutdown_function(static function () use ($facePaths) {
+                foreach ($facePaths as $path) {
+                    if (file_exists($path)) {
+                        unlink($path);
+                    }
+                }
+            });
+        } else {
+            $zip->addFile($texturePath, $root . 'resource_pack/textures/blocks/' . $identifier . '.png');
+        }
+
+        // Geometry file for non-cube, non-net, non-glass shapes (slab, pillar, plate, cross)
+        if ($geometry !== 'cube' && $geometry !== 'net' && $geometry !== 'glass') {
+            $zip->addEmptyDir($root . 'resource_pack/models/');
+            $zip->addEmptyDir($root . 'resource_pack/models/blocks/');
+            $zip->addFromString(
+                $root . 'resource_pack/models/blocks/' . $identifier . '.geo.json',
+                $this->jsonService->encode($this->jsonService->geometryJson($identifier, $geometry))
+            );
+        }
 
         $zip->close();
 
         return $zipPath;
+    }
+
+    /**
+     * Découpe une texture en réseau 4:3 (croix dépliée) en 6 faces PNG temporaires.
+     *
+     * Layout standard (width=4C, height=3C):
+     *        [top]
+     *  [left][front][right][back]
+     *        [bottom]
+     */
+    private function splitNetTexture(string $texturePath, string $identifier): array
+    {
+        $img = imagecreatefrompng($texturePath);
+        $w   = imagesx($img);
+        $C   = intval($w / 4);
+
+        $regions = [
+            'top'    => [$C,       0],
+            'left'   => [0,        $C],
+            'front'  => [$C,       $C],
+            'right'  => [2 * $C,   $C],
+            'back'   => [3 * $C,   $C],
+            'bottom' => [$C,       2 * $C],
+        ];
+
+        $paths = [];
+        foreach ($regions as $face => [$sx, $sy]) {
+            $faceImg = imagecreatetruecolor($C, $C);
+            imagealphablending($faceImg, false);
+            imagesavealpha($faceImg, true);
+            imagecopy($faceImg, $img, 0, 0, $sx, $sy, $C, $C);
+
+            $facePath = tempnam(sys_get_temp_dir(), "mc_{$identifier}_{$face}_") . '.png';
+            imagepng($faceImg, $facePath);
+            imagedestroy($faceImg);
+            $paths[$face] = $facePath;
+        }
+
+        imagedestroy($img);
+        return $paths;
     }
 }
