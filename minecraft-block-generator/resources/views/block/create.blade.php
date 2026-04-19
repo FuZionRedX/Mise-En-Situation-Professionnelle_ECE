@@ -91,6 +91,7 @@
                     @csrf
 
                     <!-- Section : Identité du bloc -->
+                    <!-- Section : Identité du bloc -->
                     <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700">
                         <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
                             <span class="text-2xl">🧱</span> Identité du bloc
