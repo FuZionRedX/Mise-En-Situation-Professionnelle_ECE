@@ -24,7 +24,7 @@
                     <p class="text-xs text-gray-400">Historique des blocs générés</p>
                 </div>
             </div>
-            <a href="{{ route('block.index') }}"
+            <a href="{{ route('block.new') }}"
                class="bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
                 + Nouveau bloc
             </a>
@@ -43,7 +43,7 @@
             <div class="text-center py-20">
                 <div class="text-6xl mb-4">📦</div>
                 <p class="text-gray-400 text-lg">Aucun bloc généré pour l'instant.</p>
-                <a href="{{ route('block.index') }}" class="mt-4 inline-block text-green-400 hover:underline">
+                <a href="{{ route('block.new') }}" class="mt-4 inline-block text-green-400 hover:underline">
                     Créer mon premier bloc →
                 </a>
             </div>

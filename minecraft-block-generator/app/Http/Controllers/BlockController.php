@@ -187,6 +187,6 @@ class BlockController extends Controller
         Storage::delete($block->texture_path);
         $block->delete();
 
-        return redirect()->route('block.history')->with('success', 'Bloc supprimé.');
+        return redirect()->route('block.index')->with('success', 'Bloc supprimé.');
     }
 }

@@ -56,7 +56,7 @@
                 <h1 class="text-xl font-bold minecraft-font text-green-400">Minecraft Block Generator</h1>
                 <p class="text-xs text-gray-400">Bedrock Edition — Créez votre bloc personnalisé</p>
             </div>
-            <a href="{{ route('block.history') }}"
+            <a href="{{ route('block.index') }}"
                class="bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
                 📋 Historique
             </a>
