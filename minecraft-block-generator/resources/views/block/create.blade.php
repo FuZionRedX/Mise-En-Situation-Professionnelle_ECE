@@ -5,40 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Générateur de Blocs Minecraft</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         .minecraft-font { font-family: 'Courier New', monospace; }
         .drag-over { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
 
         /* 3D cube preview */
-        .cube-scene {
-            width: 96px; height: 96px;
-            perspective: 260px;
-            margin: 0 auto;
+        #cube-canvas {
+            width: 100%;
+            height: 280px;
+            display: block;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, #1a2e3a 0%, #2d3d47 100%);
         }
-        .cube-3d {
-            width: 64px; height: 64px;
-            position: relative;
-            transform-style: preserve-3d;
-            transform: rotateX(30deg) rotateY(45deg);
-            margin: 16px auto;
-            cursor: grab;
-        }
-        .cube-3d.dragging { cursor: grabbing; }
-        .cube-face {
-            position: absolute;
-            width: 64px; height: 64px;
-            background-color: #4b5563;
-            background-size: cover;
-            background-position: center;
-            image-rendering: pixelated;
-            border: 1px solid rgba(0,0,0,0.3);
-        }
-        .cube-face-top   { transform: rotateX(90deg) translateZ(32px); filter: brightness(1.25); }
-        .cube-face-front { transform: translateZ(32px);                 filter: brightness(0.9); }
-        .cube-face-right { transform: rotateY(90deg) translateZ(32px);  filter: brightness(0.65); }
-        .cube-face-back  { transform: rotateY(180deg) translateZ(32px); filter: brightness(0.65); }
-        .cube-face-left  { transform: rotateY(-90deg) translateZ(32px); filter: brightness(0.9); }
-        .cube-face-bottom{ transform: rotateX(-90deg) translateZ(32px); filter: brightness(0.5); }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
@@ -280,17 +259,10 @@
                     <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
                         <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font">Aperçu</h2>
 
-                        <!-- Cube 3D CSS -->
-                        <div class="cube-scene mb-4" id="cube-preview">
-                            <div class="cube-3d" id="cube-3d">
-                                <div class="cube-face cube-face-top"    id="cube-face-top"></div>
-                                <div class="cube-face cube-face-front"  id="cube-face-front"></div>
-                                <div class="cube-face cube-face-right"  id="cube-face-right"></div>
-                                <div class="cube-face cube-face-back"   id="cube-face-back"></div>
-                                <div class="cube-face cube-face-left"   id="cube-face-left"></div>
-                                <div class="cube-face cube-face-bottom" id="cube-face-bottom"></div>
-                            </div>
-                            <p id="cube-placeholder-text" class="text-center text-gray-500 text-xs mt-1">Uploadez une texture</p>
+                        <!-- Cube 3D Three.js -->
+                        <div class="mb-4">
+                            <canvas id="cube-canvas"></canvas>
+                            <p id="cube-placeholder-text" class="text-center text-gray-500 text-xs mt-2">Uploadez une texture pour voir l'aperçu 3D</p>
                         </div>
 
                         <!-- Infos -->
@@ -364,7 +336,6 @@
         const previewContainer  = document.getElementById('preview-container');
         const texturePreview    = document.getElementById('texture-preview');
         const textureName       = document.getElementById('texture-name');
-        const cubeFaces         = document.querySelectorAll('.cube-face');
         const cubePlaceholderText = document.getElementById('cube-placeholder-text');
 
         const geometryIndicator = document.getElementById('geometry-indicator');
@@ -493,20 +464,9 @@
 
                 const { shape, faces } = await analyzeTexture(dataUrl);
 
-                cubeFaces.forEach(face => face.style.opacity = ''); // reset opacity
-                if (shape === 'net' && faces) {
-                    for (const [id, faceDataUrl] of Object.entries(faces)) {
-                        const el = document.getElementById(id);
-                        if (el) el.style.backgroundImage = `url(${faceDataUrl})`;
-                    }
-                } else if (shape === 'glass') {
-                    cubeFaces.forEach(face => {
-                        face.style.backgroundImage = `url(${dataUrl})`;
-                        face.style.opacity = '0.55'; // show partial transparency visually
-                    });
-                } else {
-                    cubeFaces.forEach(face => face.style.backgroundImage = `url(${dataUrl})`);
-                }
+                // Apply textures to Three.js cube
+                if (!blockMesh) initThreeJs();
+                applyTexturesToCube(shape, faces, dataUrl);
 
                 showGeometryIndicator(shape);
                 const previewGeometry = document.getElementById('preview-geometry');
@@ -660,51 +620,168 @@
             toast.classList.add('opacity-0', '-translate-y-4', 'pointer-events-none');
         }
 
-        // --- 3D cube drag rotation ---
-        const cube3d = document.getElementById('cube-3d');
-        let rotX = 30, rotY = 45;
+        // --- Three.js 3D cube preview ---
+        const canvas = document.getElementById('cube-canvas');
+        let scene, camera, renderer, cube, blockMesh;
+        let autoRotate = true;
+        let userRotX = 0, userRotY = 0;
         let dragging = false, lastX = 0, lastY = 0;
 
-        cube3d.addEventListener('mousedown', e => {
+        function initThreeJs() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a2e3a);
+
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 1000);
+            camera.position.set(1.5, 1.5, 1.5);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            renderer.setSize(w, h);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 5, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            // Create block mesh
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+            blockMesh = new THREE.Mesh(geometry, material);
+            blockMesh.castShadow = true;
+            blockMesh.receiveShadow = true;
+            scene.add(blockMesh);
+
+            // Mouse events
+            canvas.addEventListener('mousedown', onMouseDown);
+            canvas.addEventListener('mousemove', onMouseMove);
+            canvas.addEventListener('mouseup', onMouseUp);
+            canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+            canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+
+            animate();
+        }
+
+        function onMouseDown(e) {
             dragging = true;
+            autoRotate = false;
             lastX = e.clientX;
             lastY = e.clientY;
-            cube3d.classList.add('dragging');
-            e.preventDefault();
-        });
-        window.addEventListener('mousemove', e => {
+            canvas.style.cursor = 'grabbing';
+        }
+
+        function onMouseMove(e) {
             if (!dragging) return;
             const dx = e.clientX - lastX;
             const dy = e.clientY - lastY;
-            rotY += dx * 0.6;
-            rotX -= dy * 0.6;
-            rotX = Math.max(-89, Math.min(89, rotX));
-            cube3d.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            userRotY += dx * 0.01;
+            userRotX -= dy * 0.01;
+            userRotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, userRotX));
             lastX = e.clientX;
             lastY = e.clientY;
-        });
-        window.addEventListener('mouseup', () => {
-            dragging = false;
-            cube3d.classList.remove('dragging');
-        });
+        }
 
-        // Touch support
-        cube3d.addEventListener('touchstart', e => {
-            lastX = e.touches[0].clientX;
-            lastY = e.touches[0].clientY;
-            e.preventDefault();
-        }, { passive: false });
-        cube3d.addEventListener('touchmove', e => {
+        function onMouseUp() {
+            dragging = false;
+            canvas.style.cursor = 'grab';
+        }
+
+        function onTouchStart(e) {
+            if (e.touches.length === 1) {
+                dragging = true;
+                autoRotate = false;
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
+                e.preventDefault();
+            }
+        }
+
+        function onTouchMove(e) {
+            if (!dragging || e.touches.length !== 1) return;
             const dx = e.touches[0].clientX - lastX;
             const dy = e.touches[0].clientY - lastY;
-            rotY += dx * 0.6;
-            rotX -= dy * 0.6;
-            rotX = Math.max(-89, Math.min(89, rotX));
-            cube3d.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            userRotY += dx * 0.01;
+            userRotX -= dy * 0.01;
+            userRotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, userRotX));
             lastX = e.touches[0].clientX;
             lastY = e.touches[0].clientY;
             e.preventDefault();
-        }, { passive: false });
+        }
+
+        function onTouchEnd(e) {
+            if (e.touches.length === 0) {
+                dragging = false;
+            }
+        }
+
+        function onWindowResize() {
+            if (!renderer) return;
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (autoRotate && !dragging) {
+                userRotY += 0.005;
+            }
+
+            blockMesh.rotation.x = userRotX;
+            blockMesh.rotation.y = userRotY;
+            blockMesh.rotation.z = 0;
+
+            renderer.render(scene, camera);
+        }
+
+        function applyTexturesToCube(shape, faces, dataUrl) {
+            if (!blockMesh) return;
+
+            const textureLoader = new THREE.TextureLoader();
+            const materials = [];
+
+            if (shape === 'net' && faces) {
+                // BoxGeometry face order: [right, left, top, bottom, front, back]
+                const faceOrder = ['cube-face-right', 'cube-face-left', 'cube-face-top', 'cube-face-bottom', 'cube-face-front', 'cube-face-back'];
+                for (const faceId of faceOrder) {
+                    const faceDataUrl = faces[faceId];
+                    const texture = textureLoader.load(faceDataUrl);
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                    materials.push(new THREE.MeshPhongMaterial({ map: texture }));
+                }
+            } else if (shape === 'glass') {
+                const texture = textureLoader.load(dataUrl);
+                texture.magFilter = THREE.NearestFilter;
+                texture.minFilter = THREE.NearestFilter;
+                const material = new THREE.MeshPhongMaterial({ map: texture, transparent: true, opacity: 0.7 });
+                for (let i = 0; i < 6; i++) materials.push(material);
+            } else {
+                const texture = textureLoader.load(dataUrl);
+                texture.magFilter = THREE.NearestFilter;
+                texture.minFilter = THREE.NearestFilter;
+                const material = new THREE.MeshPhongMaterial({ map: texture });
+                for (let i = 0; i < 6; i++) materials.push(material);
+            }
+
+            blockMesh.material = materials;
+        }
 
         // Init
         updatePreview();
