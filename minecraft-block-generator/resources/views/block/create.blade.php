@@ -358,8 +358,11 @@
         function extractFace(img, sx, sy, C) {
             const c = document.createElement('canvas');
             c.width = c.height = C;
-            c.getContext('2d').drawImage(img, sx, sy, C, C, 0, 0, C, C);
-            return c.toDataURL();
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img, sx, sy, C, C, 0, 0, C, C);
+            const dataUrl = c.toDataURL('image/png');
+            console.log(`Extracted face: sx=${sx}, sy=${sy}, C=${C}, dataUrl length: ${dataUrl.length}`);
+            return dataUrl;
         }
 
         function isNetPattern(data, w, h, C) {
@@ -384,6 +387,7 @@
                 const img = new Image();
                 img.onload = () => {
                     const w = img.width, h = img.height;
+                    console.log('Image loaded:', w, 'x', h);
                     const canvas = document.createElement('canvas');
                     canvas.width = w; canvas.height = h;
                     const ctx = canvas.getContext('2d');
@@ -392,11 +396,13 @@
 
                     // Net texture: exact 4:3 ratio (e.g. 64×48)
                     if (h > 0 && w % 4 === 0 && h % 3 === 0 && (w / 4) === (h / 3)) {
+                        console.log('Net texture detected (exact 4:3 ratio)');
                         const C = w / 4;
                         const faces = {};
                         for (const f of NET_FACES) {
                             faces[f.id] = extractFace(img, f.sx(C), f.sy(C), C);
                         }
+                        console.log('Extracted faces:', Object.keys(faces));
                         resolve({ shape: 'net', faces });
                         return;
                     }
@@ -404,10 +410,12 @@
                     // Net cross pattern on any canvas (e.g. square 64×64 with transparent corners)
                     const C = Math.floor(w / 4);
                     if (C > 0 && isNetPattern(data, w, h, C)) {
+                        console.log('Net texture detected (cross pattern with C=' + C + ')');
                         const faces = {};
                         for (const f of NET_FACES) {
                             faces[f.id] = extractFace(img, f.sx(C), f.sy(C), C);
                         }
+                        console.log('Extracted faces:', Object.keys(faces));
                         resolve({ shape: 'net', faces });
                         return;
                     }
@@ -420,11 +428,13 @@
                         if (a > 5 && a < 250) partialAlpha++; // continuous/partial alpha → blend
                     }
                     const total = w * h;
-                    if (partialAlpha / total > 0.05) {
+                    const shape = partialAlpha / total > 0.05 ? 'glass' : (transparent / total) > 0.20 ? 'cross' : 'cube';
+                    console.log('Texture shape detected:', shape, '(transparent%:', (transparent/total*100).toFixed(1), ', partial%:', (partialAlpha/total*100).toFixed(1) + ')');
+                    if (shape === 'glass') {
                         resolve({ shape: 'glass', faces: null });
-                        return;
+                    } else {
+                        resolve({ shape, faces: null });
                     }
-                    resolve({ shape: (transparent / total) > 0.20 ? 'cross' : 'cube', faces: null });
                 };
                 img.src = dataUrl;
             });
@@ -756,15 +766,26 @@
             const textureLoader = new THREE.TextureLoader();
             const materials = [];
 
+            console.log('Applying texture - Shape:', shape);
+
             if (shape === 'net' && faces) {
+                console.log('Net texture detected, faces:', Object.keys(faces));
                 // BoxGeometry face order: [right, left, top, bottom, front, back]
                 const faceOrder = ['cube-face-right', 'cube-face-left', 'cube-face-top', 'cube-face-bottom', 'cube-face-front', 'cube-face-back'];
                 for (const faceId of faceOrder) {
                     const faceDataUrl = faces[faceId];
-                    const texture = textureLoader.load(faceDataUrl);
-                    texture.magFilter = THREE.NearestFilter;
-                    texture.minFilter = THREE.NearestFilter;
-                    materials.push(new THREE.MeshPhongMaterial({ map: texture }));
+                    if (!faceDataUrl) {
+                        console.warn('Missing face texture:', faceId);
+                        const fallback = textureLoader.load(dataUrl);
+                        fallback.magFilter = THREE.NearestFilter;
+                        fallback.minFilter = THREE.NearestFilter;
+                        materials.push(new THREE.MeshPhongMaterial({ map: fallback }));
+                    } else {
+                        const texture = textureLoader.load(faceDataUrl);
+                        texture.magFilter = THREE.NearestFilter;
+                        texture.minFilter = THREE.NearestFilter;
+                        materials.push(new THREE.MeshPhongMaterial({ map: texture }));
+                    }
                 }
             } else if (shape === 'glass') {
                 const texture = textureLoader.load(dataUrl);
@@ -781,6 +802,7 @@
             }
 
             blockMesh.material = materials;
+            console.log('Materials applied:', materials.length);
         }
 
         // Init
