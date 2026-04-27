@@ -35,6 +35,12 @@ class BlockController extends Controller
 
         $geometry = $this->detectGeometry($request->file('texture')->getRealPath());
 
+        // Récupérer le contenu du fichier géométrie personnalisée si fourni
+        $customGeometryJson = null;
+        if ($request->hasFile('geometry_file')) {
+            $customGeometryJson = file_get_contents($request->file('geometry_file')->getRealPath());
+        }
+
         // Sauvegarder en base
         Block::create([
             'name'         => $request->input('name'),
@@ -48,13 +54,14 @@ class BlockController extends Controller
 
         // Générer le ZIP
         $zipPath = $this->zipService->generate(
-            name:         $request->input('name'),
-            identifier:   $identifier,
-            solid:        (bool) $request->input('solid'),
-            destructible: (bool) $request->input('destructible'),
-            resistance:   (float) $request->input('resistance'),
-            texture:      $request->file('texture'),
-            geometry:     $geometry,
+            name:                  $request->input('name'),
+            identifier:            $identifier,
+            solid:                 (bool) $request->input('solid'),
+            destructible:          (bool) $request->input('destructible'),
+            resistance:            (float) $request->input('resistance'),
+            texture:               $request->file('texture'),
+            geometry:              $geometry,
+            customGeometryJson:    $customGeometryJson,
         );
 
         return response()->download($zipPath, $identifier . '_pack.zip', [

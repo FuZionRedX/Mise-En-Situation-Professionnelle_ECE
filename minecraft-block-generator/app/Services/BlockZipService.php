@@ -16,9 +16,10 @@ class BlockZipService
         bool         $destructible,
         float        $resistance,
         UploadedFile $texture,
-        string       $geometry = 'cube'
+        string       $geometry = 'cube',
+        ?string      $customGeometryJson = null
     ): string {
-        return $this->buildZip($name, $identifier, $solid, $destructible, $resistance, $texture->getRealPath(), $geometry);
+        return $this->buildZip($name, $identifier, $solid, $destructible, $resistance, $texture->getRealPath(), $geometry, $customGeometryJson);
     }
 
     public function generateFromPath(
@@ -28,9 +29,10 @@ class BlockZipService
         bool   $destructible,
         float  $resistance,
         string $texturePath,
-        string $geometry = 'cube'
+        string $geometry = 'cube',
+        ?string $customGeometryJson = null
     ): string {
-        return $this->buildZip($name, $identifier, $solid, $destructible, $resistance, $texturePath, $geometry);
+        return $this->buildZip($name, $identifier, $solid, $destructible, $resistance, $texturePath, $geometry, $customGeometryJson);
     }
 
     private function buildZip(
@@ -40,7 +42,8 @@ class BlockZipService
         bool   $destructible,
         float  $resistance,
         string $texturePath,
-        string $geometry = 'cube'
+        string $geometry = 'cube',
+        ?string $customGeometryJson = null
     ): string {
         $zipPath = tempnam(sys_get_temp_dir(), 'mc_block_') . '.zip';
 
@@ -60,12 +63,20 @@ class BlockZipService
             $this->jsonService->encode($this->jsonService->behaviorManifest($name))
         );
 
-        $zip->addFromString(
-            $root . 'behavior_pack/blocks/' . $identifier . '.json',
-            $this->jsonService->encode(
-                $this->jsonService->blockBehavior($identifier, $solid, $destructible, $resistance, $geometry)
-            )
-        );
+        // Utiliser le fichier géométrie personnalisée si fourni, sinon générer le comportement
+        if ($customGeometryJson) {
+            $zip->addFromString(
+                $root . 'behavior_pack/blocks/' . $identifier . '.json',
+                $customGeometryJson
+            );
+        } else {
+            $zip->addFromString(
+                $root . 'behavior_pack/blocks/' . $identifier . '.json',
+                $this->jsonService->encode(
+                    $this->jsonService->blockBehavior($identifier, $solid, $destructible, $resistance, $geometry)
+                )
+            );
+        }
 
         // --- Resource Pack ---
         $zip->addEmptyDir($root . 'resource_pack/');

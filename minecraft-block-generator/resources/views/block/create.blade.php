@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         .minecraft-font { font-family: 'Courier New', monospace; }
-        .drag-over { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+        .drag-over { border-color: #22c55e !important; background-color: rgba(34, 197, 94, 0.1) !important; }
 
         /* 3D cube preview */
         #cube-canvas {
@@ -271,6 +271,47 @@
                         </div>
                     </section>
 
+                    <!-- Section : Géométrie du bloc -->
+                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700">
+                        <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
+                            <span class="text-2xl">📐</span> Géométrie du bloc (Optionnel)
+                        </h2>
+
+                        <div class="mb-4 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+                            <p class="text-sm text-gray-300 mb-3">Uploadez un fichier JSON pour définir une géométrie personnalisée :</p>
+                            <div
+                                id="geometry-drop-zone"
+                                class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center cursor-pointer transition-colors hover:border-green-500"
+                                onclick="document.getElementById('geometry-file').click()"
+                            >
+                                <input
+                                    type="file"
+                                    id="geometry-file"
+                                    name="geometry_file"
+                                    accept=".json"
+                                    class="hidden"
+                                >
+                                <div id="geometry-upload-placeholder">
+                                    <div class="text-4xl mb-2">📄</div>
+                                    <p class="text-gray-300 font-medium">Cliquez ou glissez-déposez votre fichier JSON</p>
+                                    <p class="text-gray-500 text-sm mt-1">Format: blocks/exemple_block_geo.json</p>
+                                </div>
+                                <div id="geometry-preview-container" class="hidden flex-col items-center gap-3">
+                                    <div class="text-green-400">✓ Fichier chargé</div>
+                                    <p id="geometry-file-name" class="text-green-400 text-sm font-mono"></p>
+                                    <div id="geometry-preview-info" class="text-xs text-gray-400 mt-2 bg-gray-800 p-3 rounded max-w-xs text-left">
+                                        <p><strong>Identifiant:</strong> <span id="geo-identifier" class="text-green-400">—</span></p>
+                                        <p><strong>Collision box:</strong> <span id="geo-collision" class="text-green-400 font-mono text-xs">—</span></p>
+                                    </div>
+                                    <p class="text-gray-500 text-xs mt-2">Cliquez pour changer</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-500 text-xs mt-3">Laissez vide pour un cube standard.</p>
+                        </div>
+
+                        <input type="hidden" id="geometry-data" name="geometry_data" value="">
+                    </section>
+
                     <!-- Section : Propriétés -->
                     <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700">
                         <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
@@ -398,6 +439,10 @@
                                 <span class="text-gray-400">Forme</span>
                                 <span id="preview-geometry" class="text-white">—</span>
                             </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Géométrie personnalisée</span>
+                                <span id="preview-custom-geometry" class="text-white">Non</span>
+                            </div>
                         </div>
 
                         <hr class="border-gray-700 my-4">
@@ -436,6 +481,91 @@
 
 
     <script>
+        // --- Géométrie du bloc (JSON) ---
+        const geometryInput = document.getElementById('geometry-file');
+        const geometryDropZone = document.getElementById('geometry-drop-zone');
+        const geometryUploadPlaceholder = document.getElementById('geometry-upload-placeholder');
+        const geometryPreviewContainer = document.getElementById('geometry-preview-container');
+        const geometryDataInput = document.getElementById('geometry-data');
+
+        let geometryJsonData = null;
+
+        function parseGeometryFile(file) {
+            if (!file || file.type !== 'application/json') {
+                alert('Veuillez sélectionner un fichier JSON valide');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    geometryJsonData = JSON.parse(e.target.result);
+                    const identifier = geometryJsonData['minecraft:block']?.description?.identifier || 'unknown';
+                    const collisionBox = geometryJsonData['minecraft:block']?.components?.['minecraft:collision_box'];
+
+                    document.getElementById('geometry-file-name').textContent = file.name;
+                    document.getElementById('geo-identifier').textContent = identifier;
+
+                    if (collisionBox) {
+                        const origin = collisionBox.origin ? `[${collisionBox.origin.join(',')}]` : '—';
+                        const size = collisionBox.size ? `[${collisionBox.size.join(',')}]` : '—';
+                        document.getElementById('geo-collision').textContent = `origin: ${origin}, size: ${size}`;
+                    } else {
+                        document.getElementById('geo-collision').textContent = 'Standard';
+                    }
+
+                    geometryUploadPlaceholder.classList.add('hidden');
+                    geometryPreviewContainer.classList.remove('hidden');
+                    geometryPreviewContainer.classList.add('flex');
+
+                    geometryDataInput.value = JSON.stringify(geometryJsonData);
+                    updatePreview();
+                    console.log('Géométrie chargée:', geometryJsonData);
+                } catch (err) {
+                    alert('Erreur : le fichier JSON n\'est pas valide. ' + err.message);
+                    console.error('JSON parse error:', err);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        geometryInput.addEventListener('change', e => {
+            if (e.target.files[0]) {
+                parseGeometryFile(e.target.files[0]);
+            }
+        });
+
+        geometryDropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            geometryDropZone.classList.add('drag-over');
+        });
+
+        geometryDropZone.addEventListener('dragleave', () => {
+            geometryDropZone.classList.remove('drag-over');
+        });
+
+        geometryDropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            geometryDropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                geometryInput.files = dt.files;
+                parseGeometryFile(file);
+            }
+        });
+
+        function clearGeometry() {
+            geometryJsonData = null;
+            geometryInput.value = '';
+            geometryDataInput.value = '';
+            geometryUploadPlaceholder.classList.remove('hidden');
+            geometryPreviewContainer.classList.add('hidden');
+            geometryPreviewContainer.classList.remove('flex');
+            updatePreview();
+        }
+
         // --- Type de bloc et format ---
         const blockTypeRadios = document.querySelectorAll('input[name="block_type"]');
         const complexFormatRadios = document.querySelectorAll('input[name="complex_format"]');
@@ -788,11 +918,13 @@
             const identifier = document.getElementById('identifier').value || '—';
             const solid      = document.querySelector('[name="solid"]:checked')?.value === '1';
             const destructible = document.querySelector('[name="destructible"]:checked')?.value === '1';
+            const customGeometry = geometryJsonData ? 'Oui ✓' : 'Non';
 
             document.getElementById('preview-name').textContent = name;
             document.getElementById('preview-id').textContent   = identifier !== '—' ? 'custom:' + identifier : '—';
             document.getElementById('preview-solid').textContent       = solid ? 'Oui ✓' : 'Non ✗';
             document.getElementById('preview-destructible').textContent = destructible ? 'Oui ✓' : 'Non ✗';
+            document.getElementById('preview-custom-geometry').textContent = customGeometry;
 
             const zipId = identifier !== '—' ? identifier : 'mon_bloc';
             document.getElementById('zip-id').textContent  = zipId;
