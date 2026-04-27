@@ -15,8 +15,8 @@ class BlockRequest extends FormRequest
     {
         return [
             'name'        => ['required', 'string', 'min:1', 'max:50', 'regex:/^[a-zA-Z0-9 ]+$/'],
-            'identifier'  => ['required', 'string', 'regex:/^[a-z0-9_]+$/'],
-            'texture'     => ['required', 'file', 'mimes:png', 'max:512'],
+            'identifier'  => ['required', 'string', 'regex:/^[a-z0-9_]+$/', 'unique:blocks'],
+            'texture'     => ['required', 'file', 'mimes:png', 'max:512', 'ratio=1'],
             'solid'       => ['required', 'in:0,1'],
             'destructible'=> ['required', 'in:0,1'],
             'resistance'  => ['required', 'numeric', 'min:0', 'max:100'],
@@ -31,10 +31,11 @@ class BlockRequest extends FormRequest
             'name.regex'           => 'Le nom ne peut contenir que des lettres, chiffres et espaces.',
             'identifier.required'  => "L'identifiant technique est obligatoire.",
             'identifier.regex'     => "L'identifiant ne doit contenir que des minuscules et underscores (ex: my_block).",
+            'identifier.unique'    => "Cet identifiant existe déjà. Veuillez en choisir un autre.",
             'texture.required'     => 'La texture est obligatoire.',
             'texture.mimes'        => 'La texture doit être un fichier PNG.',
             'texture.max'          => 'La texture ne doit pas dépasser 512 Ko.',
-            'texture.max'          => 'La texture ne doit pas dépasser 512 Ko.',
+            'texture.ratio'        => 'La texture doit avoir des dimensions carrées (16×16, 32×32, 64×64, 128×128, etc).',
             'solid.required'       => 'La solidité est obligatoire.',
             'destructible.required'=> 'La destructibilité est obligatoire.',
             'resistance.required'  => 'La résistance est obligatoire.',

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Générateur de Blocs Minecraft</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         .minecraft-font { font-family: 'Courier New', monospace; }
         .drag-over { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
@@ -209,39 +210,146 @@
                             <span class="text-2xl">🎨</span> Texture
                         </h2>
 
-                        <div
-                            id="drop-zone"
-                            class="border-2 border-dashed border-gray-600 rounded-xl p-10 text-center cursor-pointer transition-all hover:border-green-500 hover:bg-gray-750 @error('texture') border-red-500 @enderror group"
-                            onclick="document.getElementById('texture').click()"
-                        >
-                            <input
-                                type="file"
-                                id="texture"
-                                name="texture"
-                                accept="image/png"
-                                class="hidden"
-                            >
-                            <div id="upload-placeholder">
-                                <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">📁</div>
-                                <p class="text-gray-300 font-medium text-lg">Cliquez ou glissez-déposez votre texture</p>
-                                <p class="text-gray-500 text-sm mt-2">PNG uniquement — max 512 Ko</p>
-                                <p class="text-gray-600 text-xs mt-1">Carré (16×16…128×128) ou réseau 4:3 (64×48, 128×96…)</p>
+                        <!-- Format selection -->
+                        <div class="mb-6 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+                            <p class="text-sm font-medium text-gray-300 mb-3">Type de bloc :</p>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-3 cursor-pointer hover:bg-gray-700/50 p-2 rounded">
+                                    <input type="radio" name="block_type" value="simple" checked class="w-4 h-4 accent-green-500" id="block-simple">
+                                    <span class="text-gray-300">
+                                        <span class="font-medium">🧱 Bloc simple</span>
+                                        <span class="text-xs text-gray-500 ml-2">(même texture sur les 6 faces — ex: terre, pierre)</span>
+                                    </span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer hover:bg-gray-700/50 p-2 rounded">
+                                    <input type="radio" name="block_type" value="complex" class="w-4 h-4 accent-green-500" id="block-complex">
+                                    <span class="text-gray-300">
+                                        <span class="font-medium">📦 Bloc complexe</span>
+                                        <span class="text-xs text-gray-500 ml-2">(6 faces différentes — ex: coffre, four)</span>
+                                    </span>
+                                </label>
                             </div>
-                            <div id="preview-container" class="hidden flex-col items-center gap-3">
-                                <img id="texture-preview" src="" alt="Prévisualisation" class="w-32 h-32 object-contain rounded-lg border-2 border-green-500 shadow-lg animate-pulse-glow" style="image-rendering: pixelated;">
-                                <p id="texture-name" class="text-green-400 text-sm font-medium"></p>
-                                <p class="text-gray-500 text-xs">Cliquez pour changer</p>
+
+                            <!-- Sub-options for complex blocks -->
+                            <div id="complex-options" class="hidden mt-4 pt-4 border-t border-gray-500 space-y-2">
+                                <p class="text-xs font-medium text-gray-400 mb-2">Format du bloc complexe :</p>
+                                <label class="flex items-center gap-3 cursor-pointer hover:bg-gray-700/50 p-2 rounded">
+                                    <input type="radio" name="complex_format" value="net" checked class="w-4 h-4 accent-green-500" id="format-net">
+                                    <span class="text-gray-300">
+                                        <span class="text-sm">🗺️ Image réseau</span>
+                                        <span class="text-xs text-gray-500 ml-2">(une image avec les 6 faces)</span>
+                                    </span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer hover:bg-gray-700/50 p-2 rounded">
+                                    <input type="radio" name="complex_format" value="separate" class="w-4 h-4 accent-green-500" id="format-separate">
+                                    <span class="text-gray-300">
+                                        <span class="text-sm">🎨 6 fichiers séparés</span>
+                                        <span class="text-xs text-gray-500 ml-2">(un fichier par face)</span>
+                                    </span>
+                                </label>
                             </div>
                         </div>
 
-                        @error('texture')
-                            <p class="text-red-400 text-xs mt-2">{{ $message }}</p>
-                        @enderror
+                        <!-- Single file upload (for simple blocks and net format) -->
+                        <div id="single-upload-zone">
+                            <div
+                                id="drop-zone"
+                                class="border-2 border-dashed border-gray-600 rounded-xl p-10 text-center cursor-pointer transition-all hover:border-green-500 hover:bg-gray-750 @error('texture') border-red-500 @enderror group"
+                                onclick="document.getElementById('texture').click()"
+                            >
+                                <input
+                                    type="file"
+                                    id="texture"
+                                    name="texture"
+                                    accept="image/png"
+                                    class="hidden"
+                                >
+                                <div id="upload-placeholder">
+                                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">📁</div>
+                                    <p class="text-gray-300 font-medium text-lg">Cliquez ou glissez-déposez votre texture</p>
+                                    <p class="text-gray-500 text-sm mt-2">PNG uniquement — max 512 Ko</p>
+                                    <p class="text-gray-600 text-xs mt-1" id="upload-hint">16×16…256×256</p>
+                                </div>
+                                <div id="preview-container" class="hidden flex-col items-center gap-3">
+                                    <img id="texture-preview" src="" alt="Prévisualisation" class="w-32 h-32 object-contain rounded-lg border-2 border-green-500 shadow-lg animate-pulse-glow" style="image-rendering: pixelated;">
+                                    <p id="texture-name" class="text-green-400 text-sm font-medium"></p>
+                                    <p class="text-gray-500 text-xs">Cliquez pour changer</p>
+                                </div>
+                            </div>
 
-                        <!-- Indicateur de forme détectée -->
-                        <div id="geometry-indicator" class="hidden mt-3 flex items-center gap-2 text-sm px-3 py-2 rounded-lg">
-                            <span id="geometry-icon"></span>
-                            <span id="geometry-label"></span>
+                            @error('texture')
+                                <p class="text-red-400 text-xs mt-2">{{ $message }}</p>
+                            @enderror
+
+                            <!-- Indicateur de forme détectée -->
+                            <div id="geometry-indicator" class="hidden mt-3 flex items-center gap-2 text-sm px-3 py-2 rounded-lg">
+                                <span id="geometry-icon"></span>
+                                <span id="geometry-label"></span>
+                            </div>
+                        </div>
+
+                        <!-- Multiple file uploads (for 6 separate faces) -->
+                        <div id="separate-upload-zone" class="hidden space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- Top -->
+                                <div class="col-span-2">
+                                    <label class="block text-xs font-medium text-gray-400 mb-2">Haut (Top)</label>
+                                    <div class="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-green-500 transition-colors" onclick="document.getElementById('texture-top').click()">
+                                        <input type="file" id="texture-top" name="texture_top" accept="image/png" class="hidden face-upload">
+                                        <div class="text-2xl mb-2">⬆️</div>
+                                        <p class="text-gray-400 text-sm">Cliquez ou déposez</p>
+                                        <p class="text-gray-500 text-xs mt-1" id="top-name">Aucun fichier</p>
+                                    </div>
+                                </div>
+
+                                <!-- Left, Front, Right, Back row -->
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-2">Gauche (Left)</label>
+                                    <div class="border-2 border-dashed border-gray-600 rounded-lg p-3 text-center cursor-pointer hover:border-green-500" onclick="document.getElementById('texture-left').click()">
+                                        <input type="file" id="texture-left" name="texture_left" accept="image/png" class="hidden face-upload">
+                                        <p class="text-xl">⬅️</p>
+                                        <p class="text-gray-500 text-xs mt-1" id="left-name">—</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-2">Avant (Front)</label>
+                                    <div class="border-2 border-dashed border-gray-600 rounded-lg p-3 text-center cursor-pointer hover:border-green-500" onclick="document.getElementById('texture-front').click()">
+                                        <input type="file" id="texture-front" name="texture_front" accept="image/png" class="hidden face-upload">
+                                        <p class="text-xl">⬇️</p>
+                                        <p class="text-gray-500 text-xs mt-1" id="front-name">—</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-2">Droite (Right)</label>
+                                    <div class="border-2 border-dashed border-gray-600 rounded-lg p-3 text-center cursor-pointer hover:border-green-500" onclick="document.getElementById('texture-right').click()">
+                                        <input type="file" id="texture-right" name="texture_right" accept="image/png" class="hidden face-upload">
+                                        <p class="text-xl">➡️</p>
+                                        <p class="text-gray-500 text-xs mt-1" id="right-name">—</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-2">Arrière (Back)</label>
+                                    <div class="border-2 border-dashed border-gray-600 rounded-lg p-3 text-center cursor-pointer hover:border-green-500" onclick="document.getElementById('texture-back').click()">
+                                        <input type="file" id="texture-back" name="texture_back" accept="image/png" class="hidden face-upload">
+                                        <p class="text-xl">↩️</p>
+                                        <p class="text-gray-500 text-xs mt-1" id="back-name">—</p>
+                                    </div>
+                                </div>
+
+                                <!-- Bottom -->
+                                <div class="col-span-2">
+                                    <label class="block text-xs font-medium text-gray-400 mb-2">Bas (Bottom)</label>
+                                    <div class="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-green-500" onclick="document.getElementById('texture-bottom').click()">
+                                        <input type="file" id="texture-bottom" name="texture_bottom" accept="image/png" class="hidden face-upload">
+                                        <p class="text-2xl mb-2">⬇️</p>
+                                        <p class="text-gray-400 text-sm">Cliquez ou déposez</p>
+                                        <p class="text-gray-500 text-xs mt-1" id="bottom-name">Aucun fichier</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="separate-indicator" class="mt-3 p-3 bg-green-900/30 border border-green-600 rounded-lg text-green-300 text-xs flex items-center gap-2">
+                                <span id="separate-status">✓ 0/6 fichiers chargés</span>
+                            </div>
                         </div>
                     </section>
 
@@ -348,17 +456,10 @@
                             <span class="text-xl">👁️</span> Aperçu
                         </h2>
 
-                        <!-- Cube 3D CSS -->
-                        <div class="cube-scene mb-6" id="cube-preview">
-                            <div class="cube-3d" id="cube-3d">
-                                <div class="cube-face cube-face-top"    id="cube-face-top"></div>
-                                <div class="cube-face cube-face-front"  id="cube-face-front"></div>
-                                <div class="cube-face cube-face-right"  id="cube-face-right"></div>
-                                <div class="cube-face cube-face-back"   id="cube-face-back"></div>
-                                <div class="cube-face cube-face-left"   id="cube-face-left"></div>
-                                <div class="cube-face cube-face-bottom" id="cube-face-bottom"></div>
-                            </div>
-                            <p id="cube-placeholder-text" class="text-center text-gray-500 text-xs mt-2">Uploadez une texture</p>
+                        <!-- Cube 3D Three.js -->
+                        <div class="mb-4">
+                            <canvas id="cube-canvas"></canvas>
+                            <p id="cube-placeholder-text" class="text-center text-gray-500 text-xs mt-2">Uploadez une texture pour voir l'aperçu 3D</p>
                         </div>
 
                         <!-- Infos -->
@@ -439,6 +540,36 @@
 
 
     <script>
+        // --- Type de bloc et format ---
+        const blockTypeRadios = document.querySelectorAll('input[name="block_type"]');
+        const complexFormatRadios = document.querySelectorAll('input[name="complex_format"]');
+        const complexOptions = document.getElementById('complex-options');
+        const singleUploadZone = document.getElementById('single-upload-zone');
+        const separateUploadZone = document.getElementById('separate-upload-zone');
+
+        function updateUploadInterface() {
+            const blockType = document.querySelector('input[name="block_type"]:checked').value;
+            const complexFormat = document.querySelector('input[name="complex_format"]:checked')?.value || 'net';
+
+            // Show/hide complex options
+            complexOptions.classList.toggle('hidden', blockType === 'simple');
+
+            // Show/hide upload zones
+            if (blockType === 'simple' || complexFormat === 'net') {
+                singleUploadZone.classList.remove('hidden');
+                separateUploadZone.classList.add('hidden');
+                document.getElementById('upload-hint').textContent = blockType === 'simple'
+                    ? '16×16…256×256'
+                    : '64×48, 128×96, 256×192… (ratio 4:3)';
+            } else {
+                singleUploadZone.classList.add('hidden');
+                separateUploadZone.classList.remove('hidden');
+            }
+        }
+
+        blockTypeRadios.forEach(radio => radio.addEventListener('change', updateUploadInterface));
+        complexFormatRadios.forEach(radio => radio.addEventListener('change', updateUploadInterface));
+
         // --- Prévisualisation de la texture ---
         const textureInput = document.getElementById('texture');
         const dropZone     = document.getElementById('drop-zone');
@@ -446,7 +577,6 @@
         const previewContainer  = document.getElementById('preview-container');
         const texturePreview    = document.getElementById('texture-preview');
         const textureName       = document.getElementById('texture-name');
-        const cubeFaces         = document.querySelectorAll('.cube-face');
         const cubePlaceholderText = document.getElementById('cube-placeholder-text');
 
         const geometryIndicator = document.getElementById('geometry-indicator');
@@ -469,8 +599,11 @@
         function extractFace(img, sx, sy, C) {
             const c = document.createElement('canvas');
             c.width = c.height = C;
-            c.getContext('2d').drawImage(img, sx, sy, C, C, 0, 0, C, C);
-            return c.toDataURL();
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img, sx, sy, C, C, 0, 0, C, C);
+            const dataUrl = c.toDataURL('image/png');
+            console.log(`Extracted face: sx=${sx}, sy=${sy}, C=${C}, dataUrl length: ${dataUrl.length}`);
+            return dataUrl;
         }
 
         function isNetPattern(data, w, h, C) {
@@ -482,6 +615,22 @@
             }
             const empty  = (c, r) => alphaAt(c, r) < 128;
             const opaque = (c, r) => alphaAt(c, r) >= 128;
+
+            // Check if we have a proper cross pattern
+            // Standard 4:3 cross: opaque in cross, transparent in corners
+            const corners = [alphaAt(0,0), alphaAt(2,0), alphaAt(3,0), alphaAt(0,2), alphaAt(2,2), alphaAt(3,2)];
+            const cross = [alphaAt(1,0), alphaAt(0,1), alphaAt(1,1), alphaAt(2,1), alphaAt(3,1), alphaAt(1,2)];
+
+            const transparentCorners = corners.filter(a => a < 128).length;
+            const opaqueCross = cross.filter(a => a >= 128).length;
+
+            // Need at least 4/6 corners transparent and all 6 cross positions opaque
+            if (transparentCorners >= 4 && opaqueCross === 6) {
+                console.log('Net pattern detected with lenient rules');
+                return true;
+            }
+
+            // Strict check (original)
             if (!empty(0,0) || !empty(2,0) || !empty(3,0)) return false;
             if (!empty(0,2) || !empty(2,2) || !empty(3,2)) return false;
             if (!opaque(1,0)) return false;
@@ -490,11 +639,38 @@
             return true;
         }
 
+        function extractNetFaces(dataUrl) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => {
+                    const w = img.width, h = img.height;
+                    console.log('Extracting net faces from:', w, 'x', h);
+
+                    // Determine cell size C from image width
+                    let C = Math.floor(w / 4);
+                    if (C <= 0) {
+                        console.warn('Invalid image width for net extraction');
+                        resolve({ faces: null });
+                        return;
+                    }
+
+                    const faces = {};
+                    for (const f of NET_FACES) {
+                        faces[f.id] = extractFace(img, f.sx(C), f.sy(C), C);
+                    }
+                    console.log('Extracted net faces:', Object.keys(faces));
+                    resolve({ faces });
+                };
+                img.src = dataUrl;
+            });
+        }
+
         function analyzeTexture(dataUrl) {
             return new Promise(resolve => {
                 const img = new Image();
                 img.onload = () => {
                     const w = img.width, h = img.height;
+                    console.log('Image loaded:', w, 'x', h);
                     const canvas = document.createElement('canvas');
                     canvas.width = w; canvas.height = h;
                     const ctx = canvas.getContext('2d');
@@ -503,11 +679,13 @@
 
                     // Net texture: exact 4:3 ratio (e.g. 64×48)
                     if (h > 0 && w % 4 === 0 && h % 3 === 0 && (w / 4) === (h / 3)) {
+                        console.log('Net texture detected (exact 4:3 ratio)');
                         const C = w / 4;
                         const faces = {};
                         for (const f of NET_FACES) {
                             faces[f.id] = extractFace(img, f.sx(C), f.sy(C), C);
                         }
+                        console.log('Extracted faces:', Object.keys(faces));
                         resolve({ shape: 'net', faces });
                         return;
                     }
@@ -515,10 +693,12 @@
                     // Net cross pattern on any canvas (e.g. square 64×64 with transparent corners)
                     const C = Math.floor(w / 4);
                     if (C > 0 && isNetPattern(data, w, h, C)) {
+                        console.log('Net texture detected (cross pattern with C=' + C + ')');
                         const faces = {};
                         for (const f of NET_FACES) {
                             faces[f.id] = extractFace(img, f.sx(C), f.sy(C), C);
                         }
+                        console.log('Extracted faces:', Object.keys(faces));
                         resolve({ shape: 'net', faces });
                         return;
                     }
@@ -531,11 +711,13 @@
                         if (a > 5 && a < 250) partialAlpha++; // continuous/partial alpha → blend
                     }
                     const total = w * h;
-                    if (partialAlpha / total > 0.05) {
+                    const shape = partialAlpha / total > 0.05 ? 'glass' : (transparent / total) > 0.20 ? 'cross' : 'cube';
+                    console.log('Texture shape detected:', shape, '(transparent%:', (transparent/total*100).toFixed(1), ', partial%:', (partialAlpha/total*100).toFixed(1) + ')');
+                    if (shape === 'glass') {
                         resolve({ shape: 'glass', faces: null });
-                        return;
+                    } else {
+                        resolve({ shape, faces: null });
                     }
-                    resolve({ shape: (transparent / total) > 0.20 ? 'cross' : 'cube', faces: null });
                 };
                 img.src = dataUrl;
             });
@@ -544,16 +726,12 @@
         function showGeometryIndicator(shape) {
             const styles = {
                 net:   'bg-yellow-900/40 border border-yellow-600 text-yellow-300',
-                cross: 'bg-blue-900/40 border border-blue-600 text-blue-300',
                 cube:  'bg-green-900/40 border border-green-700 text-green-300',
-                glass: 'bg-cyan-900/40 border border-cyan-600 text-cyan-300',
             };
-            const icons  = { net: '🗺️', cross: '🌿', cube: '🧱', glass: '🔷' };
+            const icons  = { net: '📦', cube: '🧱' };
             const labels = {
-                net:   'Réseau de faces détecté : textures différentes par face (4×3)',
-                cross: 'Transparence binaire détectée : croix / plante (alpha_test)',
-                cube:  'Cube plein détecté (opaque)',
-                glass: 'Transparence continue détectée : bloc transparent (blend)',
+                net:   'Bloc complexe : textures différentes sur chaque face',
+                cube:  'Bloc simple : même texture sur les 6 faces',
             };
             geometryIndicator.className = 'mt-3 flex items-center gap-2 text-sm px-3 py-2 rounded-lg ' + styles[shape];
             geometryIcon.textContent  = icons[shape];
@@ -573,34 +751,116 @@
                 previewContainer.classList.add('flex');
                 textureName.textContent = file.name;
 
-                const { shape, faces } = await analyzeTexture(dataUrl);
+                // Get user-selected block type and complex format
+                const blockType = document.querySelector('input[name="block_type"]:checked').value;
+                const complexFormat = document.querySelector('input[name="complex_format"]:checked')?.value || 'net';
+                const textureFormat = blockType === 'simple' ? 'cube' : complexFormat;
 
-                cubeFaces.forEach(face => face.style.opacity = ''); // reset opacity
-                if (shape === 'net' && faces) {
-                    for (const [id, faceDataUrl] of Object.entries(faces)) {
-                        const el = document.getElementById(id);
-                        if (el) el.style.backgroundImage = `url(${faceDataUrl})`;
-                    }
-                } else if (shape === 'glass') {
-                    cubeFaces.forEach(face => {
-                        face.style.backgroundImage = `url(${dataUrl})`;
-                        face.style.opacity = '0.55'; // show partial transparency visually
-                    });
-                } else {
-                    cubeFaces.forEach(face => face.style.backgroundImage = `url(${dataUrl})`);
+                console.log('Block type:', blockType, 'Complex format:', complexFormat, 'Texture format:', textureFormat);
+
+                let faces = null;
+                if (textureFormat === 'net') {
+                    // Extract the 6 faces from the net texture
+                    const { faces: extractedFaces } = await extractNetFaces(dataUrl);
+                    faces = extractedFaces;
                 }
 
-                showGeometryIndicator(shape);
+                // Apply textures to Three.js cube
+                if (!blockMesh) initThreeJs();
+                applyTexturesToCube(textureFormat, faces, dataUrl);
+
+                showGeometryIndicator(textureFormat);
                 const previewGeometry = document.getElementById('preview-geometry');
                 if (previewGeometry) {
-                    const labels = { net: '🗺️ Net (6 faces)', cross: '🌿 Croix', cube: '🧱 Cube', glass: '🔷 Transparent' };
-                    previewGeometry.textContent = labels[shape] ?? '—';
+                    const labels = { net: '📦 Bloc complexe (réseau)', cube: '🧱 Bloc simple' };
+                    previewGeometry.textContent = labels[textureFormat] ?? '—';
                 }
             };
             reader.readAsDataURL(file);
         }
 
         textureInput.addEventListener('change', e => showPreview(e.target.files[0]));
+
+        // Update preview when complex format changes
+        complexFormatRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (textureInput.files[0]) {
+                    showPreview(textureInput.files[0]);
+                }
+            });
+        });
+
+        // --- Gestion des 6 fichiers séparés ---
+        const faceInputs = {
+            top: document.getElementById('texture-top'),
+            bottom: document.getElementById('texture-bottom'),
+            left: document.getElementById('texture-left'),
+            right: document.getElementById('texture-right'),
+            front: document.getElementById('texture-front'),
+            back: document.getElementById('texture-back'),
+        };
+
+        const faceNames = {
+            top: 'top-name',
+            bottom: 'bottom-name',
+            left: 'left-name',
+            right: 'right-name',
+            front: 'front-name',
+            back: 'back-name',
+        };
+
+        let separateFaces = {};
+
+        function updateSeparateFaceCount() {
+            const loaded = Object.values(separateFaces).filter(Boolean).length;
+            document.getElementById('separate-status').textContent = `✓ ${loaded}/6 fichiers chargés`;
+            if (loaded > 0) {
+                if (!blockMesh) initThreeJs();
+                applySeparateFaces();
+            }
+        }
+
+        Object.entries(faceInputs).forEach(([face, input]) => {
+            input.addEventListener('change', async e => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = ev => {
+                        separateFaces[face] = ev.target.result;
+                        document.getElementById(faceNames[face]).textContent = file.name;
+                        updateSeparateFaceCount();
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    delete separateFaces[face];
+                    document.getElementById(faceNames[face]).textContent = '—';
+                    updateSeparateFaceCount();
+                }
+            });
+        });
+
+        function applySeparateFaces() {
+            if (!blockMesh) return;
+            const textureLoader = new THREE.TextureLoader();
+            const materials = [];
+
+            // Three.js BoxGeometry face order: [right, left, top, bottom, front, back]
+            const faceMap = ['right', 'left', 'top', 'bottom', 'front', 'back'];
+
+            for (const faceName of faceMap) {
+                if (separateFaces[faceName]) {
+                    const texture = textureLoader.load(separateFaces[faceName]);
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                    materials.push(new THREE.MeshPhongMaterial({ map: texture }));
+                } else {
+                    materials.push(new THREE.MeshPhongMaterial({ color: 0xcccccc }));
+                }
+            }
+
+            blockMesh.material = materials;
+            console.log('Matériaux appliqués (6 fichiers séparés):', materials.length);
+        }
 
         dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
@@ -742,51 +1002,175 @@
             toast.classList.add('opacity-0', '-translate-y-4', 'pointer-events-none');
         }
 
-        // --- 3D cube drag rotation ---
-        const cube3d = document.getElementById('cube-3d');
-        let rotX = 30, rotY = 45;
+        // --- Three.js 3D cube preview ---
+        const canvas = document.getElementById('cube-canvas');
+        let scene, camera, renderer, cube, blockMesh;
+        let autoRotate = true;
+        let userRotX = 0, userRotY = 0;
         let dragging = false, lastX = 0, lastY = 0;
 
-        cube3d.addEventListener('mousedown', e => {
+        function initThreeJs() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a2e3a);
+
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 1000);
+            camera.position.set(1.5, 1.5, 1.5);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            renderer.setSize(w, h);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 5, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            // Create block mesh
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+            blockMesh = new THREE.Mesh(geometry, material);
+            blockMesh.castShadow = true;
+            blockMesh.receiveShadow = true;
+            scene.add(blockMesh);
+
+            // Mouse events
+            canvas.addEventListener('mousedown', onMouseDown);
+            canvas.addEventListener('mousemove', onMouseMove);
+            canvas.addEventListener('mouseup', onMouseUp);
+            canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+            canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+
+            animate();
+        }
+
+        function onMouseDown(e) {
             dragging = true;
+            autoRotate = false;
             lastX = e.clientX;
             lastY = e.clientY;
-            cube3d.classList.add('dragging');
-            e.preventDefault();
-        });
-        window.addEventListener('mousemove', e => {
+            canvas.style.cursor = 'grabbing';
+        }
+
+        function onMouseMove(e) {
             if (!dragging) return;
             const dx = e.clientX - lastX;
             const dy = e.clientY - lastY;
-            rotY += dx * 0.6;
-            rotX -= dy * 0.6;
-            rotX = Math.max(-89, Math.min(89, rotX));
-            cube3d.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            userRotY += dx * 0.01;
+            userRotX -= dy * 0.01;
+            userRotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, userRotX));
             lastX = e.clientX;
             lastY = e.clientY;
-        });
-        window.addEventListener('mouseup', () => {
-            dragging = false;
-            cube3d.classList.remove('dragging');
-        });
+        }
 
-        // Touch support
-        cube3d.addEventListener('touchstart', e => {
-            lastX = e.touches[0].clientX;
-            lastY = e.touches[0].clientY;
-            e.preventDefault();
-        }, { passive: false });
-        cube3d.addEventListener('touchmove', e => {
+        function onMouseUp() {
+            dragging = false;
+            canvas.style.cursor = 'grab';
+        }
+
+        function onTouchStart(e) {
+            if (e.touches.length === 1) {
+                dragging = true;
+                autoRotate = false;
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
+                e.preventDefault();
+            }
+        }
+
+        function onTouchMove(e) {
+            if (!dragging || e.touches.length !== 1) return;
             const dx = e.touches[0].clientX - lastX;
             const dy = e.touches[0].clientY - lastY;
-            rotY += dx * 0.6;
-            rotX -= dy * 0.6;
-            rotX = Math.max(-89, Math.min(89, rotX));
-            cube3d.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            userRotY += dx * 0.01;
+            userRotX -= dy * 0.01;
+            userRotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, userRotX));
             lastX = e.touches[0].clientX;
             lastY = e.touches[0].clientY;
             e.preventDefault();
-        }, { passive: false });
+        }
+
+        function onTouchEnd(e) {
+            if (e.touches.length === 0) {
+                dragging = false;
+            }
+        }
+
+        function onWindowResize() {
+            if (!renderer) return;
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (autoRotate && !dragging) {
+                userRotY += 0.005;
+            }
+
+            blockMesh.rotation.x = userRotX;
+            blockMesh.rotation.y = userRotY;
+            blockMesh.rotation.z = 0;
+
+            renderer.render(scene, camera);
+        }
+
+        function applyTexturesToCube(shape, faces, dataUrl) {
+            if (!blockMesh) return;
+
+            const textureLoader = new THREE.TextureLoader();
+            const materials = [];
+
+            console.log('Applying texture - Type:', shape);
+
+            if (shape === 'net' && faces) {
+                console.log('Bloc complexe - faces extraites:', Object.keys(faces));
+                // BoxGeometry face order: [right, left, top, bottom, front, back]
+                const faceOrder = ['cube-face-right', 'cube-face-left', 'cube-face-top', 'cube-face-bottom', 'cube-face-front', 'cube-face-back'];
+                for (const faceId of faceOrder) {
+                    const faceDataUrl = faces[faceId];
+                    if (!faceDataUrl) {
+                        console.warn('Face manquante:', faceId);
+                        const fallback = textureLoader.load(dataUrl);
+                        fallback.magFilter = THREE.NearestFilter;
+                        fallback.minFilter = THREE.NearestFilter;
+                        materials.push(new THREE.MeshPhongMaterial({ map: fallback }));
+                    } else {
+                        const texture = textureLoader.load(faceDataUrl);
+                        texture.magFilter = THREE.NearestFilter;
+                        texture.minFilter = THREE.NearestFilter;
+                        materials.push(new THREE.MeshPhongMaterial({ map: texture }));
+                    }
+                }
+            } else {
+                console.log('Bloc simple - même texture sur les 6 faces');
+                const texture = textureLoader.load(dataUrl);
+                texture.magFilter = THREE.NearestFilter;
+                texture.minFilter = THREE.NearestFilter;
+                const material = new THREE.MeshPhongMaterial({ map: texture });
+                for (let i = 0; i < 6; i++) materials.push(material);
+            }
+
+            blockMesh.material = materials;
+            console.log('Matériaux appliqués:', materials.length);
+        }
 
         // Init
         updatePreview();
