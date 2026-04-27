@@ -10,34 +10,117 @@
         .minecraft-font { font-family: 'Courier New', monospace; }
         .drag-over { border-color: #22c55e !important; background-color: rgba(34, 197, 94, 0.1) !important; }
 
+        /* Animations */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.6); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes slide-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-slide-in { animation: slide-in 0.5s ease-out forwards; }
+
         /* 3D cube preview */
-        #cube-canvas {
+        .cube-scene {
+            width: 96px; height: 96px;
+            perspective: 260px;
+            margin: 0 auto;
+        }
+        .cube-3d {
+            width: 64px; height: 64px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(30deg) rotateY(45deg);
+            margin: 16px auto;
+            cursor: grab;
+            transition: transform 0.3s ease;
+        }
+        .cube-3d:hover { transform: rotateX(30deg) rotateY(45deg) scale(1.1); }
+        .cube-3d.dragging { cursor: grabbing; }
+        .cube-face {
+            position: absolute;
+            width: 64px; height: 64px;
+            background-color: #4b5563;
+            background-size: cover;
+            background-position: center;
+            image-rendering: pixelated;
+            border: 1px solid rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        .cube-face-top   { transform: rotateX(90deg) translateZ(32px); filter: brightness(1.25); }
+        .cube-face-front { transform: translateZ(32px);                 filter: brightness(0.9); }
+        .cube-face-right { transform: rotateY(90deg) translateZ(32px);  filter: brightness(0.65); }
+        .cube-face-back  { transform: rotateY(180deg) translateZ(32px); filter: brightness(0.65); }
+        .cube-face-left  { transform: rotateY(-90deg) translateZ(32px); filter: brightness(0.9); }
+        .cube-face-bottom{ transform: rotateX(-90deg) translateZ(32px); filter: brightness(0.5); }
+
+        /* Enhanced form inputs */
+        .input-enhanced {
+            transition: all 0.3s ease;
+        }
+        .input-enhanced:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+        }
+
+        /* Card hover effects */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Button enhancements */
+        .btn-minecraft {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-minecraft::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
             width: 100%;
-            height: 280px;
-            display: block;
-            border-radius: 0.75rem;
-            background: linear-gradient(135deg, #1a2e3a 0%, #2d3d47 100%);
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        .btn-minecraft:hover::before {
+            left: 100%;
         }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
 
     <!-- Header -->
-    <header class="bg-gray-800 border-b border-gray-700 py-4 px-6">
+    <header class="bg-gray-800 border-b border-gray-700 py-4 px-6 sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <div class="w-10 h-10 bg-green-600 rounded grid grid-cols-2 gap-0.5 p-1">
-                <div class="bg-green-400 rounded-sm"></div>
-                <div class="bg-green-700 rounded-sm"></div>
-                <div class="bg-green-700 rounded-sm"></div>
-                <div class="bg-green-400 rounded-sm"></div>
-            </div>
-            <div>
-                <h1 class="text-xl font-bold minecraft-font text-green-400">Minecraft Block Generator</h1>
-                <p class="text-xs text-gray-400">Bedrock Edition — Créez votre bloc personnalisé</p>
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-green-600 rounded-lg grid grid-cols-2 gap-0.5 p-1.5 animate-float shadow-lg">
+                    <div class="bg-green-400 rounded-sm"></div>
+                    <div class="bg-green-700 rounded-sm"></div>
+                    <div class="bg-green-700 rounded-sm"></div>
+                    <div class="bg-green-400 rounded-sm"></div>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold minecraft-font text-green-400 flex items-center gap-2">
+                        <span class="text-2xl">⛏️</span> Minecraft Block Generator
+                    </h1>
+                    <p class="text-xs text-gray-400">Bedrock Edition — Créez votre bloc personnalisé</p>
+                </div>
             </div>
             <a href="{{ route('block.index') }}"
-               class="bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
-                📋 Historique
+               class="bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
+                <span>📋</span> Historique
             </a>
         </div>
     </header>
@@ -70,10 +153,9 @@
                     @csrf
 
                     <!-- Section : Identité du bloc -->
-                    <!-- Section : Identité du bloc -->
-                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700">
+                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
                         <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
-                            <span class="text-2xl">🧱</span> Identité du bloc
+                            <span class="text-2xl animate-bounce">🧱</span> Identité du bloc
                         </h2>
 
                         <div class="space-y-4">
@@ -89,7 +171,7 @@
                                     value="{{ old('name') }}"
                                     placeholder="Ex: Pierre volcanique"
                                     maxlength="50"
-                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 @error('name') border-red-500 @enderror"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30 @error('name') border-red-500 @enderror input-enhanced"
                                 >
                                 @error('name')
                                     <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
@@ -123,7 +205,7 @@
                     </section>
 
                     <!-- Section : Texture -->
-                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700">
+                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
                         <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
                             <span class="text-2xl">🎨</span> Texture
                         </h2>
@@ -172,7 +254,7 @@
                         <div id="single-upload-zone">
                             <div
                                 id="drop-zone"
-                                class="border-2 border-dashed border-gray-600 rounded-xl p-8 text-center cursor-pointer transition-colors hover:border-green-500 @error('texture') border-red-500 @enderror"
+                                class="border-2 border-dashed border-gray-600 rounded-xl p-10 text-center cursor-pointer transition-all hover:border-green-500 hover:bg-gray-750 @error('texture') border-red-500 @enderror group"
                                 onclick="document.getElementById('texture').click()"
                             >
                                 <input
@@ -183,14 +265,14 @@
                                     class="hidden"
                                 >
                                 <div id="upload-placeholder">
-                                    <div class="text-5xl mb-3">📁</div>
-                                    <p class="text-gray-300 font-medium">Cliquez ou glissez-déposez votre texture</p>
-                                    <p class="text-gray-500 text-sm mt-1">PNG uniquement — max 512 Ko</p>
+                                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">📁</div>
+                                    <p class="text-gray-300 font-medium text-lg">Cliquez ou glissez-déposez votre texture</p>
+                                    <p class="text-gray-500 text-sm mt-2">PNG uniquement — max 512 Ko</p>
                                     <p class="text-gray-600 text-xs mt-1" id="upload-hint">16×16…256×256</p>
                                 </div>
                                 <div id="preview-container" class="hidden flex-col items-center gap-3">
-                                    <img id="texture-preview" src="" alt="Prévisualisation" class="w-32 h-32 object-contain rounded-lg border-2 border-green-500" style="image-rendering: pixelated;">
-                                    <p id="texture-name" class="text-green-400 text-sm"></p>
+                                    <img id="texture-preview" src="" alt="Prévisualisation" class="w-32 h-32 object-contain rounded-lg border-2 border-green-500 shadow-lg animate-pulse-glow" style="image-rendering: pixelated;">
+                                    <p id="texture-name" class="text-green-400 text-sm font-medium"></p>
                                     <p class="text-gray-500 text-xs">Cliquez pour changer</p>
                                 </div>
                             </div>
@@ -313,17 +395,20 @@
                     </section>
 
                     <!-- Section : Propriétés -->
-                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700">
+                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
                         <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
                             <span class="text-2xl">⚙️</span> Propriétés du bloc
                         </h2>
 
                         <div class="space-y-5">
                             <!-- Solidité -->
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="font-medium text-gray-200">Solidité</p>
-                                    <p class="text-gray-500 text-xs">Le bloc possède une hitbox et bloque les joueurs</p>
+                            <div class="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">🧱</span>
+                                    <div>
+                                        <p class="font-medium text-gray-200">Solidité</p>
+                                        <p class="text-gray-500 text-xs">Le bloc possède une hitbox et bloque les joueurs</p>
+                                    </div>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="hidden" name="solid" value="0">
@@ -334,15 +419,18 @@
                                         class="sr-only peer"
                                         {{ old('solid', '1') == '1' ? 'checked' : '' }}
                                     >
-                                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                    <div class="w-14 h-7 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600 shadow-inner"></div>
                                 </label>
                             </div>
 
                             <!-- Destructible -->
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="font-medium text-gray-200">Destructible</p>
-                                    <p class="text-gray-500 text-xs">Le bloc peut être cassé par les joueurs</p>
+                            <div class="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">⛏️</span>
+                                    <div>
+                                        <p class="font-medium text-gray-200">Destructible</p>
+                                        <p class="text-gray-500 text-xs">Le bloc peut être cassé par les joueurs</p>
+                                    </div>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="hidden" name="destructible" value="0">
@@ -353,7 +441,7 @@
                                         class="sr-only peer"
                                         {{ old('destructible', '1') == '1' ? 'checked' : '' }}
                                     >
-                                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                    <div class="w-14 h-7 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600 shadow-inner"></div>
                                 </label>
                             </div>
 
@@ -392,9 +480,9 @@
                     <button
                         type="submit"
                         id="submit-btn"
-                        class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-6 rounded-xl transition-colors minecraft-font text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-4 px-6 rounded-xl transition-all minecraft-font text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed btn-minecraft shadow-lg hover:shadow-green-600/30 hover:scale-[1.02] active:scale-[0.98]"
                     >
-                        <span id="btn-icon">⚡</span>
+                        <span id="btn-icon" class="text-2xl">⚡</span>
                         <span id="btn-text">Générer mon bloc</span>
                     </button>
 
@@ -403,9 +491,11 @@
 
             <!-- Panneau de prévisualisation -->
             <div class="lg:col-span-1">
-                <div class="sticky top-6">
-                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
-                        <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font">Aperçu</h2>
+                <div class="sticky top-24">
+                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all shadow-xl">
+                        <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
+                            <span class="text-xl">👁️</span> Aperçu
+                        </h2>
 
                         <!-- Cube 3D Three.js -->
                         <div class="mb-4">
@@ -414,29 +504,29 @@
                         </div>
 
                         <!-- Infos -->
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Nom</span>
+                        <div class="space-y-3 text-sm bg-gray-700/30 p-4 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">📛 Nom</span>
                                 <span id="preview-name" class="text-white font-medium truncate ml-2 max-w-32">—</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Identifiant</span>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">🔖 ID</span>
                                 <span id="preview-id" class="text-green-400 font-mono text-xs truncate ml-2 max-w-32">—</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Solidité</span>
-                                <span id="preview-solid" class="text-white">Oui</span>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">🧱 Solidité</span>
+                                <span id="preview-solid" class="text-green-400">Oui</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Destructible</span>
-                                <span id="preview-destructible" class="text-white">Oui</span>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">⛏️ Détruit.</span>
+                                <span id="preview-destructible" class="text-green-400">Oui</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Résistance</span>
-                                <span id="preview-resistance" class="text-white">3</span>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">💪 Résistance</span>
+                                <span id="preview-resistance" class="text-white font-bold">3</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Forme</span>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">📐 Forme</span>
                                 <span id="preview-geometry" class="text-white">—</span>
                             </div>
                             <div class="flex justify-between">
@@ -448,8 +538,10 @@
                         <hr class="border-gray-700 my-4">
 
                         <!-- Structure ZIP attendue -->
-                        <div>
-                            <p class="text-gray-400 text-xs font-medium mb-2">Structure de l'archive :</p>
+                        <div class="bg-gray-900/50 p-4 rounded-lg">
+                            <p class="text-gray-400 text-xs font-medium mb-2 flex items-center gap-2">
+                                <span>📦</span> Structure de l'archive :
+                            </p>
                             <pre class="text-xs text-gray-500 leading-5 font-mono overflow-x-auto">generated_pack/
 ├── behavior_pack/
 │   ├── manifest.json
@@ -468,15 +560,27 @@
     </main>
 
     <!-- Toast succès -->
-    <div id="success-toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 opacity-0 -translate-y-4 pointer-events-none">
-        <div class="flex items-center gap-3 bg-green-700 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-lg">
-            <span>✅ Téléchargement de <strong id="toast-name"></strong> réussi !</span>
-            <button onclick="closeToast()" class="text-green-200 hover:text-white text-lg leading-none">&times;</button>
+    <div id="success-toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 opacity-0 -translate-y-4 pointer-events-none">
+        <div class="flex items-center gap-3 bg-gradient-to-r from-green-700 to-green-600 text-white text-sm font-medium px-6 py-4 rounded-xl shadow-lg animate-slide-in border border-green-500/30">
+            <span class="text-2xl">✅</span>
+            <div>
+                <p class="font-bold">Téléchargement réussi !</p>
+                <p class="text-green-200 text-xs"><strong id="toast-name"></strong> est prêt</p>
+            </div>
+            <button onclick="closeToast()" class="text-green-200 hover:text-white text-xl leading-none ml-2">×</button>
         </div>
     </div>
 
-    <footer class="text-center text-gray-600 text-xs py-6">
-        Minecraft Block Generator — Bedrock Edition &bull; Laravel {{ app()->version() }}
+    <footer class="text-center text-gray-500 text-xs py-8 mt-8 border-t border-gray-800">
+        <div class="flex items-center justify-center gap-2 mb-2">
+            <span>⛏️</span>
+            <span>Minecraft Block Generator</span>
+            <span>—</span>
+            <span>Bedrock Edition</span>
+            <span>•</span>
+            <span>Laravel {{ app()->version() }}</span>
+        </div>
+        <p class="text-gray-600">Créé avec ❤️ pour la communauté Minecraft</p>
     </footer>
 
 
