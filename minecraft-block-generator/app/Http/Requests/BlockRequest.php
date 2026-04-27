@@ -16,7 +16,7 @@ class BlockRequest extends FormRequest
         return [
             'name'        => ['required', 'string', 'min:1', 'max:50', 'regex:/^[a-zA-Z0-9 ]+$/'],
             'identifier'  => ['required', 'string', 'regex:/^[a-z0-9_]+$/', 'unique:blocks'],
-            'texture'     => ['required', 'file', 'mimes:png', 'max:512', 'ratio=1'],
+            'texture'     => ['required', 'file', 'mimes:png', 'max:512'],
             'geometry_file' => ['nullable', 'file', 'mimes:json', 'max:256'],
             'solid'       => ['required', 'in:0,1'],
             'destructible'=> ['required', 'in:0,1'],
