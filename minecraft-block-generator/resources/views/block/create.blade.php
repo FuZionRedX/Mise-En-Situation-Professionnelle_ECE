@@ -452,23 +452,18 @@
                                         <p class="font-medium text-gray-200">Résistance aux explosions</p>
                                         <p class="text-gray-500 text-xs">Résistance aux TNT et creepers</p>
                                     </div>
-                                    <span id="resistance-value" class="text-green-400 font-bold text-lg">{{ old('resistance', 3) }}</span>
                                 </div>
                                 <input
-                                    type="range"
+                                    type="number"
                                     name="resistance"
                                     id="resistance"
                                     min="0"
                                     max="100"
                                     step="0.5"
                                     value="{{ old('resistance', 3) }}"
-                                    class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-green-500"
+                                    placeholder="3"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30 @error('resistance') border-red-500 @enderror input-enhanced"
                                 >
-                                <div class="flex justify-between text-gray-600 text-xs mt-1">
-                                    <span>0 (fragile)</span>
-                                    <span>50 (pierre)</span>
-                                    <span>100 (bedrock)</span>
-                                </div>
                                 @error('resistance')
                                     <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                                 @enderror
@@ -499,7 +494,7 @@
 
                         <!-- Cube 3D Three.js -->
                         <div class="mb-4">
-                            <canvas id="cube-canvas"></canvas>
+                            <canvas id="cube-canvas" style="width: 100%; height: 200px; border: 1px solid #374151; border-radius: 0.5rem;"></canvas>
                             <p id="cube-placeholder-text" class="text-center text-gray-500 text-xs mt-2">Uploadez une texture pour voir l'aperçu 3D</p>
                         </div>
 
@@ -604,18 +599,35 @@
             reader.onload = e => {
                 try {
                     geometryJsonData = JSON.parse(e.target.result);
-                    const identifier = geometryJsonData['minecraft:block']?.description?.identifier || 'unknown';
-                    const collisionBox = geometryJsonData['minecraft:block']?.components?.['minecraft:collision_box'];
 
-                    document.getElementById('geometry-file-name').textContent = file.name;
-                    document.getElementById('geo-identifier').textContent = identifier;
+                    // Handle minecraft:geometry format (model file)
+                    const geoArray = geometryJsonData['minecraft:geometry'];
+                    if (geoArray?.length) {
+                        const desc = geoArray[0].description;
+                        const identifier = desc.identifier || 'unknown';
+                        const tw = desc.texture_width || 16;
+                        const th = desc.texture_height || 16;
+                        const cubeCount = (geoArray[0].bones || [])
+                            .reduce((n, b) => n + (b.cubes || []).length, 0);
 
-                    if (collisionBox) {
-                        const origin = collisionBox.origin ? `[${collisionBox.origin.join(',')}]` : '—';
-                        const size = collisionBox.size ? `[${collisionBox.size.join(',')}]` : '—';
-                        document.getElementById('geo-collision').textContent = `origin: ${origin}, size: ${size}`;
-                    } else {
-                        document.getElementById('geo-collision').textContent = 'Standard';
+                        document.getElementById('geometry-file-name').textContent = file.name;
+                        document.getElementById('geo-identifier').textContent = identifier;
+                        document.getElementById('geo-collision').textContent = `${cubeCount} cubes — texture: ${tw}×${th}`;
+                    } else if (geometryJsonData['minecraft:block']) {
+                        // Handle minecraft:block format (block behavior file)
+                        const identifier = geometryJsonData['minecraft:block']?.description?.identifier || 'unknown';
+                        const collisionBox = geometryJsonData['minecraft:block']?.components?.['minecraft:collision_box'];
+
+                        document.getElementById('geometry-file-name').textContent = file.name;
+                        document.getElementById('geo-identifier').textContent = identifier;
+
+                        if (collisionBox) {
+                            const origin = collisionBox.origin ? `[${collisionBox.origin.join(',')}]` : '—';
+                            const size = collisionBox.size ? `[${collisionBox.size.join(',')}]` : '—';
+                            document.getElementById('geo-collision').textContent = `origin: ${origin}, size: ${size}`;
+                        } else {
+                            document.getElementById('geo-collision').textContent = 'Standard';
+                        }
                     }
 
                     geometryUploadPlaceholder.classList.add('hidden');
@@ -623,6 +635,12 @@
                     geometryPreviewContainer.classList.add('flex');
 
                     geometryDataInput.value = JSON.stringify(geometryJsonData);
+
+                    // If texture is already loaded, rebuild the 3D preview
+                    if (textureInput.files[0]) {
+                        showPreview(textureInput.files[0]);
+                    }
+
                     updatePreview();
                     console.log('Géométrie chargée:', geometryJsonData);
                 } catch (err) {
@@ -667,6 +685,12 @@
             geometryUploadPlaceholder.classList.remove('hidden');
             geometryPreviewContainer.classList.add('hidden');
             geometryPreviewContainer.classList.remove('flex');
+
+            // Rebuild with normal cube preview if texture is loaded
+            if (textureInput.files[0]) {
+                showPreview(textureInput.files[0]);
+            }
+
             updatePreview();
         }
 
@@ -853,6 +877,91 @@
             });
         }
 
+        // --- Custom Geometry Helpers ---
+        function loadImage(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = url;
+            });
+        }
+
+        function extractGeoFace(img, tw, th, uv, uvSize) {
+            const [u, v] = uv;
+            const [du, dv] = uvSize;
+            const scale = img.naturalWidth / tw;
+            const pw = Math.max(1, Math.round(Math.abs(du) * scale));
+            const ph = Math.max(1, Math.round(Math.abs(dv) * scale));
+            const sx = Math.round(Math.min(u, u + du) * scale);
+            const sy = Math.round(Math.min(v, v + dv) * scale);
+
+            const c = document.createElement('canvas');
+            c.width = pw; c.height = ph;
+            const ctx = c.getContext('2d');
+            ctx.save();
+            if (du < 0) { ctx.translate(pw, 0); ctx.scale(-1, 1); }
+            if (dv < 0) { ctx.translate(0, ph); ctx.scale(1, -1); }
+            ctx.drawImage(img, sx, sy, pw, ph, 0, 0, pw, ph);
+            ctx.restore();
+            return c.toDataURL('image/png');
+        }
+
+        function replaceBlockMesh(newObj) {
+            if (blockMesh) scene.remove(blockMesh);
+            blockMesh = newObj;
+            scene.add(blockMesh);
+        }
+
+        async function buildCustomGeoMesh(geoData, textureUrl) {
+            const geo = geoData['minecraft:geometry']?.[0];
+            if (!geo) return null;
+
+            const desc = geo.description;
+            const tw = desc.texture_width || 16;
+            const th = desc.texture_height || 16;
+            const S = 1 / 16;
+
+            const img = await loadImage(textureUrl);
+            const loader = new THREE.TextureLoader();
+            const group = new THREE.Group();
+            const FACE_MAP = ['east', 'west', 'up', 'down', 'south', 'north'];
+
+            for (const bone of (geo.bones || [])) {
+                for (const cube of (bone.cubes || [])) {
+                    const [ox, oy, oz] = cube.origin;
+                    const [cw, ch, cd] = cube.size;
+
+                    const materials = FACE_MAP.map(face => {
+                        const faceUv = cube.uv?.[face];
+                        if (!faceUv) return new THREE.MeshPhongMaterial({ color: 0x888888 });
+                        const dataUrl = extractGeoFace(img, tw, th, faceUv.uv, faceUv.uv_size);
+                        const tex = loader.load(dataUrl);
+                        tex.magFilter = THREE.NearestFilter;
+                        tex.minFilter = THREE.NearestFilter;
+                        return new THREE.MeshPhongMaterial({ map: tex });
+                    });
+
+                    const boxGeo = new THREE.BoxGeometry(cw * S, ch * S, cd * S);
+                    const mesh = new THREE.Mesh(boxGeo, materials);
+                    mesh.position.set(
+                        (ox + cw / 2) * S,
+                        (oy + ch / 2) * S,
+                        (oz + cd / 2) * S
+                    );
+                    group.add(mesh);
+                }
+            }
+
+            // Center the group
+            const box = new THREE.Box3().setFromObject(group);
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            group.position.sub(center);
+
+            return group;
+        }
+
         function showGeometryIndicator(shape) {
             const styles = {
                 net:   'bg-yellow-900/40 border border-yellow-600 text-yellow-300',
@@ -881,29 +990,42 @@
                 previewContainer.classList.add('flex');
                 textureName.textContent = file.name;
 
-                // Get user-selected block type and complex format
-                const blockType = document.querySelector('input[name="block_type"]:checked').value;
-                const complexFormat = document.querySelector('input[name="complex_format"]:checked')?.value || 'net';
-                const textureFormat = blockType === 'simple' ? 'cube' : complexFormat;
-
-                console.log('Block type:', blockType, 'Complex format:', complexFormat, 'Texture format:', textureFormat);
-
-                let faces = null;
-                if (textureFormat === 'net') {
-                    // Extract the 6 faces from the net texture
-                    const { faces: extractedFaces } = await extractNetFaces(dataUrl);
-                    faces = extractedFaces;
-                }
-
-                // Apply textures to Three.js cube
+                // Initialize Three.js if not already done
                 if (!blockMesh) initThreeJs();
-                applyTexturesToCube(textureFormat, faces, dataUrl);
 
-                showGeometryIndicator(textureFormat);
-                const previewGeometry = document.getElementById('preview-geometry');
-                if (previewGeometry) {
-                    const labels = { net: '📦 Bloc complexe (réseau)', cube: '🧱 Bloc simple' };
-                    previewGeometry.textContent = labels[textureFormat] ?? '—';
+                // Check if we have a custom geometry loaded
+                const isCustomGeo = geometryJsonData?.['minecraft:geometry'];
+                if (isCustomGeo) {
+                    // Build and render custom geometry with UV mapping
+                    console.log('Building custom geometry with texture mapping');
+                    const group = await buildCustomGeoMesh(geometryJsonData, dataUrl);
+                    if (group) {
+                        replaceBlockMesh(group);
+                        const previewGeometry = document.getElementById('preview-geometry');
+                        if (previewGeometry) previewGeometry.textContent = '📐 Géométrie personnalisée';
+                    }
+                } else {
+                    // Standard cube/net preview path
+                    const blockType = document.querySelector('input[name="block_type"]:checked').value;
+                    const complexFormat = document.querySelector('input[name="complex_format"]:checked')?.value || 'net';
+                    const textureFormat = blockType === 'simple' ? 'cube' : complexFormat;
+
+                    console.log('Block type:', blockType, 'Complex format:', complexFormat, 'Texture format:', textureFormat);
+
+                    let faces = null;
+                    if (textureFormat === 'net') {
+                        const { faces: extractedFaces } = await extractNetFaces(dataUrl);
+                        faces = extractedFaces;
+                    }
+
+                    applyTexturesToCube(textureFormat, faces, dataUrl);
+
+                    showGeometryIndicator(textureFormat);
+                    const previewGeometry = document.getElementById('preview-geometry');
+                    if (previewGeometry) {
+                        const labels = { net: '📦 Bloc complexe (réseau)', cube: '🧱 Bloc simple' };
+                        previewGeometry.textContent = labels[textureFormat] ?? '—';
+                    }
                 }
             };
             reader.readAsDataURL(file);
@@ -1006,14 +1128,12 @@
             }
         });
 
-        // --- Résistance slider ---
-        const resistanceSlider = document.getElementById('resistance');
-        const resistanceValue  = document.getElementById('resistance-value');
+        // --- Résistance input ---
+        const resistanceInput = document.getElementById('resistance');
         const previewResistance = document.getElementById('preview-resistance');
 
-        resistanceSlider.addEventListener('input', () => {
-            resistanceValue.textContent  = resistanceSlider.value;
-            previewResistance.textContent = resistanceSlider.value;
+        resistanceInput.addEventListener('input', () => {
+            previewResistance.textContent = resistanceInput.value || '0';
         });
 
         // --- Mise à jour du panneau de prévisualisation ---
