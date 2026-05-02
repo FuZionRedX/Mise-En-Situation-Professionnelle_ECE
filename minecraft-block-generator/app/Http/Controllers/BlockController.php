@@ -21,6 +21,14 @@ class BlockController extends Controller
     }
 
     /**
+     * Affiche le formulaire d'édition pour un bloc existant.
+     */
+    public function edit(Block $block)
+    {
+        return view('block.create', compact('block'));
+    }
+
+    /**
      * Génère les fichiers du pack Minecraft, sauvegarde en base et renvoie l'archive ZIP.
      */
     public function create(BlockRequest $request): BinaryFileResponse
@@ -63,6 +71,72 @@ class BlockController extends Controller
             geometry:              $geometry,
             customGeometryJson:    $customGeometryJson,
         );
+
+        return response()->download($zipPath, $identifier . '_pack.zip', [
+            'Content-Type' => 'application/zip',
+        ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Met à jour un bloc existant et régénère le ZIP.
+     */
+    public function update(BlockRequest $request, Block $block): BinaryFileResponse
+    {
+        $identifier = $request->input('identifier');
+
+        // Si une nouvelle texture est fournie, supprimer l'ancienne et en sauvegarder une nouvelle
+        if ($request->hasFile('texture')) {
+            Storage::delete($block->texture_path);
+            $texturePath = $request->file('texture')->storeAs(
+                'textures',
+                $identifier . '_' . time() . '.png'
+            );
+            $geometry = $this->detectGeometry($request->file('texture')->getRealPath());
+        } else {
+            $texturePath = $block->texture_path;
+            $geometry = $block->geometry ?? 'cube';
+        }
+
+        // Récupérer le contenu du fichier géométrie personnalisée si fourni
+        $customGeometryJson = null;
+        if ($request->hasFile('geometry_file')) {
+            $customGeometryJson = file_get_contents($request->file('geometry_file')->getRealPath());
+        }
+
+        // Mettre à jour le bloc
+        $block->update([
+            'name'         => $request->input('name'),
+            'identifier'   => $identifier,
+            'solid'        => (bool) $request->input('solid'),
+            'destructible' => (bool) $request->input('destructible'),
+            'resistance'   => (float) $request->input('resistance'),
+            'texture_path' => $texturePath,
+            'geometry'     => $geometry,
+        ]);
+
+        // Générer le ZIP
+        if ($request->hasFile('texture')) {
+            $zipPath = $this->zipService->generate(
+                name:                  $request->input('name'),
+                identifier:            $identifier,
+                solid:                 (bool) $request->input('solid'),
+                destructible:          (bool) $request->input('destructible'),
+                resistance:            (float) $request->input('resistance'),
+                texture:               $request->file('texture'),
+                geometry:              $geometry,
+                customGeometryJson:    $customGeometryJson,
+            );
+        } else {
+            $zipPath = $this->zipService->generateFromPath(
+                name:         $request->input('name'),
+                identifier:   $identifier,
+                solid:        (bool) $request->input('solid'),
+                destructible: (bool) $request->input('destructible'),
+                resistance:   (float) $request->input('resistance'),
+                texturePath:  Storage::path($texturePath),
+                geometry:     $geometry,
+            );
+        }
 
         return response()->download($zipPath, $identifier . '_pack.zip', [
             'Content-Type' => 'application/zip',

@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Storage;
 Route::get('/', [BlockController::class, 'history'])->name('block.index');
 Route::get('/block/new', [BlockController::class, 'index'])->name('block.new');
 Route::post('/block/create', [BlockController::class, 'create'])->name('block.create');
+Route::get('/block/{block}/edit', [BlockController::class, 'edit'])->name('block.edit');
+Route::post('/block/{block}/update', [BlockController::class, 'update'])->name('block.update');
 Route::get('/block/{block}/download', [BlockController::class, 'download'])->name('block.download');
 Route::delete('/block/{block}', [BlockController::class, 'destroy'])->name('block.destroy');
 

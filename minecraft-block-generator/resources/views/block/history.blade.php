@@ -126,6 +126,10 @@
                             </p>
 
                             <div class="flex gap-2">
+                                <a href="{{ route('block.edit', $block->id) }}"
+                                   class="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-center text-sm font-semibold py-2.5 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg">
+                                    ✏️ Modifier
+                                </a>
                                 <a href="{{ route('block.download', $block->id) }}"
                                    class="flex-1 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white text-center text-sm font-semibold py-2.5 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg">
                                     ⬇ Télécharger

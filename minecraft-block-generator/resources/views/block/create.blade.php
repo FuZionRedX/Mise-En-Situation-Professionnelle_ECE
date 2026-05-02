@@ -99,7 +99,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen">
+<body class="bg-gray-900 text-gray-100 min-h-screen" @if (isset($block)) data-edit-block-id="{{ $block->id }}" @endif>
 
     <!-- Header -->
     <header class="bg-gray-800 border-b border-gray-700 py-4 px-6 sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
@@ -145,7 +145,7 @@
             <div class="lg:col-span-2">
                 <form
                     id="block-form"
-                    action="{{ route('block.create') }}"
+                    action="{{ isset($block) ? route('block.update', $block->id) : route('block.create') }}"
                     method="POST"
                     enctype="multipart/form-data"
                     novalidate
@@ -168,7 +168,7 @@
                                     type="text"
                                     id="name"
                                     name="name"
-                                    value="{{ old('name') }}"
+                                    value="{{ old('name', $block->name ?? '') }}"
                                     placeholder="Ex: Pierre volcanique"
                                     maxlength="50"
                                     class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30 @error('name') border-red-500 @enderror input-enhanced"
@@ -190,16 +190,17 @@
                                         type="text"
                                         id="identifier"
                                         name="identifier"
-                                        value="{{ old('identifier') }}"
+                                        value="{{ old('identifier', $block->identifier ?? '') }}"
                                         placeholder="volcanic_rock"
                                         pattern="[a-z0-9_]+"
-                                        class="flex-1 bg-gray-700 border border-gray-600 rounded-r-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 @error('identifier') border-red-500 @enderror"
+                                        {{ isset($block) ? 'readonly' : '' }}
+                                        class="flex-1 bg-gray-700 border border-gray-600 rounded-r-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 @error('identifier') border-red-500 @enderror {{ isset($block) ? 'bg-gray-600 cursor-not-allowed' : '' }}"
                                     >
                                 </div>
                                 @error('identifier')
                                     <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                                 @enderror
-                                <p class="text-gray-500 text-xs mt-1">Minuscules et underscores uniquement (ex: <code class="text-green-400">my_block</code>).</p>
+                                <p class="text-gray-500 text-xs mt-1">{{ isset($block) ? 'Cet identifiant ne peut pas être modifié.' : 'Minuscules et underscores uniquement (ex: <code class="text-green-400">my_block</code>).' }}</p>
                             </div>
                         </div>
                     </section>
@@ -287,6 +288,13 @@
                                 <span id="geometry-label"></span>
                             </div>
                         </div>
+
+                        @if (isset($block) && \Illuminate\Support\Facades\Storage::exists($block->texture_path))
+                            <div class="mt-4 p-4 bg-blue-900/30 border border-blue-600 rounded-lg text-blue-300 text-sm">
+                                <p class="mb-2">📦 Texture actuelle chargée</p>
+                                <p class="text-xs text-blue-400">Téléchargez une nouvelle texture pour la remplacer, ou conservez l'actuelle.</p>
+                            </div>
+                        @endif
 
                         <!-- Multiple file uploads (for 6 separate faces) -->
                         <div id="separate-upload-zone" class="hidden space-y-4">
@@ -411,13 +419,12 @@
                                     </div>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="hidden" name="solid" value="0">
                                     <input
                                         type="checkbox"
-                                        name="solid"
+                                        id="solid-check"
                                         value="1"
                                         class="sr-only peer"
-                                        {{ old('solid', '1') == '1' ? 'checked' : '' }}
+                                        {{ old('solid', isset($block) ? $block->solid : '1') == '1' ? 'checked' : '' }}
                                     >
                                     <div class="w-14 h-7 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600 shadow-inner"></div>
                                 </label>
@@ -433,13 +440,12 @@
                                     </div>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="hidden" name="destructible" value="0">
                                     <input
                                         type="checkbox"
-                                        name="destructible"
+                                        id="destructible-check"
                                         value="1"
                                         class="sr-only peer"
-                                        {{ old('destructible', '1') == '1' ? 'checked' : '' }}
+                                        {{ old('destructible', isset($block) ? $block->destructible : '1') == '1' ? 'checked' : '' }}
                                     >
                                     <div class="w-14 h-7 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600 shadow-inner"></div>
                                 </label>
@@ -460,7 +466,7 @@
                                     min="0"
                                     max="100"
                                     step="0.5"
-                                    value="{{ old('resistance', 3) }}"
+                                    value="{{ old('resistance', isset($block) ? $block->resistance : 3) }}"
                                     placeholder="3"
                                     class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30 @error('resistance') border-red-500 @enderror input-enhanced"
                                 >
@@ -477,8 +483,8 @@
                         id="submit-btn"
                         class="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-4 px-6 rounded-xl transition-all minecraft-font text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed btn-minecraft shadow-lg hover:shadow-green-600/30 hover:scale-[1.02] active:scale-[0.98]"
                     >
-                        <span id="btn-icon" class="text-2xl">⚡</span>
-                        <span id="btn-text">Générer mon bloc</span>
+                        <span id="btn-icon" class="text-2xl">{{ isset($block) ? '💾' : '⚡' }}</span>
+                        <span id="btn-text">{{ isset($block) ? 'Enregistrer et régénérer' : 'Générer mon bloc' }}</span>
                     </button>
 
                 </form>
@@ -1215,9 +1221,25 @@
             let success = false;
             try {
                 const formData = new FormData(this);
+                // Ensure solid and destructible are properly set
+                formData.set('solid', document.getElementById('solid-check').checked ? '1' : '0');
+                formData.set('destructible', document.getElementById('destructible-check').checked ? '1' : '0');
                 const response = await fetch(this.action, { method: 'POST', body: formData });
 
-                if (!response.ok) throw new Error('Erreur serveur : ' + response.status);
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    let errorMsg = `Erreur serveur : ${response.status}`;
+                    if (contentType?.includes('application/json')) {
+                        const data = await response.json();
+                        errorMsg = data.message || errorMsg;
+                    } else {
+                        const text = await response.text();
+                        if (text.includes('error') || text.includes('Error')) {
+                            errorMsg = text.substring(0, 500);
+                        }
+                    }
+                    throw new Error(errorMsg);
+                }
 
                 const blob = await response.blob();
                 const url  = URL.createObjectURL(blob);
@@ -1230,6 +1252,7 @@
 
                 success = true;
             } catch (err) {
+                console.error('Form submission error:', err);
                 alert('Une erreur est survenue : ' + err.message);
             } finally {
                 btn.disabled = false;
@@ -1422,6 +1445,30 @@
 
             blockMesh.material = materials;
             console.log('Matériaux appliqués:', materials.length);
+        }
+
+        // Load existing texture when editing
+        const blockIdAttr = document.body.getAttribute('data-edit-block-id');
+        if (blockIdAttr) {
+            async function loadExistingTexture() {
+                const textureUrl = '/block/' + blockIdAttr + '/texture';
+                const response = await fetch(textureUrl);
+                const blob = await response.blob();
+                const file = new File([blob], 'texture.png', { type: 'image/png' });
+
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                document.getElementById('texture').files = dt.files;
+
+                const reader = new FileReader();
+                reader.onload = e => {
+                    showPreview(file);
+                    texturePreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            window.addEventListener('load', loadExistingTexture);
         }
 
         // Init

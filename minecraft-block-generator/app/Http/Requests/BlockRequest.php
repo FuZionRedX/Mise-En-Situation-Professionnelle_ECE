@@ -13,10 +13,12 @@ class BlockRequest extends FormRequest
 
     public function rules(): array
     {
+        $isUpdate = $this->route() && $this->route()->getName() === 'block.update';
+
         return [
             'name'        => ['required', 'string', 'min:1', 'max:50', 'regex:/^[a-zA-Z0-9 ]+$/'],
-            'identifier'  => ['required', 'string', 'regex:/^[a-z0-9_]+$/', 'unique:blocks'],
-            'texture'     => ['required', 'file', 'mimes:png', 'max:512'],
+            'identifier'  => ['required', 'string', 'regex:/^[a-z0-9_]+$/', $isUpdate ? 'unique:blocks,identifier,' . $this->route('block')->id : 'unique:blocks'],
+            'texture'     => [$isUpdate ? 'nullable' : 'required', 'file', 'mimes:png', 'max:512'],
             'geometry_file' => ['nullable', 'file', 'mimes:json', 'max:256'],
             'solid'       => ['required', 'in:0,1'],
             'destructible'=> ['required', 'in:0,1'],
@@ -33,7 +35,7 @@ class BlockRequest extends FormRequest
             'identifier.required'  => "L'identifiant technique est obligatoire.",
             'identifier.regex'     => "L'identifiant ne doit contenir que des minuscules et underscores (ex: my_block).",
             'identifier.unique'    => "Cet identifiant existe déjà. Veuillez en choisir un autre.",
-            'texture.required'     => 'La texture est obligatoire.',
+            'texture.required'     => 'La texture est obligatoire pour créer un nouveau bloc.',
             'texture.mimes'        => 'La texture doit être un fichier PNG.',
             'texture.max'          => 'La texture ne doit pas dépasser 512 Ko.',
             'texture.ratio'        => 'La texture doit avoir des dimensions carrées (16×16, 32×32, 64×64, 128×128, etc).',
