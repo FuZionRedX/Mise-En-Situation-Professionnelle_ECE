@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\BlockRequest;
 use App\Models\Block;
 use App\Services\BlockZipService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use ZipArchive;
 
 class BlockController extends Controller
 {
@@ -258,6 +260,57 @@ class BlockController extends Controller
         if (!$opaqueAt(1, 2)) return false;
 
         return true;
+    }
+
+    /**
+     * Télécharge un pack fusionné pour plusieurs blocs sélectionnés.
+     */
+    public function downloadSelected(Request $request): BinaryFileResponse
+    {
+        $ids = array_filter((array) $request->input('ids', []), 'is_numeric');
+
+        if (empty($ids)) {
+            abort(400, 'Aucun bloc sélectionné.');
+        }
+
+        $blocks = Block::whereIn('id', $ids)->get();
+
+        if ($blocks->isEmpty()) {
+            abort(404, 'Blocs introuvables.');
+        }
+
+        $zipPath = $this->zipService->generateMulti($blocks->all());
+
+        return response()->download($zipPath, 'custom_blocks_pack.zip', [
+            'Content-Type' => 'application/zip',
+        ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Télécharge toutes les textures en un ZIP plat.
+     */
+    public function downloadAllTextures(): BinaryFileResponse
+    {
+        $blocks  = Block::all();
+        $zipPath = tempnam(sys_get_temp_dir(), 'mc_textures_') . '.zip';
+
+        $zip = new ZipArchive();
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            throw new \RuntimeException('Impossible de créer l\'archive ZIP.');
+        }
+
+        foreach ($blocks as $block) {
+            $path = Storage::path($block->texture_path);
+            if (file_exists($path)) {
+                $zip->addFile($path, $block->identifier . '.png');
+            }
+        }
+
+        $zip->close();
+
+        return response()->download($zipPath, 'all_textures.zip', [
+            'Content-Type' => 'application/zip',
+        ])->deleteFileAfterSend(true);
     }
 
     /**

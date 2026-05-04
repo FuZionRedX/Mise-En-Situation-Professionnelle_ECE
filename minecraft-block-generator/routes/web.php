@@ -9,6 +9,8 @@ Route::get('/block/new', [BlockController::class, 'index'])->name('block.new');
 Route::post('/block/create', [BlockController::class, 'create'])->name('block.create');
 Route::get('/block/{block}/edit', [BlockController::class, 'edit'])->name('block.edit');
 Route::post('/block/{block}/update', [BlockController::class, 'update'])->name('block.update');
+Route::post('/blocks/download-selected', [BlockController::class, 'downloadSelected'])->name('block.download-selected');
+Route::get('/blocks/textures', [BlockController::class, 'downloadAllTextures'])->name('block.download-textures');
 Route::get('/block/{block}/download', [BlockController::class, 'download'])->name('block.download');
 Route::delete('/block/{block}', [BlockController::class, 'destroy'])->name('block.destroy');
 
