@@ -100,30 +100,7 @@
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen" @if (isset($block)) data-edit-block-id="{{ $block->id }}" @endif>
-
-                            <!-- Résistance -->
-                            <div>
-                                <label for="resistance" class="block font-medium text-gray-200 mb-1">Résistance aux explosions</label>
-                                <input
-                                    type="number"
-                                    name="resistance"
-                                    id="resistance"
-                                    min="0"
-                                    max="100"
-                                    step="0.5"
-                                    value="{{ old('resistance', isset($block) ? $block->resistance : 3) }}"
-                                    placeholder="3"
-                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30 @error('resistance') border-red-500 @enderror input-enhanced"
-                                >
-                                <div class="flex justify-between text-gray-600 text-xs mt-1">
-                                    <span>0 (fragile)</span>
-                                    <span>50 (pierre)</span>
-                                    <span>100 (bedrock)</span>
-                                </div>
-                                @error('resistance')
-                                    <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
+        @if ($errors->any())
             <div class="bg-red-900/50 border border-red-500 rounded-lg p-4 mb-6">
                 <h2 class="font-bold text-red-400 mb-2">Erreurs de validation :</h2>
                 <ul class="list-disc list-inside text-red-300 text-sm space-y-1">
