@@ -85,13 +85,14 @@ class BlockZipService
                 continue;
             }
 
-            // Behavior JSON
-            $zip->addFromString(
-                $root . 'behavior_pack/blocks/' . $identifier . '.json',
-                $this->jsonService->encode(
+            // Behavior JSON (use stored custom geometry file if available)
+            $customGeometryJson = $block->geometry_json_path ? Storage::get($block->geometry_json_path) : null;
+            $blockJson = $customGeometryJson
+                ? $customGeometryJson
+                : $this->jsonService->encode(
                     $this->jsonService->blockBehavior($identifier, $block->solid, $block->destructible, $block->resistance, $geometry)
-                )
-            );
+                );
+            $zip->addFromString($root . 'behavior_pack/blocks/' . $identifier . '.json', $blockJson);
 
             // Textures
             if ($geometry === 'net') {

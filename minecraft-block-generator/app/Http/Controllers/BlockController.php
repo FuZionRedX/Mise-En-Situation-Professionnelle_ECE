@@ -45,24 +45,23 @@ class BlockController extends Controller
 
         $geometry = $this->detectGeometry($request->file('texture')->getRealPath());
 
-        // Récupérer le contenu du fichier géométrie personnalisée si fourni
-        $customGeometryJson = null;
-        if ($request->hasFile('geometry_file')) {
-            $customGeometryJson = file_get_contents($request->file('geometry_file')->getRealPath());
-        }
+        // Sauvegarder le fichier JSON de géométrie sur le disque
+        $geometryJsonPath = $this->storeGeometryJson($request, $identifier);
 
         // Sauvegarder en base
         Block::create([
-            'name'         => $request->input('name'),
-            'identifier'   => $identifier,
-            'solid'        => (bool) $request->input('solid'),
-            'destructible' => (bool) $request->input('destructible'),
-            'resistance'   => (float) $request->input('resistance'),
-            'texture_path' => $texturePath,
-            'geometry'     => $geometry,
+            'name'              => $request->input('name'),
+            'identifier'        => $identifier,
+            'solid'             => (bool) $request->input('solid'),
+            'destructible'      => (bool) $request->input('destructible'),
+            'resistance'        => (float) $request->input('resistance'),
+            'texture_path'      => $texturePath,
+            'geometry'          => $geometry,
+            'geometry_json_path'=> $geometryJsonPath,
         ]);
 
         // Générer le ZIP
+        $customGeometryJson = $geometryJsonPath ? Storage::get($geometryJsonPath) : null;
         $zipPath = $this->zipService->generate(
             name:                  $request->input('name'),
             identifier:            $identifier,
@@ -99,24 +98,27 @@ class BlockController extends Controller
             $geometry = $block->geometry ?? 'cube';
         }
 
-        // Récupérer le contenu du fichier géométrie personnalisée si fourni
-        $customGeometryJson = null;
-        if ($request->hasFile('geometry_file')) {
-            $customGeometryJson = file_get_contents($request->file('geometry_file')->getRealPath());
+        // Sauvegarder le nouveau JSON de géométrie si fourni, sinon conserver l'ancien
+        $newGeometryJsonPath = $this->storeGeometryJson($request, $identifier);
+        if ($newGeometryJsonPath && $block->geometry_json_path) {
+            Storage::delete($block->geometry_json_path);
         }
+        $geometryJsonPath = $newGeometryJsonPath ?? $block->geometry_json_path;
 
         // Mettre à jour le bloc
         $block->update([
-            'name'         => $request->input('name'),
-            'identifier'   => $identifier,
-            'solid'        => (bool) $request->input('solid'),
-            'destructible' => (bool) $request->input('destructible'),
-            'resistance'   => (float) $request->input('resistance'),
-            'texture_path' => $texturePath,
-            'geometry'     => $geometry,
+            'name'              => $request->input('name'),
+            'identifier'        => $identifier,
+            'solid'             => (bool) $request->input('solid'),
+            'destructible'      => (bool) $request->input('destructible'),
+            'resistance'        => (float) $request->input('resistance'),
+            'texture_path'      => $texturePath,
+            'geometry'          => $geometry,
+            'geometry_json_path'=> $geometryJsonPath,
         ]);
 
         // Générer le ZIP
+        $customGeometryJson = $geometryJsonPath ? Storage::get($geometryJsonPath) : null;
         if ($request->hasFile('texture')) {
             $zipPath = $this->zipService->generate(
                 name:                  $request->input('name'),
@@ -130,13 +132,14 @@ class BlockController extends Controller
             );
         } else {
             $zipPath = $this->zipService->generateFromPath(
-                name:         $request->input('name'),
-                identifier:   $identifier,
-                solid:        (bool) $request->input('solid'),
-                destructible: (bool) $request->input('destructible'),
-                resistance:   (float) $request->input('resistance'),
-                texturePath:  Storage::path($texturePath),
-                geometry:     $geometry,
+                name:                  $request->input('name'),
+                identifier:            $identifier,
+                solid:                 (bool) $request->input('solid'),
+                destructible:          (bool) $request->input('destructible'),
+                resistance:            (float) $request->input('resistance'),
+                texturePath:           Storage::path($texturePath),
+                geometry:              $geometry,
+                customGeometryJson:    $customGeometryJson,
             );
         }
 
@@ -165,19 +168,48 @@ class BlockController extends Controller
             abort(404, 'Texture introuvable pour ce bloc.');
         }
 
+        $customGeometryJson = $block->geometry_json_path ? Storage::get($block->geometry_json_path) : null;
+
         $zipPath = $this->zipService->generateFromPath(
-            name:         $block->name,
-            identifier:   $block->identifier,
-            solid:        $block->solid,
-            destructible: $block->destructible,
-            resistance:   $block->resistance,
-            texturePath:  $texturePath,
-            geometry:     $block->geometry ?? 'cube',
+            name:               $block->name,
+            identifier:         $block->identifier,
+            solid:              $block->solid,
+            destructible:       $block->destructible,
+            resistance:         $block->resistance,
+            texturePath:        $texturePath,
+            geometry:           $block->geometry ?? 'cube',
+            customGeometryJson: $customGeometryJson,
         );
 
         return response()->download($zipPath, $block->identifier . '_pack.zip', [
             'Content-Type' => 'application/zip',
         ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Sauvegarde le JSON de géométrie sur le disque et retourne son chemin de stockage.
+     * Lit depuis le champ caché geometry_data (JSON en string) ou depuis le fichier geometry_file.
+     * Retourne null si aucun JSON n'est fourni.
+     */
+    private function storeGeometryJson(\Illuminate\Http\Request $request, string $identifier): ?string
+    {
+        $json = null;
+
+        $geometryData = $request->input('geometry_data');
+        if (!empty($geometryData)) {
+            $json = $geometryData;
+        } elseif ($request->hasFile('geometry_file')) {
+            $json = file_get_contents($request->file('geometry_file')->getRealPath());
+        }
+
+        if ($json === null) {
+            return null;
+        }
+
+        $filename = $identifier . '_' . time() . '.json';
+        Storage::put('geometry/' . $filename, $json);
+
+        return 'geometry/' . $filename;
     }
 
     /**
@@ -319,6 +351,9 @@ class BlockController extends Controller
     public function destroy(Block $block)
     {
         Storage::delete($block->texture_path);
+        if ($block->geometry_json_path) {
+            Storage::delete($block->geometry_json_path);
+        }
         $block->delete();
 
         return redirect()->route('block.index')->with('success', 'Bloc supprimé.');

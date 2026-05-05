@@ -210,15 +210,16 @@
                         <div class="mb-6 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
                             <p class="text-sm font-medium text-gray-300 mb-3">Type de bloc :</p>
                             <div class="space-y-2">
+                                @php $isComplex = isset($block) && $block->geometry === 'net'; @endphp
                                 <label class="flex items-center gap-3 cursor-pointer hover:bg-gray-700/50 p-2 rounded">
-                                    <input type="radio" name="block_type" value="simple" checked class="w-4 h-4 accent-green-500" id="block-simple">
+                                    <input type="radio" name="block_type" value="simple" {{ $isComplex ? '' : 'checked' }} class="w-4 h-4 accent-green-500" id="block-simple">
                                     <span class="text-gray-300">
                                         <span class="font-medium">🧱 Bloc simple</span>
                                         <span class="text-xs text-gray-500 ml-2">(même texture sur les 6 faces — ex: terre, pierre)</span>
                                     </span>
                                 </label>
                                 <label class="flex items-center gap-3 cursor-pointer hover:bg-gray-700/50 p-2 rounded">
-                                    <input type="radio" name="block_type" value="complex" class="w-4 h-4 accent-green-500" id="block-complex">
+                                    <input type="radio" name="block_type" value="complex" {{ $isComplex ? 'checked' : '' }} class="w-4 h-4 accent-green-500" id="block-complex">
                                     <span class="text-gray-300">
                                         <span class="font-medium">📦 Bloc complexe</span>
                                         <span class="text-xs text-gray-500 ml-2">(6 faces différentes — ex: coffre, four)</span>
@@ -227,7 +228,7 @@
                             </div>
 
                             <!-- Sub-options for complex blocks -->
-                            <div id="complex-options" class="hidden mt-4 pt-4 border-t border-gray-500 space-y-2">
+                            <div id="complex-options" class="{{ $isComplex ? '' : 'hidden' }} mt-4 pt-4 border-t border-gray-500 space-y-2">
                                 <p class="text-xs font-medium text-gray-400 mb-2">Format du bloc complexe :</p>
                                 <label class="flex items-center gap-3 cursor-pointer hover:bg-gray-700/50 p-2 rounded">
                                     <input type="radio" name="complex_format" value="net" checked class="w-4 h-4 accent-green-500" id="format-net">
@@ -394,7 +395,15 @@
                             <p class="text-gray-500 text-xs mt-3">Laissez vide pour un cube standard.</p>
                         </div>
 
-                        <input type="hidden" id="geometry-data" name="geometry_data" value="">
+                        @php
+                            $existingGeometryJson = (isset($block) && $block->geometry_json_path)
+                                ? \Illuminate\Support\Facades\Storage::get($block->geometry_json_path)
+                                : '';
+                            $existingGeometryFilename = (isset($block) && $block->geometry_json_path)
+                                ? basename($block->geometry_json_path)
+                                : '';
+                        @endphp
+                        <input type="hidden" id="geometry-data" name="geometry_data" value="{{ $existingGeometryJson }}">
                     </section>
 
                     <!-- Section : Propriétés -->
@@ -419,7 +428,7 @@
                                         id="solid-check"
                                         value="1"
                                         class="sr-only peer"
-                                        {{ old('solid', isset($block) ? $block->solid : '1') == '1' ? 'checked' : '' }}
+                                        @checked(old('solid', isset($block) ? $block->solid : true))
                                     >
                                     <div class="w-14 h-7 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600 shadow-inner"></div>
                                 </label>
@@ -440,7 +449,7 @@
                                         id="destructible-check"
                                         value="1"
                                         class="sr-only peer"
-                                        {{ old('destructible', isset($block) ? $block->destructible : '1') == '1' ? 'checked' : '' }}
+                                        @checked(old('destructible', isset($block) ? $block->destructible : true))
                                     >
                                     <div class="w-14 h-7 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600 shadow-inner"></div>
                                 </label>
@@ -448,28 +457,18 @@
 
                             <!-- Résistance -->
                             <div>
-                                <div class="flex justify-between mb-2">
-                                    <div>
-                                        <p class="font-medium text-gray-200">Résistance aux explosions</p>
-                                        <p class="text-gray-500 text-xs">Résistance aux TNT et creepers</p>
-                                    </div>
-                                    <span id="resistance-value" class="text-green-400 font-bold text-lg">{{ old('resistance', isset($block) ? $block->resistance : 3) }}</span>
-                                </div>
+                                <p class="font-medium text-gray-200 mb-1">Résistance aux explosions</p>
+                                <p class="text-gray-500 text-xs mb-2">Résistance aux TNT et creepers (0 = fragile, 100 = bedrock)</p>
                                 <input
-                                    type="range"
+                                    type="number"
                                     name="resistance"
                                     id="resistance"
                                     min="0"
                                     max="100"
                                     step="0.5"
                                     value="{{ old('resistance', isset($block) ? $block->resistance : 3) }}"
-                                    class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-green-500"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
                                 >
-                                <div class="flex justify-between text-gray-600 text-xs mt-1">
-                                    <span>0 (fragile)</span>
-                                    <span>50 (pierre)</span>
-                                    <span>100 (bedrock)</span>
-                                </div>
                                 @error('resistance')
                                     <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                                 @enderror
@@ -586,6 +585,18 @@
 
 
     <script>
+        // --- Restore toggle states when editing (force CSS peer-checked reflow) ---
+        @if(isset($block))
+        (function () {
+            const solidEl = document.getElementById('solid-check');
+            const destructEl = document.getElementById('destructible-check');
+            solidEl.checked = {{ $block->solid ? 'true' : 'false' }};
+            destructEl.checked = {{ $block->destructible ? 'true' : 'false' }};
+            solidEl.dispatchEvent(new Event('change'));
+            destructEl.dispatchEvent(new Event('change'));
+        })();
+        @endif
+
         // --- Géométrie du bloc (JSON) ---
         const geometryInput = document.getElementById('geometry-file');
         const geometryDropZone = document.getElementById('geometry-drop-zone');
@@ -700,6 +711,44 @@
             updatePreview();
         }
 
+        // --- Restore geometry JSON state when editing ---
+        if (geometryDataInput.value) {
+            try {
+                geometryJsonData = JSON.parse(geometryDataInput.value);
+                const geoArray = geometryJsonData['minecraft:geometry'];
+                const blockDef = geometryJsonData['minecraft:block'];
+
+                if (geoArray?.length) {
+                    const desc = geoArray[0].description;
+                    document.getElementById('geo-identifier').textContent = desc?.identifier || 'unknown';
+                    const tw = desc?.texture_width || 16;
+                    const th = desc?.texture_height || 16;
+                    const cubeCount = (geoArray[0].bones || []).reduce((n, b) => n + (b.cubes || []).length, 0);
+                    document.getElementById('geo-collision').textContent = `${cubeCount} cubes — texture: ${tw}×${th}`;
+                } else if (blockDef) {
+                    document.getElementById('geo-identifier').textContent = blockDef?.description?.identifier || 'unknown';
+                    const collisionBox = blockDef?.components?.['minecraft:collision_box'];
+                    if (collisionBox) {
+                        const origin = collisionBox.origin ? `[${collisionBox.origin.join(',')}]` : '—';
+                        const size = collisionBox.size ? `[${collisionBox.size.join(',')}]` : '—';
+                        document.getElementById('geo-collision').textContent = `origin: ${origin}, size: ${size}`;
+                    } else {
+                        document.getElementById('geo-collision').textContent = 'Standard';
+                    }
+                } else {
+                    document.getElementById('geo-identifier').textContent = 'géométrie personnalisée';
+                    document.getElementById('geo-collision').textContent = '—';
+                }
+
+                document.getElementById('geometry-file-name').textContent = '{{ $existingGeometryFilename }}';
+                geometryUploadPlaceholder.classList.add('hidden');
+                geometryPreviewContainer.classList.remove('hidden');
+                geometryPreviewContainer.classList.add('flex');
+            } catch(e) {
+                console.warn('Could not restore geometry JSON:', e);
+            }
+        }
+
         // --- Type de bloc et format ---
         const blockTypeRadios = document.querySelectorAll('input[name="block_type"]');
         const complexFormatRadios = document.querySelectorAll('input[name="complex_format"]');
@@ -729,6 +778,7 @@
 
         blockTypeRadios.forEach(radio => radio.addEventListener('change', updateUploadInterface));
         complexFormatRadios.forEach(radio => radio.addEventListener('change', updateUploadInterface));
+        updateUploadInterface(); // Sync UI to pre-selected state on load
 
         // --- Prévisualisation de la texture ---
         const textureInput = document.getElementById('texture');
@@ -1134,12 +1184,9 @@
             }
         });
 
-        // --- Résistance input ---
-        const resistanceInput = document.getElementById('resistance');
-        const previewResistance = document.getElementById('preview-resistance');
-
-        resistanceInput.addEventListener('input', () => {
-            previewResistance.textContent = resistanceInput.value || '0';
+        // --- Résistance → aperçu ---
+        document.getElementById('resistance').addEventListener('input', function () {
+            document.getElementById('preview-resistance').textContent = this.value || '0';
         });
 
         // --- Mise à jour du panneau de prévisualisation ---
@@ -1191,13 +1238,25 @@
             const errors = [];
             const name       = document.getElementById('name').value.trim();
             const identifier = document.getElementById('identifier').value.trim();
-            const texture    = document.getElementById('texture').files[0];
+
+            const blockType     = document.querySelector('input[name="block_type"]:checked')?.value || 'simple';
+            const complexFormat = document.querySelector('input[name="complex_format"]:checked')?.value || 'net';
+            const isSeparate    = blockType === 'complex' && complexFormat === 'separate';
 
             if (!name) errors.push('Le nom du bloc est requis.');
             if (!identifier || !/^[a-z0-9_]+$/.test(identifier)) errors.push("L'identifiant doit contenir uniquement des minuscules et underscores.");
-            if (!texture) errors.push('Veuillez sélectionner une texture PNG.');
-            else if (texture.type !== 'image/png') errors.push('La texture doit être un fichier PNG.');
-            else if (texture.size > 512 * 1024) errors.push('La texture ne doit pas dépasser 512 Ko.');
+
+            if (isSeparate) {
+                const faceIds = ['texture-top', 'texture-left', 'texture-front', 'texture-right', 'texture-back', 'texture-bottom'];
+                const faceLabels = { 'texture-top': 'haut', 'texture-left': 'gauche', 'texture-front': 'avant', 'texture-right': 'droite', 'texture-back': 'arrière', 'texture-bottom': 'bas' };
+                const missing = faceIds.filter(id => !document.getElementById(id).files[0]);
+                if (missing.length > 0) errors.push('Faces manquantes : ' + missing.map(id => faceLabels[id]).join(', ') + '.');
+            } else {
+                const texture = document.getElementById('texture').files[0];
+                if (!texture) errors.push('Veuillez sélectionner une texture PNG.');
+                else if (texture.type !== 'image/png') errors.push('La texture doit être un fichier PNG.');
+                else if (texture.size > 512 * 1024) errors.push('La texture ne doit pas dépasser 512 Ko.');
+            }
 
             if (errors.length > 0) {
                 const existingAlert = document.getElementById('client-errors');
@@ -1218,27 +1277,70 @@
             document.getElementById('btn-icon').textContent = '⏳';
             document.getElementById('btn-text').textContent = 'Génération en cours…';
 
+            // Assemble net texture from 6 separate faces before submission
+            if (isSeparate) {
+                const faceOrder = [
+                    { id: 'texture-top',    x: 1, y: 0 },
+                    { id: 'texture-left',   x: 0, y: 1 },
+                    { id: 'texture-front',  x: 1, y: 1 },
+                    { id: 'texture-right',  x: 2, y: 1 },
+                    { id: 'texture-back',   x: 3, y: 1 },
+                    { id: 'texture-bottom', x: 1, y: 2 },
+                ];
+
+                const loadImg = file => new Promise(resolve => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.src = URL.createObjectURL(file);
+                });
+
+                const faceImgs = await Promise.all(
+                    faceOrder.map(f => loadImg(document.getElementById(f.id).files[0]))
+                );
+
+                const C = faceImgs[0].naturalWidth;
+                const netCanvas = document.createElement('canvas');
+                netCanvas.width  = 4 * C;
+                netCanvas.height = 3 * C;
+                const ctx = netCanvas.getContext('2d');
+                faceOrder.forEach(({ x, y }, i) => ctx.drawImage(faceImgs[i], x * C, y * C, C, C));
+
+                const netBlob = await new Promise(resolve => netCanvas.toBlob(resolve, 'image/png'));
+                const netFile = new File([netBlob], 'net_texture.png', { type: 'image/png' });
+                const dt = new DataTransfer();
+                dt.items.add(netFile);
+                document.getElementById('texture').files = dt.files;
+            }
+
             let success = false;
             try {
                 const formData = new FormData(this);
                 // Ensure solid and destructible are properly set
                 formData.set('solid', document.getElementById('solid-check').checked ? '1' : '0');
                 formData.set('destructible', document.getElementById('destructible-check').checked ? '1' : '0');
-                const response = await fetch(this.action, { method: 'POST', body: formData });
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Accept': 'application/json' },
+                });
 
                 if (!response.ok) {
-                    const contentType = response.headers.get('content-type');
+                    const contentType = response.headers.get('content-type') || '';
                     let errorMsg = `Erreur serveur : ${response.status}`;
-                    if (contentType?.includes('application/json')) {
+                    if (contentType.includes('application/json')) {
                         const data = await response.json();
-                        errorMsg = data.message || errorMsg;
-                    } else {
-                        const text = await response.text();
-                        if (text.includes('error') || text.includes('Error')) {
-                            errorMsg = text.substring(0, 500);
+                        if (data.errors) {
+                            errorMsg = Object.values(data.errors).flat().join('\n');
+                        } else {
+                            errorMsg = data.message || errorMsg;
                         }
                     }
                     throw new Error(errorMsg);
+                }
+
+                const contentType = response.headers.get('content-type') || '';
+                if (!contentType.includes('application/zip') && !contentType.includes('application/octet-stream')) {
+                    throw new Error('Réponse inattendue du serveur — le bloc n\'a peut-être pas été sauvegardé.');
                 }
 
                 const blob = await response.blob();
