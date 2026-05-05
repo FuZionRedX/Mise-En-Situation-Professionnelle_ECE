@@ -120,7 +120,7 @@
             </div>
             <a href="{{ route('block.index') }}"
                class="bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
-                <span>📋</span> Historique
+                <span>📋</span> Liste des blocs
             </a>
         </div>
     </header>
