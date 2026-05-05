@@ -118,7 +118,7 @@
             </div>
             <a href="{{ route('block.index') }}"
                class="bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
-                <span>📜</span> Historique
+                <span>📜</span> Liste de blocs
             </a>
         </div>
     </header>
@@ -134,7 +134,7 @@
             </div>
         @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
 
             <!-- Formulaire -->
             <div class="lg:col-span-2">
