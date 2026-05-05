@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historique — Minecraft Block Generator</title>
+    <title>Liste Texture — Minecraft Block Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .minecraft-font { font-family: 'Courier New', monospace; }

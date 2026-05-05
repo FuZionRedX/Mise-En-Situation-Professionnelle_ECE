@@ -8,16 +8,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         .minecraft-font { font-family: 'Courier New', monospace; }
-        .drag-over { border-color: #22c55e !important; background-color: rgba(34, 197, 94, 0.1) !important; }
 
         /* Animations */
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.6); }
-        }
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-5px); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.6); }
         }
         @keyframes slide-in {
             from { opacity: 0; transform: translateY(20px); }
