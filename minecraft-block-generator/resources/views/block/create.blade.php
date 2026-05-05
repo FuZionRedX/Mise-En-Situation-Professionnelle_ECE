@@ -100,6 +100,30 @@
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen" @if (isset($block)) data-edit-block-id="{{ $block->id }}" @endif>
+    <!-- Header -->
+    <header class="bg-gray-800 border-b border-gray-700 py-4 px-6 sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-green-600 rounded-lg grid grid-cols-2 gap-0.5 p-1.5 animate-float shadow-lg">
+                    <div class="bg-green-400 rounded-sm"></div>
+                    <div class="bg-green-700 rounded-sm"></div>
+                    <div class="bg-green-700 rounded-sm"></div>
+                    <div class="bg-green-400 rounded-sm"></div>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold minecraft-font text-green-400 flex items-center gap-2">
+                        <span class="text-2xl">🧱</span> Générateur de blocs Minecraft
+                    </h1>
+                    <p class="text-xs text-gray-400">Bedrock Edition — Créez votre bloc personnalisé</p>
+                </div>
+            </div>
+            <a href="{{ route('block.index') }}"
+               class="bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
+                <span>📜</span> Historique
+            </a>
+        </div>
+    </header>
+
         @if ($errors->any())
             <div class="bg-red-900/50 border border-red-500 rounded-lg p-4 mb-6">
                 <h2 class="font-bold text-red-400 mb-2">Erreurs de validation :</h2>
@@ -430,18 +454,23 @@
                                         <p class="font-medium text-gray-200">Résistance aux explosions</p>
                                         <p class="text-gray-500 text-xs">Résistance aux TNT et creepers</p>
                                     </div>
+                                    <span id="resistance-value" class="text-green-400 font-bold text-lg">{{ old('resistance', isset($block) ? $block->resistance : 3) }}</span>
                                 </div>
                                 <input
-                                    type="number"
+                                    type="range"
                                     name="resistance"
                                     id="resistance"
                                     min="0"
                                     max="100"
                                     step="0.5"
                                     value="{{ old('resistance', isset($block) ? $block->resistance : 3) }}"
-                                    placeholder="3"
-                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30 @error('resistance') border-red-500 @enderror input-enhanced"
+                                    class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-green-500"
                                 >
+                                <div class="flex justify-between text-gray-600 text-xs mt-1">
+                                    <span>0 (fragile)</span>
+                                    <span>50 (pierre)</span>
+                                    <span>100 (bedrock)</span>
+                                </div>
                                 @error('resistance')
                                     <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                                 @enderror
