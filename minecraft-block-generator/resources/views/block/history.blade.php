@@ -260,6 +260,10 @@
                             </p>
 
                             <div class="flex gap-2 items-stretch">
+                                <a href="{{ route('mob.edit', $mob->id) }}"
+                                   class="flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-2.5 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg whitespace-nowrap">
+                                    ✏️ Modifier
+                                </a>
                                 <a href="{{ route('mob.download', $mob->id) }}"
                                    class="flex-1 flex items-center justify-center bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white text-sm font-bold py-2.5 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg">
                                     ⬇ Télécharger

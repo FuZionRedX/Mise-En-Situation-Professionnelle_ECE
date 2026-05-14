@@ -505,7 +505,7 @@
 
             <!-- Formulaire Mob (caché par défaut) -->
             <div id="mob-form-col" class="lg:col-span-2 hidden">
-                <form id="mob-form" action="{{ route('mob.create') }}" method="POST" enctype="multipart/form-data" novalidate>
+                <form id="mob-form" action="{{ isset($mob) ? route('mob.update', $mob->id) : route('mob.create') }}" method="POST" enctype="multipart/form-data" novalidate>
                     @csrf
 
                     <!-- Identité -->
@@ -517,6 +517,7 @@
                             <div>
                                 <label for="mob-name" class="block text-sm font-medium text-gray-300 mb-1">Nom du mob</label>
                                 <input type="text" id="mob-name" name="name" maxlength="50" placeholder="ex: Dragon des Glaces"
+                                    value="{{ old('name', $mob->name ?? '') }}"
                                     class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 input-enhanced">
                                 @error('name') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
@@ -525,9 +526,11 @@
                                 <div class="flex items-center gap-2">
                                     <span class="text-green-400 font-mono text-sm bg-gray-700 px-3 py-2 rounded-lg border border-gray-600">custom:</span>
                                     <input type="text" id="mob-identifier" name="identifier" placeholder="ice_dragon"
-                                        class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 input-enhanced">
+                                        value="{{ old('identifier', $mob->identifier ?? '') }}"
+                                        {{ isset($mob) ? 'readonly' : '' }}
+                                        class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 input-enhanced {{ isset($mob) ? 'bg-gray-600 cursor-not-allowed' : '' }}">
                                 </div>
-                                <p class="text-gray-500 text-xs mt-1">Minuscules et underscores uniquement.</p>
+                                <p class="text-gray-500 text-xs mt-1">{{ isset($mob) ? 'Cet identifiant ne peut pas être modifié.' : 'Minuscules et underscores uniquement.' }}</p>
                                 @error('identifier') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
                         </div>
@@ -544,7 +547,7 @@
                             <p class="text-sm font-medium text-gray-300 mb-3">Type de modèle :</p>
                             <div class="grid grid-cols-3 gap-3">
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="model_type" value="humanoid" checked class="sr-only peer" id="mob-model-humanoid">
+                                    <input type="radio" name="model_type" value="humanoid" {{ old('model_type', $mob->model_type ?? 'humanoid') === 'humanoid' ? 'checked' : '' }} class="sr-only peer" id="mob-model-humanoid">
                                     <div class="peer-checked:border-green-500 peer-checked:bg-green-500/10 border-2 border-gray-600 rounded-lg p-3 text-center transition-all hover:border-gray-500">
                                         <div class="text-2xl mb-1">🧍</div>
                                         <p class="text-xs font-medium text-gray-300 peer-checked:text-green-400">Humanoïde</p>
@@ -552,7 +555,7 @@
                                     </div>
                                 </label>
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="model_type" value="quadruped" class="sr-only peer" id="mob-model-quadruped">
+                                    <input type="radio" name="model_type" value="quadruped" {{ old('model_type', $mob->model_type ?? 'humanoid') === 'quadruped' ? 'checked' : '' }} class="sr-only peer" id="mob-model-quadruped">
                                     <div class="peer-checked:border-green-500 peer-checked:bg-green-500/10 border-2 border-gray-600 rounded-lg p-3 text-center transition-all hover:border-gray-500">
                                         <div class="text-2xl mb-1">🐷</div>
                                         <p class="text-xs font-medium text-gray-300">Quadrupède</p>
@@ -560,7 +563,7 @@
                                     </div>
                                 </label>
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="model_type" value="creeper" class="sr-only peer" id="mob-model-creeper">
+                                    <input type="radio" name="model_type" value="creeper" {{ old('model_type', $mob->model_type ?? 'humanoid') === 'creeper' ? 'checked' : '' }} class="sr-only peer" id="mob-model-creeper">
                                     <div class="peer-checked:border-green-500 peer-checked:bg-green-500/10 border-2 border-gray-600 rounded-lg p-3 text-center transition-all hover:border-gray-500">
                                         <div class="text-2xl mb-1">💥</div>
                                         <p class="text-xs font-medium text-gray-300">Creeper</p>
@@ -590,6 +593,12 @@
                                 </div>
                             </div>
                             @error('texture') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                            @if (isset($mob) && \Illuminate\Support\Facades\Storage::exists($mob->texture_path))
+                                <div class="mt-3 p-3 bg-blue-900/30 border border-blue-600 rounded-lg text-blue-300 text-sm">
+                                    <p class="mb-1">🖼 Texture actuelle conservée</p>
+                                    <p class="text-xs text-blue-400">Déposez un nouveau fichier PNG pour la remplacer.</p>
+                                </div>
+                            @endif
                         </div>
                     </section>
 
@@ -625,14 +634,14 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-300 mb-1">❤️ Points de vie</label>
-                                    <input type="number" name="health" id="mob-health" value="20" min="1" max="2048"
+                                    <input type="number" name="health" id="mob-health" value="{{ old('health', $mob->health ?? 20) }}" min="1" max="2048"
                                         class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
                                     <p class="text-gray-500 text-xs mt-1">1–2048 (20 = humain)</p>
                                     @error('health') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-300 mb-1">🏃 Vitesse</label>
-                                    <input type="number" name="speed" id="mob-speed" value="0.25" min="0.1" max="2.0" step="0.05"
+                                    <input type="number" name="speed" id="mob-speed" value="{{ old('speed', $mob->speed ?? '0.25') }}" min="0.1" max="2.0" step="0.05"
                                         class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
                                     <p class="text-gray-500 text-xs mt-1">0.1–2.0 (0.25 = humain)</p>
                                     @error('speed') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
@@ -644,21 +653,21 @@
                                 <p class="text-sm font-medium text-gray-300 mb-2">🧠 Comportement</p>
                                 <div class="grid grid-cols-3 gap-3">
                                     <label class="cursor-pointer">
-                                        <input type="radio" name="behavior_type" value="passive" checked class="sr-only peer" id="mob-behavior-passive">
+                                        <input type="radio" name="behavior_type" value="passive" {{ old('behavior_type', $mob->behavior_type ?? 'passive') === 'passive' ? 'checked' : '' }} class="sr-only peer" id="mob-behavior-passive">
                                         <div class="peer-checked:border-green-500 peer-checked:bg-green-500/10 border-2 border-gray-600 rounded-lg px-3 py-2 text-center transition-all hover:border-gray-500">
                                             <div class="text-xl">😊</div>
                                             <p class="text-xs font-medium text-gray-300 mt-1">Passif</p>
                                         </div>
                                     </label>
                                     <label class="cursor-pointer">
-                                        <input type="radio" name="behavior_type" value="neutral" class="sr-only peer" id="mob-behavior-neutral">
+                                        <input type="radio" name="behavior_type" value="neutral" {{ old('behavior_type', $mob->behavior_type ?? 'passive') === 'neutral' ? 'checked' : '' }} class="sr-only peer" id="mob-behavior-neutral">
                                         <div class="peer-checked:border-green-500 peer-checked:bg-green-500/10 border-2 border-gray-600 rounded-lg px-3 py-2 text-center transition-all hover:border-gray-500">
                                             <div class="text-xl">😐</div>
                                             <p class="text-xs font-medium text-gray-300 mt-1">Neutre</p>
                                         </div>
                                     </label>
                                     <label class="cursor-pointer">
-                                        <input type="radio" name="behavior_type" value="hostile" class="sr-only peer" id="mob-behavior-hostile">
+                                        <input type="radio" name="behavior_type" value="hostile" {{ old('behavior_type', $mob->behavior_type ?? 'passive') === 'hostile' ? 'checked' : '' }} class="sr-only peer" id="mob-behavior-hostile">
                                         <div class="peer-checked:border-green-500 peer-checked:bg-green-500/10 border-2 border-gray-600 rounded-lg px-3 py-2 text-center transition-all hover:border-gray-500">
                                             <div class="text-xl">😠</div>
                                             <p class="text-xs font-medium text-gray-300 mt-1">Hostile</p>
@@ -671,7 +680,7 @@
                             <!-- Attack damage (visible only if hostile/neutral) -->
                             <div id="mob-attack-row" class="hidden">
                                 <label class="block text-sm font-medium text-gray-300 mb-1">⚔️ Dégâts d'attaque</label>
-                                <input type="number" name="attack_damage" id="mob-attack-damage" value="3" min="1" max="50"
+                                <input type="number" name="attack_damage" id="mob-attack-damage" value="{{ old('attack_damage', $mob->attack_damage ?? 3) }}" min="1" max="50"
                                     class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
                                 @error('attack_damage') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
@@ -694,7 +703,7 @@
                                     </div>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="mob-spawnable" value="1" class="sr-only peer" checked>
+                                    <input type="checkbox" id="mob-spawnable" value="1" class="sr-only peer" {{ old('is_spawnable', ($mob->is_spawnable ?? true) ? '1' : '0') !== '0' ? 'checked' : '' }}>
                                     <div class="w-14 h-7 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600 shadow-inner"></div>
                                 </label>
                             </div>
@@ -707,7 +716,7 @@
                                     </div>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="mob-summonable" value="1" class="sr-only peer" checked>
+                                    <input type="checkbox" id="mob-summonable" value="1" class="sr-only peer" {{ old('is_summonable', ($mob->is_summonable ?? true) ? '1' : '0') !== '0' ? 'checked' : '' }}>
                                     <div class="w-14 h-7 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600 shadow-inner"></div>
                                 </label>
                             </div>
@@ -716,19 +725,19 @@
                             <div class="grid grid-cols-3 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-300 mb-1">📏 Largeur collision</label>
-                                    <input type="number" name="collision_width" value="0.6" min="0.1" max="4.0" step="0.1"
+                                    <input type="number" name="collision_width" value="{{ old('collision_width', $mob->collision_width ?? '0.6') }}" min="0.1" max="4.0" step="0.1"
                                         class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
                                     @error('collision_width') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-300 mb-1">📐 Hauteur collision</label>
-                                    <input type="number" name="collision_height" value="1.8" min="0.1" max="4.0" step="0.1"
+                                    <input type="number" name="collision_height" value="{{ old('collision_height', $mob->collision_height ?? '1.8') }}" min="0.1" max="4.0" step="0.1"
                                         class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
                                     @error('collision_height') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-300 mb-1">🔭 Échelle</label>
-                                    <input type="number" name="scale" value="1.0" min="0.1" max="4.0" step="0.1"
+                                    <input type="number" name="scale" value="{{ old('scale', $mob->scale ?? '1.0') }}" min="0.1" max="4.0" step="0.1"
                                         class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
                                     @error('scale') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
                                 </div>
@@ -745,9 +754,9 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-2">Couleur principale</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="spawn_egg_primary" id="mob-egg-primary" value="#a06040"
+                                    <input type="color" name="spawn_egg_primary" id="mob-egg-primary" value="{{ old('spawn_egg_primary', $mob->spawn_egg_primary ?? '#a06040') }}"
                                         class="w-12 h-10 rounded-lg cursor-pointer border border-gray-600 bg-gray-700">
-                                    <input type="text" id="mob-egg-primary-text" value="#a06040"
+                                    <input type="text" id="mob-egg-primary-text" value="{{ old('spawn_egg_primary', $mob->spawn_egg_primary ?? '#a06040') }}"
                                         class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-green-500">
                                 </div>
                                 @error('spawn_egg_primary') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
@@ -755,9 +764,9 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-2">Couleur secondaire</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="spawn_egg_secondary" id="mob-egg-secondary" value="#ffffff"
+                                    <input type="color" name="spawn_egg_secondary" id="mob-egg-secondary" value="{{ old('spawn_egg_secondary', $mob->spawn_egg_secondary ?? '#ffffff') }}"
                                         class="w-12 h-10 rounded-lg cursor-pointer border border-gray-600 bg-gray-700">
-                                    <input type="text" id="mob-egg-secondary-text" value="#ffffff"
+                                    <input type="text" id="mob-egg-secondary-text" value="{{ old('spawn_egg_secondary', $mob->spawn_egg_secondary ?? '#ffffff') }}"
                                         class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-green-500">
                                 </div>
                                 @error('spawn_egg_secondary') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
@@ -769,7 +778,7 @@
                     <button type="submit" id="mob-submit-btn"
                         class="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold py-4 px-6 rounded-xl transition-all minecraft-font text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-purple-600/30 hover:scale-[1.02] active:scale-[0.98]">
                         <span class="text-2xl">⚡</span>
-                        <span>Générer mon mob</span>
+                        <span>{{ isset($mob) ? 'Mettre à jour mon mob' : 'Générer mon mob' }}</span>
                     </button>
                 </form>
             </div>
@@ -2481,7 +2490,7 @@
             const errors = [];
             if (!name) errors.push('Le nom du mob est requis.');
             if (!identifier || !/^[a-z0-9_]+$/.test(identifier)) errors.push('L\'identifiant est invalide (minuscules et underscores).');
-            if (!mobTex.files[0]) errors.push('Une texture PNG est requise.');
+            if (!mobTex.files[0] && !{{ isset($mob) ? 'true' : 'false' }}) errors.push('Une texture PNG est requise.');
             if (errors.length) { alert(errors.join('\n')); return; }
 
             const btn = document.getElementById('mob-submit-btn');
@@ -2527,7 +2536,7 @@
                 alert('Une erreur est survenue : ' + err.message);
             } finally {
                 btn.disabled = false;
-                btn.querySelector('span:last-child').textContent = 'Générer mon mob';
+                btn.querySelector('span:last-child').textContent = btn.dataset.label || 'Générer mon mob';
             }
 
             if (success) {
@@ -2538,6 +2547,48 @@
                 setTimeout(() => closeToast(), 5000);
             }
         });
+
+        @if (isset($mob))
+        // ── Mob edit mode boot ──────────────────────────────────────────────
+        (function () {
+            // Store original label on the button
+            const submitBtn = document.getElementById('mob-submit-btn');
+            submitBtn.dataset.label = submitBtn.querySelector('span:last-child').textContent;
+
+            setMode('mob');
+
+            // Show attack row if hostile/neutral
+            @if (in_array($mob->behavior_type, ['hostile', 'neutral']))
+            document.getElementById('mob-attack-row').classList.remove('hidden');
+            @endif
+
+            // Load existing texture for 3D preview
+            fetch('{{ route('mob.texture', $mob->id) }}')
+                .then(r => r.blob())
+                .then(blob => {
+                    const objectUrl = URL.createObjectURL(blob);
+                    document.getElementById('mob-texture-preview').src = objectUrl;
+                    document.getElementById('mob-texture-name').textContent = '{{ basename($mob->texture_path) }}';
+                    document.getElementById('mob-upload-placeholder').classList.add('hidden');
+                    const pc = document.getElementById('mob-preview-container');
+                    pc.classList.remove('hidden'); pc.classList.add('flex');
+                    @if ($mob->geometry_json_path)
+                    rebuildMobPreview(objectUrl);
+                    @else
+                    buildMobMesh(objectUrl, getMobModelType());
+                    @endif
+                });
+
+            @if ($mob->geometry_json_path)
+            // Pre-load existing geometry JSON
+            mobGeoJsonStr = @json(\Illuminate\Support\Facades\Storage::get($mob->geometry_json_path));
+            document.getElementById('mob-geo-placeholder').classList.add('hidden');
+            const geoLoadedEl = document.getElementById('mob-geo-loaded');
+            geoLoadedEl.classList.remove('hidden'); geoLoadedEl.classList.add('flex');
+            document.getElementById('mob-geo-name').textContent = '{{ basename($mob->geometry_json_path) }}';
+            @endif
+        })();
+        @endif
     </script>
 </body>
 </html>

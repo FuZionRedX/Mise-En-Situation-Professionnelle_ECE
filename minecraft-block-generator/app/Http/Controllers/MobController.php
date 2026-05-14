@@ -67,6 +67,94 @@ class MobController extends Controller
         ])->deleteFileAfterSend(true);
     }
 
+    public function edit(Mob $mob)
+    {
+        return view('block.create', compact('mob'));
+    }
+
+    public function update(MobRequest $request, Mob $mob): BinaryFileResponse
+    {
+        $identifier = $mob->identifier;
+
+        if ($request->hasFile('texture')) {
+            Storage::delete($mob->texture_path);
+            $texturePath = $request->file('texture')->storeAs(
+                'mob_textures',
+                $identifier . '_' . time() . '.png'
+            );
+        } else {
+            $texturePath = $mob->texture_path;
+        }
+
+        $newGeometryJsonPath = $this->storeMobGeometryJson($request, $identifier);
+        if ($newGeometryJsonPath && $mob->geometry_json_path) {
+            Storage::delete($mob->geometry_json_path);
+        }
+        $geometryJsonPath = $newGeometryJsonPath ?? $mob->geometry_json_path;
+
+        $mob->update([
+            'name'                => $request->input('name'),
+            'health'              => (int)   $request->input('health'),
+            'speed'               => (float) $request->input('speed'),
+            'behavior_type'       => $request->input('behavior_type'),
+            'attack_damage'       => $request->input('attack_damage') ? (int) $request->input('attack_damage') : null,
+            'is_spawnable'        => (bool)  $request->input('is_spawnable'),
+            'is_summonable'       => (bool)  $request->input('is_summonable'),
+            'collision_width'     => (float) $request->input('collision_width'),
+            'collision_height'    => (float) $request->input('collision_height'),
+            'scale'               => (float) $request->input('scale'),
+            'model_type'          => $request->input('model_type'),
+            'texture_path'        => $texturePath,
+            'geometry_json_path'  => $geometryJsonPath,
+            'spawn_egg_primary'   => $request->input('spawn_egg_primary'),
+            'spawn_egg_secondary' => $request->input('spawn_egg_secondary'),
+        ]);
+
+        $customGeometryJson = $geometryJsonPath ? Storage::get($geometryJsonPath) : null;
+
+        if ($request->hasFile('texture')) {
+            $zipPath = $this->zipService->generate(
+                name:               $request->input('name'),
+                identifier:         $identifier,
+                health:             (int)   $request->input('health'),
+                speed:              (float) $request->input('speed'),
+                behaviorType:       $request->input('behavior_type'),
+                attackDamage:       $request->input('attack_damage') ? (int) $request->input('attack_damage') : null,
+                isSpawnable:        (bool)  $request->input('is_spawnable'),
+                isSummonable:       (bool)  $request->input('is_summonable'),
+                collisionWidth:     (float) $request->input('collision_width'),
+                collisionHeight:    (float) $request->input('collision_height'),
+                modelType:          $request->input('model_type'),
+                texture:            $request->file('texture'),
+                spawnEggPrimary:    $request->input('spawn_egg_primary'),
+                spawnEggSecondary:  $request->input('spawn_egg_secondary'),
+                customGeometryJson: $customGeometryJson,
+            );
+        } else {
+            $zipPath = $this->zipService->generateFromPath(
+                name:               $request->input('name'),
+                identifier:         $identifier,
+                health:             (int)   $request->input('health'),
+                speed:              (float) $request->input('speed'),
+                behaviorType:       $request->input('behavior_type'),
+                attackDamage:       $request->input('attack_damage') ? (int) $request->input('attack_damage') : null,
+                isSpawnable:        (bool)  $request->input('is_spawnable'),
+                isSummonable:       (bool)  $request->input('is_summonable'),
+                collisionWidth:     (float) $request->input('collision_width'),
+                collisionHeight:    (float) $request->input('collision_height'),
+                modelType:          $request->input('model_type'),
+                texturePath:        Storage::path($texturePath),
+                spawnEggPrimary:    $request->input('spawn_egg_primary'),
+                spawnEggSecondary:  $request->input('spawn_egg_secondary'),
+                customGeometryJson: $customGeometryJson,
+            );
+        }
+
+        return response()->download($zipPath, $identifier . '_mob_pack.zip', [
+            'Content-Type' => 'application/zip',
+        ])->deleteFileAfterSend(true);
+    }
+
     public function download(Mob $mob): BinaryFileResponse
     {
         $texturePath = Storage::path($mob->texture_path);

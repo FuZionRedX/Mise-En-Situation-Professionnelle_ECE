@@ -13,10 +13,13 @@ class MobRequest extends FormRequest
 
     public function rules(): array
     {
+        $isUpdate = $this->route() && $this->route()->getName() === 'mob.update';
+        $mobId    = $isUpdate ? $this->route('mob')->id : null;
+
         return [
             'name'              => ['required', 'string', 'min:1', 'max:50'],
-            'identifier'        => ['required', 'regex:/^[a-z0-9_]+$/', 'unique:mobs,identifier'],
-            'texture'           => ['required', 'file', 'mimes:png', 'max:512'],
+            'identifier'        => ['required', 'regex:/^[a-z0-9_]+$/', $isUpdate ? 'unique:mobs,identifier,' . $mobId : 'unique:mobs,identifier'],
+            'texture'           => [$isUpdate ? 'nullable' : 'required', 'file', 'mimes:png', 'max:512'],
             'model_type'        => ['required', 'in:humanoid,quadruped,creeper'],
             'health'            => ['required', 'integer', 'min:1', 'max:2048'],
             'speed'             => ['required', 'numeric', 'min:0.1', 'max:2.0'],

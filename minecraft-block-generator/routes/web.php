@@ -17,6 +17,8 @@ Route::delete('/block/{block}', [BlockController::class, 'destroy'])->name('bloc
 
 // Mob routes
 Route::post('/mob/create', [MobController::class, 'create'])->name('mob.create');
+Route::get('/mob/{mob}/edit', [MobController::class, 'edit'])->name('mob.edit');
+Route::post('/mob/{mob}/update', [MobController::class, 'update'])->name('mob.update');
 Route::get('/mob/{mob}/download', [MobController::class, 'download'])->name('mob.download');
 Route::delete('/mob/{mob}', [MobController::class, 'destroy'])->name('mob.destroy');
 
