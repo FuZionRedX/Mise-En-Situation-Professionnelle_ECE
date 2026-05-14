@@ -123,8 +123,22 @@
         </div>
     </header>
 
+        <!-- Mode Selector Island -->
+        <div class="flex justify-center pt-6 pb-2">
+            <div class="bg-gray-800 rounded-xl p-1.5 inline-flex gap-1 border border-gray-700 shadow-xl">
+                <button id="mode-btn-block" onclick="setMode('block')"
+                    class="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all bg-green-600 text-white shadow-md">
+                    🧱 Bloc
+                </button>
+                <button id="mode-btn-mob" onclick="setMode('mob')"
+                    class="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-700">
+                    🐾 Mob
+                </button>
+            </div>
+        </div>
+
         @if ($errors->any())
-            <div class="bg-red-900/50 border border-red-500 rounded-lg p-4 mb-6">
+            <div class="bg-red-900/50 border border-red-500 rounded-lg p-4 mb-4 mt-2">
                 <h2 class="font-bold text-red-400 mb-2">Erreurs de validation :</h2>
                 <ul class="list-disc list-inside text-red-300 text-sm space-y-1">
                     @foreach ($errors->all() as $error)
@@ -134,10 +148,10 @@
             </div>
         @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
 
-            <!-- Formulaire -->
-            <div class="lg:col-span-2">
+            <!-- Formulaire Bloc -->
+            <div id="block-form-col" class="lg:col-span-2">
                 <form
                     id="block-form"
                     action="{{ isset($block) ? route('block.update', $block->id) : route('block.create') }}"
@@ -489,6 +503,277 @@
                 </form>
             </div>
 
+            <!-- Formulaire Mob (caché par défaut) -->
+            <div id="mob-form-col" class="lg:col-span-2 hidden">
+                <form id="mob-form" action="{{ route('mob.create') }}" method="POST" enctype="multipart/form-data" novalidate>
+                    @csrf
+
+                    <!-- Identité -->
+                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
+                        <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
+                            <span class="text-2xl">🐾</span> Identité du mob
+                        </h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="mob-name" class="block text-sm font-medium text-gray-300 mb-1">Nom du mob</label>
+                                <input type="text" id="mob-name" name="name" maxlength="50" placeholder="ex: Dragon des Glaces"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 input-enhanced">
+                                @error('name') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label for="mob-identifier" class="block text-sm font-medium text-gray-300 mb-1">Identifiant unique</label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-green-400 font-mono text-sm bg-gray-700 px-3 py-2 rounded-lg border border-gray-600">custom:</span>
+                                    <input type="text" id="mob-identifier" name="identifier" placeholder="ice_dragon"
+                                        class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 input-enhanced">
+                                </div>
+                                <p class="text-gray-500 text-xs mt-1">Minuscules et underscores uniquement.</p>
+                                @error('identifier') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Modèle & Texture -->
+                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
+                        <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
+                            <span class="text-2xl">🎨</span> Modèle & Texture
+                        </h2>
+
+                        <!-- Model type -->
+                        <div class="mb-5 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+                            <p class="text-sm font-medium text-gray-300 mb-3">Type de modèle :</p>
+                            <div class="grid grid-cols-3 gap-3">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="model_type" value="humanoid" checked class="sr-only peer" id="mob-model-humanoid">
+                                    <div class="peer-checked:border-green-500 peer-checked:bg-green-500/10 border-2 border-gray-600 rounded-lg p-3 text-center transition-all hover:border-gray-500">
+                                        <div class="text-2xl mb-1">🧍</div>
+                                        <p class="text-xs font-medium text-gray-300 peer-checked:text-green-400">Humanoïde</p>
+                                        <p class="text-xs text-gray-500">Zombie, squelette</p>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="model_type" value="quadruped" class="sr-only peer" id="mob-model-quadruped">
+                                    <div class="peer-checked:border-green-500 peer-checked:bg-green-500/10 border-2 border-gray-600 rounded-lg p-3 text-center transition-all hover:border-gray-500">
+                                        <div class="text-2xl mb-1">🐷</div>
+                                        <p class="text-xs font-medium text-gray-300">Quadrupède</p>
+                                        <p class="text-xs text-gray-500">Cochon, vache</p>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="model_type" value="creeper" class="sr-only peer" id="mob-model-creeper">
+                                    <div class="peer-checked:border-green-500 peer-checked:bg-green-500/10 border-2 border-gray-600 rounded-lg p-3 text-center transition-all hover:border-gray-500">
+                                        <div class="text-2xl mb-1">💥</div>
+                                        <p class="text-xs font-medium text-gray-300">Creeper</p>
+                                        <p class="text-xs text-gray-500">4 pattes, compact</p>
+                                    </div>
+                                </label>
+                            </div>
+                            @error('model_type') <p class="text-red-400 text-xs mt-2">{{ $message }}</p> @enderror
+                        </div>
+
+                        <!-- Texture upload -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Texture / skin PNG</label>
+                            <div id="mob-drop-zone"
+                                class="border-2 border-dashed border-gray-600 rounded-xl p-8 text-center cursor-pointer transition-all hover:border-green-500 hover:bg-gray-750"
+                                onclick="document.getElementById('mob-texture').click()">
+                                <input type="file" id="mob-texture" name="texture" accept=".png,image/png" class="hidden">
+                                <div id="mob-upload-placeholder">
+                                    <div class="text-4xl mb-2">🖼️</div>
+                                    <p class="text-gray-300 font-medium">Cliquez ou glissez votre texture PNG</p>
+                                    <p class="text-gray-500 text-sm mt-1">64×64 (humanoïde) · 64×32 (quadrupède / creeper)</p>
+                                </div>
+                                <div id="mob-preview-container" class="hidden flex-col items-center gap-2">
+                                    <img id="mob-texture-preview" src="" alt="" class="w-16 h-16 object-contain rounded" style="image-rendering:pixelated">
+                                    <p id="mob-texture-name" class="text-green-400 text-sm font-mono"></p>
+                                    <p class="text-gray-500 text-xs">Cliquez pour changer</p>
+                                </div>
+                            </div>
+                            @error('texture') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                    </section>
+
+                    <!-- Géométrie personnalisée (optionnel) -->
+                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 card-hover hover:border-purple-500/50 transition-all">
+                        <h2 class="text-lg font-semibold text-purple-400 mb-1 minecraft-font flex items-center gap-2">
+                            <span class="text-2xl">📐</span> Géométrie personnalisée
+                            <span class="text-xs text-gray-500 font-normal ml-1 bg-gray-700 px-2 py-0.5 rounded-full">optionnel</span>
+                        </h2>
+                        <p class="text-gray-400 text-xs mb-4">Importez un <code class="bg-gray-700 px-1 rounded">.geo.json</code> Minecraft Bedrock (Blockbench ou resource pack vanilla) pour une forme exacte en aperçu et dans le ZIP.</p>
+                        <div id="mob-geo-drop"
+                            class="border-2 border-dashed border-gray-600 rounded-xl p-4 text-center cursor-pointer transition-all hover:border-purple-500 hover:bg-gray-750"
+                            onclick="document.getElementById('mob-geo-file').click()">
+                            <input type="file" id="mob-geo-file" name="geometry_file" accept=".json,application/json" class="hidden">
+                            <div id="mob-geo-placeholder">
+                                <p class="text-gray-400 text-sm">📂 Cliquez ou déposez un fichier <code>.geo.json</code></p>
+                                <p class="text-gray-600 text-xs mt-1">Sans ce fichier, un modèle prédéfini (humanoid / quadruped / creeper) est utilisé.</p>
+                            </div>
+                            <div id="mob-geo-loaded" class="hidden flex-col items-center gap-1">
+                                <p class="text-purple-400 text-sm">✓ <span id="mob-geo-name" class="font-mono"></span></p>
+                                <p class="text-gray-500 text-xs">Cliquez pour changer</p>
+                            </div>
+                        </div>
+                        @error('geometry_file') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                    </section>
+
+                    <!-- Stats -->
+                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
+                        <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
+                            <span class="text-2xl">⚔️</span> Statistiques
+                        </h2>
+                        <div class="space-y-5">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-1">❤️ Points de vie</label>
+                                    <input type="number" name="health" id="mob-health" value="20" min="1" max="2048"
+                                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
+                                    <p class="text-gray-500 text-xs mt-1">1–2048 (20 = humain)</p>
+                                    @error('health') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-1">🏃 Vitesse</label>
+                                    <input type="number" name="speed" id="mob-speed" value="0.25" min="0.1" max="2.0" step="0.05"
+                                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
+                                    <p class="text-gray-500 text-xs mt-1">0.1–2.0 (0.25 = humain)</p>
+                                    @error('speed') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+
+                            <!-- Behavior type -->
+                            <div>
+                                <p class="text-sm font-medium text-gray-300 mb-2">🧠 Comportement</p>
+                                <div class="grid grid-cols-3 gap-3">
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="behavior_type" value="passive" checked class="sr-only peer" id="mob-behavior-passive">
+                                        <div class="peer-checked:border-green-500 peer-checked:bg-green-500/10 border-2 border-gray-600 rounded-lg px-3 py-2 text-center transition-all hover:border-gray-500">
+                                            <div class="text-xl">😊</div>
+                                            <p class="text-xs font-medium text-gray-300 mt-1">Passif</p>
+                                        </div>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="behavior_type" value="neutral" class="sr-only peer" id="mob-behavior-neutral">
+                                        <div class="peer-checked:border-green-500 peer-checked:bg-green-500/10 border-2 border-gray-600 rounded-lg px-3 py-2 text-center transition-all hover:border-gray-500">
+                                            <div class="text-xl">😐</div>
+                                            <p class="text-xs font-medium text-gray-300 mt-1">Neutre</p>
+                                        </div>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="behavior_type" value="hostile" class="sr-only peer" id="mob-behavior-hostile">
+                                        <div class="peer-checked:border-green-500 peer-checked:bg-green-500/10 border-2 border-gray-600 rounded-lg px-3 py-2 text-center transition-all hover:border-gray-500">
+                                            <div class="text-xl">😠</div>
+                                            <p class="text-xs font-medium text-gray-300 mt-1">Hostile</p>
+                                        </div>
+                                    </label>
+                                </div>
+                                @error('behavior_type') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
+
+                            <!-- Attack damage (visible only if hostile/neutral) -->
+                            <div id="mob-attack-row" class="hidden">
+                                <label class="block text-sm font-medium text-gray-300 mb-1">⚔️ Dégâts d'attaque</label>
+                                <input type="number" name="attack_damage" id="mob-attack-damage" value="3" min="1" max="50"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
+                                @error('attack_damage') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Propriétés & Spawn -->
+                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
+                        <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
+                            <span class="text-2xl">⚙️</span> Propriétés & Spawn
+                        </h2>
+                        <div class="space-y-5">
+                            <!-- Spawnable / Summonable toggles -->
+                            <div class="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">🌍</span>
+                                    <div>
+                                        <p class="font-medium text-gray-200">Peut apparaître naturellement</p>
+                                        <p class="text-gray-500 text-xs">Spawn dans le monde</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="mob-spawnable" value="1" class="sr-only peer" checked>
+                                    <div class="w-14 h-7 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600 shadow-inner"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">✨</span>
+                                    <div>
+                                        <p class="font-medium text-gray-200">Invocable par commande</p>
+                                        <p class="text-gray-500 text-xs">/summon custom:{identifier}</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="mob-summonable" value="1" class="sr-only peer" checked>
+                                    <div class="w-14 h-7 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600 shadow-inner"></div>
+                                </label>
+                            </div>
+
+                            <!-- Collision + Scale -->
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-1">📏 Largeur collision</label>
+                                    <input type="number" name="collision_width" value="0.6" min="0.1" max="4.0" step="0.1"
+                                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
+                                    @error('collision_width') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-1">📐 Hauteur collision</label>
+                                    <input type="number" name="collision_height" value="1.8" min="0.1" max="4.0" step="0.1"
+                                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
+                                    @error('collision_height') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-1">🔭 Échelle</label>
+                                    <input type="number" name="scale" value="1.0" min="0.1" max="4.0" step="0.1"
+                                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
+                                    @error('scale') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Apparence spawn egg -->
+                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
+                        <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
+                            <span class="text-2xl">🥚</span> Œuf d'invocation
+                        </h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Couleur principale</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="color" name="spawn_egg_primary" id="mob-egg-primary" value="#a06040"
+                                        class="w-12 h-10 rounded-lg cursor-pointer border border-gray-600 bg-gray-700">
+                                    <input type="text" id="mob-egg-primary-text" value="#a06040"
+                                        class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-green-500">
+                                </div>
+                                @error('spawn_egg_primary') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Couleur secondaire</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="color" name="spawn_egg_secondary" id="mob-egg-secondary" value="#ffffff"
+                                        class="w-12 h-10 rounded-lg cursor-pointer border border-gray-600 bg-gray-700">
+                                    <input type="text" id="mob-egg-secondary-text" value="#ffffff"
+                                        class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-green-500">
+                                </div>
+                                @error('spawn_egg_secondary') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Submit -->
+                    <button type="submit" id="mob-submit-btn"
+                        class="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold py-4 px-6 rounded-xl transition-all minecraft-font text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-purple-600/30 hover:scale-[1.02] active:scale-[0.98]">
+                        <span class="text-2xl">⚡</span>
+                        <span>Générer mon mob</span>
+                    </button>
+                </form>
+            </div>
+
             <!-- Panneau de prévisualisation -->
             <div class="lg:col-span-1">
                 <div class="sticky top-24">
@@ -501,10 +786,11 @@
                         <div class="mb-4">
                             <canvas id="cube-canvas" style="width: 100%; height: 200px; border: 1px solid #374151; border-radius: 0.5rem;"></canvas>
                             <p id="cube-placeholder-text" class="text-center text-gray-500 text-xs mt-2">Uploadez une texture pour voir l'aperçu 3D</p>
+                        <p id="mob-preview-label" class="text-center text-purple-400 text-xs mt-1 hidden">Aperçu du mob</p>
                         </div>
 
-                        <!-- Infos -->
-                        <div class="space-y-3 text-sm bg-gray-700/30 p-4 rounded-lg">
+                        <!-- Infos Bloc -->
+                        <div id="block-preview-info" class="space-y-3 text-sm bg-gray-700/30 p-4 rounded-lg">
                             <div class="flex justify-between items-center">
                                 <span class="text-gray-400 flex items-center gap-2">📛 Nom</span>
                                 <span id="preview-name" class="text-white font-medium truncate ml-2 max-w-32">—</span>
@@ -535,10 +821,38 @@
                             </div>
                         </div>
 
+                        <!-- Infos Mob -->
+                        <div id="mob-preview-info" class="hidden space-y-3 text-sm bg-gray-700/30 p-4 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">📛 Nom</span>
+                                <span id="mob-preview-name" class="text-white font-medium truncate ml-2 max-w-32">—</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">🔖 ID</span>
+                                <span id="mob-preview-id" class="text-purple-400 font-mono text-xs truncate ml-2 max-w-32">—</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">🧍 Modèle</span>
+                                <span id="mob-preview-model" class="text-white">—</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">❤️ Vie</span>
+                                <span id="mob-preview-health" class="text-red-400 font-bold">20</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">🏃 Vitesse</span>
+                                <span id="mob-preview-speed" class="text-yellow-400 font-bold">0.25</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">🧠 Comportement</span>
+                                <span id="mob-preview-behavior" class="text-green-400">Passif</span>
+                            </div>
+                        </div>
+
                         <hr class="border-gray-700 my-4">
 
-                        <!-- Structure ZIP attendue -->
-                        <div class="bg-gray-900/50 p-4 rounded-lg">
+                        <!-- Structure ZIP Bloc -->
+                        <div id="block-zip-structure" class="bg-gray-900/50 p-4 rounded-lg">
                             <p class="text-gray-400 text-xs font-medium mb-2 flex items-center gap-2">
                                 <span>📦</span> Structure de l'archive :
                             </p>
@@ -552,6 +866,26 @@
     ├── terrain_texture.json
     └── textures/blocks/
         └── <span id="zip-id2" class="text-green-400">mon_bloc</span>.png</pre>
+                        </div>
+
+                        <!-- Structure ZIP Mob -->
+                        <div id="mob-zip-structure" class="hidden bg-gray-900/50 p-4 rounded-lg">
+                            <p class="text-gray-400 text-xs font-medium mb-2 flex items-center gap-2">
+                                <span>📦</span> Structure de l'archive :
+                            </p>
+                            <pre class="text-xs text-gray-500 leading-5 font-mono overflow-x-auto"><span id="mob-zip-id" class="text-purple-400">mon_mob</span>_mob_pack/
+├── behavior_pack/
+│   ├── manifest.json
+│   └── entities/
+│       └── <span id="mob-zip-id2" class="text-purple-400">mon_mob</span>.json
+└── resource_pack/
+    ├── manifest.json
+    ├── entity/
+    ├── models/entity/
+    ├── render_controllers/
+    ├── animation_controllers/
+    └── textures/entity/
+        └── <span id="mob-zip-id3" class="text-purple-400">mon_mob</span>.png</pre>
                         </div>
                     </div>
                 </div>
@@ -1047,7 +1381,17 @@
                 textureName.textContent = file.name;
 
                 // Initialize Three.js if not already done
-                if (!blockMesh) initThreeJs();
+                if (!scene) initThreeJs();
+
+                // Recreate cube if blockMesh was removed (e.g. after mob mode)
+                if (!blockMesh || blockMesh.type === 'Group') {
+                    if (blockMesh) scene.remove(blockMesh);
+                    const geo = new THREE.BoxGeometry(1, 1, 1);
+                    const mat = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+                    blockMesh = new THREE.Mesh(geo, mat);
+                    blockMesh.castShadow = true;
+                    scene.add(blockMesh);
+                }
 
                 // Check if we have a custom geometry loaded
                 const isCustomGeo = geometryJsonData?.['minecraft:geometry'];
@@ -1123,7 +1467,7 @@
             const loaded = Object.values(separateFaces).filter(Boolean).length;
             document.getElementById('separate-status').textContent = `✓ ${loaded}/6 fichiers chargés`;
             if (loaded > 0) {
-                if (!blockMesh) initThreeJs();
+                if (!scene) initThreeJs();
                 applySeparateFaces();
             }
         }
@@ -1502,9 +1846,11 @@
                 userRotY += 0.005;
             }
 
-            blockMesh.rotation.x = userRotX;
-            blockMesh.rotation.y = userRotY;
-            blockMesh.rotation.z = 0;
+            if (blockMesh) {
+                blockMesh.rotation.x = userRotX;
+                blockMesh.rotation.y = userRotY;
+                blockMesh.rotation.z = 0;
+            }
 
             renderer.render(scene, camera);
         }
@@ -1575,6 +1921,623 @@
 
         // Init
         updatePreview();
+        initThreeJs();
+
+        // ====================================================================
+        // MOB MODE
+        // ====================================================================
+
+        let currentMode = 'block';
+
+        function setMode(mode) {
+            currentMode = mode;
+            const blockCol  = document.getElementById('block-form-col');
+            const mobCol    = document.getElementById('mob-form-col');
+            const blockInfo = document.getElementById('block-preview-info');
+            const mobInfo   = document.getElementById('mob-preview-info');
+            const blockZip  = document.getElementById('block-zip-structure');
+            const mobZip    = document.getElementById('mob-zip-structure');
+            const mobLabel  = document.getElementById('mob-preview-label');
+            const btnBlock  = document.getElementById('mode-btn-block');
+            const btnMob    = document.getElementById('mode-btn-mob');
+
+            if (mode === 'block') {
+                blockCol.classList.remove('hidden');
+                mobCol.classList.add('hidden');
+                blockInfo.classList.remove('hidden');
+                mobInfo.classList.add('hidden');
+                blockZip.classList.remove('hidden');
+                mobZip.classList.add('hidden');
+                mobLabel.classList.add('hidden');
+                btnBlock.className = 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all bg-green-600 text-white shadow-md';
+                btnMob.className   = 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-700';
+                if (blockMesh) { scene.remove(blockMesh); blockMesh = null; }
+                if (textureInput && textureInput.files[0]) showPreview(textureInput.files[0]);
+            } else {
+                blockCol.classList.add('hidden');
+                mobCol.classList.remove('hidden');
+                blockInfo.classList.add('hidden');
+                mobInfo.classList.remove('hidden');
+                blockZip.classList.add('hidden');
+                mobZip.classList.remove('hidden');
+                mobLabel.classList.remove('hidden');
+                btnMob.className   = 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all bg-purple-600 text-white shadow-md';
+                btnBlock.className = 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-700';
+                if (blockMesh) { scene.remove(blockMesh); blockMesh = null; }
+                const mobTex = document.getElementById('mob-texture');
+                if (mobTex.files[0]) {
+                    const r = new FileReader();
+                    r.onload = e => rebuildMobPreview(e.target.result);
+                    r.readAsDataURL(mobTex.files[0]);
+                }
+                updateMobPreview();
+            }
+        }
+
+        function getMobModelType() {
+            return document.querySelector('input[name="model_type"]:checked')?.value || 'humanoid';
+        }
+
+        function updateMobPreview() {
+            const name       = document.getElementById('mob-name').value || '—';
+            const identifier = document.getElementById('mob-identifier').value || '—';
+            const model      = getMobModelType();
+            const health     = document.getElementById('mob-health').value || '20';
+            const speed      = document.getElementById('mob-speed').value || '0.25';
+            const behavior   = document.querySelector('input[name="behavior_type"]:checked')?.value || 'passive';
+            const modelLabels    = { humanoid: 'Humanoïde 🧍', quadruped: 'Quadrupède 🐷', creeper: 'Creeper 💥' };
+            const behaviorLabels = { passive: 'Passif 😊', neutral: 'Neutre 😐', hostile: 'Hostile 😠' };
+            document.getElementById('mob-preview-name').textContent     = name;
+            document.getElementById('mob-preview-id').textContent       = identifier !== '—' ? 'custom:' + identifier : '—';
+            document.getElementById('mob-preview-model').textContent    = modelLabels[model] || model;
+            document.getElementById('mob-preview-health').textContent   = health;
+            document.getElementById('mob-preview-speed').textContent    = speed;
+            document.getElementById('mob-preview-behavior').textContent = behaviorLabels[behavior] || behavior;
+            const zipId = identifier !== '—' ? identifier : 'mon_mob';
+            ['mob-zip-id', 'mob-zip-id2', 'mob-zip-id3'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = zipId;
+            });
+        }
+
+        // --- Mob 3D preview (Three.js) ---
+        function buildMobMesh(dataUrl, modelType) {
+            if (!scene) initThreeJs();
+            if (blockMesh) { scene.remove(blockMesh); blockMesh = null; }
+
+            const img = new Image();
+            img.onload = function () {
+                const tw = img.naturalWidth;
+                const th = img.naturalHeight;
+                // Reference texture dimensions for the three model types
+                const refTw = 64;
+                const refTh = (modelType === 'humanoid') ? 64 : 32;
+                const scaleX = tw / refTw;
+                const scaleY = th / refTh;
+
+                // Crop a pixel region from the skin and return a Three.js texture
+                function cropTex(px, py, pw, ph) {
+                    const cw = Math.max(1, Math.round(pw * scaleX));
+                    const ch = Math.max(1, Math.round(ph * scaleY));
+                    const c = document.createElement('canvas');
+                    c.width = cw; c.height = ch;
+                    c.getContext('2d').drawImage(img,
+                        Math.round(px * scaleX), Math.round(py * scaleY),
+                        cw, ch, 0, 0, cw, ch);
+                    const t = new THREE.CanvasTexture(c);
+                    t.magFilter = t.minFilter = THREE.NearestFilter;
+                    t.flipY = false;
+                    return t;
+                }
+
+                // Minecraft Bedrock box UV → Three.js material array
+                // For cube size (w×h×d) at UV origin (u,v):
+                //   Up(+y)    : (u+d,       v,   w×d)
+                //   Down(-y)  : (u+d+w,     v,   w×d)
+                //   West(-x)  : (u,         v+d, d×h)
+                //   North(-z) : (u+d,       v+d, w×h)  ← front face (mob's face/eyes)
+                //   East(+x)  : (u+d+w,     v+d, d×h)
+                //   South(+z) : (u+d+w+d,   v+d, w×h)  ← back face
+                // Three.js BoxGeometry indices: [+x=East, -x=West, +y=Up, -y=Down, +z=South, -z=North]
+                function boxMat(u, v, w, h, d) {
+                    const m = (px, py, pw, ph) =>
+                        new THREE.MeshLambertMaterial({map: cropTex(px, py, pw, ph), transparent: true, side: THREE.FrontSide});
+                    return [
+                        m(u+d+w,     v+d, d, h),  // +x  East
+                        m(u,         v+d, d, h),  // -x  West
+                        m(u+d,       v,   w, d),  // +y  Up
+                        m(u+d+w,     v,   w, d),  // -y  Down
+                        m(u+d+w+d,   v+d, w, h),  // +z  South (mob back)
+                        m(u+d,       v+d, w, h),  // -z  North (mob front/face)
+                    ];
+                }
+
+                // Scale factor: 1 Minecraft pixel = 1/16 Three.js unit
+                const S = 1 / 16;
+                const group = new THREE.Group();
+
+                if (modelType === 'humanoid') {
+                    // Positions are cube-center = origin + size/2, scaled by S
+                    // Head: origin [-4,24,-4], size [8,8,8], uv [0,0]
+                    const head = new THREE.Mesh(new THREE.BoxGeometry(8*S, 8*S, 8*S), boxMat(0, 0, 8, 8, 8));
+                    head.position.set(0*S, 28*S, 0*S);
+                    group.add(head);
+
+                    // Body: origin [-4,12,-2], size [8,12,4], uv [16,16]
+                    const body = new THREE.Mesh(new THREE.BoxGeometry(8*S, 12*S, 4*S), boxMat(16, 16, 8, 12, 4));
+                    body.position.set(0*S, 18*S, 0*S);
+                    group.add(body);
+
+                    // Right arm: origin [-8,12,-2], size [4,12,4], uv [40,16]
+                    const rArm = new THREE.Mesh(new THREE.BoxGeometry(4*S, 12*S, 4*S), boxMat(40, 16, 4, 12, 4));
+                    rArm.position.set(-6*S, 18*S, 0*S);
+                    group.add(rArm);
+
+                    // Left arm: origin [4,12,-2], size [4,12,4], uv [32,48]
+                    const lArm = new THREE.Mesh(new THREE.BoxGeometry(4*S, 12*S, 4*S), boxMat(32, 48, 4, 12, 4));
+                    lArm.position.set(6*S, 18*S, 0*S);
+                    group.add(lArm);
+
+                    // Right leg: origin [-3.9,0,-2], size [4,12,4], uv [0,16]
+                    const rLeg = new THREE.Mesh(new THREE.BoxGeometry(4*S, 12*S, 4*S), boxMat(0, 16, 4, 12, 4));
+                    rLeg.position.set(-1.9*S, 6*S, 0*S);
+                    group.add(rLeg);
+
+                    // Left leg: origin [-0.1,0,-2], size [4,12,4], uv [16,48]
+                    const lLeg = new THREE.Mesh(new THREE.BoxGeometry(4*S, 12*S, 4*S), boxMat(16, 48, 4, 12, 4));
+                    lLeg.position.set(1.9*S, 6*S, 0*S);
+                    group.add(lLeg);
+
+                    // Model spans y=0..32 → center at y=16
+                    group.position.set(0, -16*S, 0);
+
+                } else if (modelType === 'quadruped') {
+                    // Body: origin [-5,6,-8], size [10,8,16], uv [0,0]
+                    const body = new THREE.Mesh(new THREE.BoxGeometry(10*S, 8*S, 16*S), boxMat(0, 0, 10, 8, 16));
+                    body.position.set(0*S, 10*S, 0*S);
+                    group.add(body);
+
+                    // Head: origin [-4,8,-14], size [8,8,8], uv [0,16]
+                    const head = new THREE.Mesh(new THREE.BoxGeometry(8*S, 8*S, 8*S), boxMat(0, 16, 8, 8, 8));
+                    head.position.set(0*S, 12*S, -10*S);
+                    group.add(head);
+
+                    // Front-right leg: origin [-5,0,-7], size [4,6,4], uv [16,0]
+                    const legFR = new THREE.Mesh(new THREE.BoxGeometry(4*S, 6*S, 4*S), boxMat(16, 0, 4, 6, 4));
+                    legFR.position.set(-3*S, 3*S, -5*S);
+                    group.add(legFR);
+
+                    // Front-left leg: origin [1,0,-7], size [4,6,4], uv [16,0]
+                    const legFL = new THREE.Mesh(new THREE.BoxGeometry(4*S, 6*S, 4*S), boxMat(16, 0, 4, 6, 4));
+                    legFL.position.set(3*S, 3*S, -5*S);
+                    group.add(legFL);
+
+                    // Back-right leg: origin [-5,0,3], size [4,6,4], uv [16,0]
+                    const legBR = new THREE.Mesh(new THREE.BoxGeometry(4*S, 6*S, 4*S), boxMat(16, 0, 4, 6, 4));
+                    legBR.position.set(-3*S, 3*S, 5*S);
+                    group.add(legBR);
+
+                    // Back-left leg: origin [1,0,3], size [4,6,4], uv [16,0]
+                    const legBL = new THREE.Mesh(new THREE.BoxGeometry(4*S, 6*S, 4*S), boxMat(16, 0, 4, 6, 4));
+                    legBL.position.set(3*S, 3*S, 5*S);
+                    group.add(legBL);
+
+                    // Model spans y=0..16 → center at y=8
+                    group.position.set(0, -8*S, 0);
+
+                } else { // creeper — 64×32 skin
+                    // Head: origin [-4,18,-4], size [8,8,8], uv [0,0]
+                    const head = new THREE.Mesh(new THREE.BoxGeometry(8*S, 8*S, 8*S), boxMat(0, 0, 8, 8, 8));
+                    head.position.set(0*S, 22*S, 0*S);
+                    group.add(head);
+
+                    // Body: origin [-4,6,-2], size [8,12,4], uv [16,16]
+                    const body = new THREE.Mesh(new THREE.BoxGeometry(8*S, 12*S, 4*S), boxMat(16, 16, 8, 12, 4));
+                    body.position.set(0*S, 12*S, 0*S);
+                    group.add(body);
+
+                    // leg0: origin [-4,0,-4], size [4,6,4], uv [0,16]
+                    const leg0 = new THREE.Mesh(new THREE.BoxGeometry(4*S, 6*S, 4*S), boxMat(0, 16, 4, 6, 4));
+                    leg0.position.set(-2*S, 3*S, -2*S);
+                    group.add(leg0);
+
+                    // leg1: origin [0,0,-4], size [4,6,4], uv [0,16]
+                    const leg1 = new THREE.Mesh(new THREE.BoxGeometry(4*S, 6*S, 4*S), boxMat(0, 16, 4, 6, 4));
+                    leg1.position.set(2*S, 3*S, -2*S);
+                    group.add(leg1);
+
+                    // leg2: origin [-4,0,0], size [4,6,4], uv [0,16]
+                    const leg2 = new THREE.Mesh(new THREE.BoxGeometry(4*S, 6*S, 4*S), boxMat(0, 16, 4, 6, 4));
+                    leg2.position.set(-2*S, 3*S, 2*S);
+                    group.add(leg2);
+
+                    // leg3: origin [0,0,0], size [4,6,4], uv [0,16]
+                    const leg3 = new THREE.Mesh(new THREE.BoxGeometry(4*S, 6*S, 4*S), boxMat(0, 16, 4, 6, 4));
+                    leg3.position.set(2*S, 3*S, 2*S);
+                    group.add(leg3);
+
+                    // Model spans y=0..26 → center at y=13
+                    group.position.set(0, -13*S, 0);
+                }
+
+                blockMesh = group;
+                scene.add(blockMesh);
+                // Start slightly rotated so the mob's front face is visible
+                userRotX = -0.25;
+                userRotY = -0.6;
+                autoRotate = true;
+                document.getElementById('cube-placeholder-text').style.display = 'none';
+            };
+            img.src = dataUrl;
+        }
+
+        // --- Mob geometry JSON 3D preview (parses Minecraft Bedrock .geo.json) ---
+        let mobGeoJsonStr = null;
+
+        function buildMobMeshFromGeoJson(geoJsonStr, textureDataUrl) {
+            if (!scene) initThreeJs();
+            if (blockMesh) { scene.remove(blockMesh); blockMesh = null; }
+
+            let geoData;
+            try { geoData = JSON.parse(geoJsonStr); } catch (e) {
+                console.error('Invalid geometry JSON:', e);
+                buildMobMesh(textureDataUrl, getMobModelType());
+                return;
+            }
+
+            const geoArr = geoData['minecraft:geometry'];
+            if (!geoArr || !geoArr[0] || !geoArr[0].bones) {
+                buildMobMesh(textureDataUrl, getMobModelType());
+                return;
+            }
+
+            const geo  = geoArr[0];
+            const desc = geo.description || {};
+            const TW   = desc.texture_width  || 64;
+            const TH   = desc.texture_height || 64;
+
+            const img = new Image();
+            img.onload = function () {
+                const su = img.naturalWidth  / TW;
+                const sv = img.naturalHeight / TH;
+
+                function cropTex(px, py, pw, ph) {
+                    const cw = Math.max(1, Math.round(pw * su));
+                    const ch = Math.max(1, Math.round(ph * sv));
+                    const c  = document.createElement('canvas');
+                    c.width = cw; c.height = ch;
+                    c.getContext('2d').drawImage(img,
+                        Math.round(px * su), Math.round(py * sv), cw, ch, 0, 0, cw, ch);
+                    const t = new THREE.CanvasTexture(c);
+                    t.magFilter = t.minFilter = THREE.NearestFilter;
+                    t.flipY = false;
+                    return t;
+                }
+
+                // Box UV: cube (w×h×d) at UV origin (u,v) → 6 Three.js materials
+                // Three.js index order: [+x=East, -x=West, +y=Up, -y=Down, +z=South, -z=North]
+                function boxUvMats(u, v, w, h, d) {
+                    const m = (px, py, pw, ph) =>
+                        new THREE.MeshLambertMaterial({map: cropTex(px, py, pw, ph), transparent: true, side: THREE.FrontSide});
+                    return [
+                        m(u+d+w,   v+d, d, h),  // +x  East
+                        m(u,       v+d, d, h),  // -x  West
+                        m(u+d,     v,   w, d),  // +y  Up
+                        m(u+d+w,   v,   w, d),  // -y  Down
+                        m(u+d+w+d, v+d, w, h),  // +z  South (back)
+                        m(u+d,     v+d, w, h),  // -z  North (front)
+                    ];
+                }
+
+                // Per-face UV: object keyed by face name
+                function perFaceUvMats(uvObj) {
+                    const faceIdx = {east:0, west:1, up:2, down:3, south:4, north:5};
+                    const grey    = new THREE.MeshLambertMaterial({color: 0x888888, transparent: true});
+                    const mats    = [grey, grey, grey, grey, grey, grey];
+                    for (const [face, fd] of Object.entries(uvObj)) {
+                        const idx = faceIdx[face];
+                        if (idx === undefined || !fd) continue;
+                        const [fu, fv]   = fd.uv       || [0, 0];
+                        const [fw, fh]   = fd.uv_size  || [8, 8];
+                        mats[idx] = new THREE.MeshLambertMaterial({
+                            map: cropTex(fu, fv, fw, fh), transparent: true, side: THREE.FrontSide
+                        });
+                    }
+                    return mats;
+                }
+
+                const S     = 1 / 16;
+                const group = new THREE.Group();
+                let minY = Infinity, maxY = -Infinity, maxExt = 0;
+
+                for (const bone of geo.bones) {
+                    for (const cube of bone.cubes || []) {
+                        const [ox, oy, oz] = cube.origin;
+                        const [sw, sh, sd] = cube.size;
+
+                        let mats;
+                        if (Array.isArray(cube.uv)) {
+                            mats = boxUvMats(cube.uv[0], cube.uv[1], sw, sh, sd);
+                        } else if (cube.uv && typeof cube.uv === 'object') {
+                            mats = perFaceUvMats(cube.uv);
+                        } else {
+                            mats = new THREE.MeshLambertMaterial({color: 0x888888});
+                        }
+
+                        const mesh = new THREE.Mesh(new THREE.BoxGeometry(sw*S, sh*S, sd*S), mats);
+                        const cx = (ox + sw/2) * S;
+                        const cy = (oy + sh/2) * S;
+                        const cz = (oz + sd/2) * S;
+                        mesh.position.set(cx, cy, cz);
+                        group.add(mesh);
+
+                        minY    = Math.min(minY, oy * S);
+                        maxY    = Math.max(maxY, (oy + sh) * S);
+                        maxExt  = Math.max(maxExt, Math.abs(cx), Math.abs(cz), sw*S/2, sd*S/2);
+                    }
+                }
+
+                if (!isFinite(minY)) { minY = 0; maxY = 2; }
+                const centerY   = (minY + maxY) / 2;
+                group.position.y = -centerY;
+
+                const modelH = maxY - minY;
+                const dist   = Math.max(modelH * 1.8, maxExt * 3, 1.5);
+                camera.position.set(dist * 0.55, dist * 0.35, dist * 0.8);
+                camera.lookAt(0, 0, 0);
+
+                blockMesh = group;
+                scene.add(blockMesh);
+                userRotX = -0.25;
+                userRotY = -0.6;
+                autoRotate = true;
+                document.getElementById('cube-placeholder-text').style.display = 'none';
+            };
+            img.src = textureDataUrl;
+        }
+
+        // --- Spawn egg color extraction ---
+        function extractSpawnEggColors(img) {
+            const SIZE = 32;
+            const c = document.createElement('canvas');
+            c.width = SIZE; c.height = SIZE;
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img, 0, 0, SIZE, SIZE);
+            const px = ctx.getImageData(0, 0, SIZE, SIZE).data;
+
+            const Q = 28; // quantization bucket size
+            const buckets = {};
+            for (let i = 0; i < px.length; i += 4) {
+                if (px[i + 3] < 128) continue;
+                const r = px[i], g = px[i+1], b = px[i+2];
+                const key = `${Math.round(r/Q)*Q},${Math.round(g/Q)*Q},${Math.round(b/Q)*Q}`;
+                if (!buckets[key]) buckets[key] = {r:0,g:0,b:0,n:0};
+                buckets[key].r += r; buckets[key].g += g; buckets[key].b += b; buckets[key].n++;
+            }
+
+            const sorted = Object.values(buckets).sort((a,b) => b.n - a.n);
+            if (!sorted.length) return ['#a06040','#ffffff'];
+
+            const toHex = ({r,g,b,n}) =>
+                '#' + [r,g,b].map(v => Math.min(255,Math.round(v/n)).toString(16).padStart(2,'0')).join('');
+
+            const p  = sorted[0];
+            const primary = toHex(p);
+
+            // Secondary: first color sufficiently distant from primary (Euclidean RGB ≥ 55)
+            let secondary = '#ffffff';
+            for (let i = 1; i < sorted.length; i++) {
+                const s = sorted[i];
+                const d = Math.sqrt(((p.r/p.n)-(s.r/s.n))**2 + ((p.g/p.n)-(s.g/s.n))**2 + ((p.b/p.n)-(s.b/s.n))**2);
+                if (d >= 55) { secondary = toHex(s); break; }
+            }
+            return [primary, secondary];
+        }
+
+        function applySpawnEggColors(primary, secondary) {
+            document.getElementById('mob-egg-primary').value         = primary;
+            document.getElementById('mob-egg-primary-text').value    = primary;
+            document.getElementById('mob-egg-secondary').value       = secondary;
+            document.getElementById('mob-egg-secondary-text').value  = secondary;
+        }
+
+        // --- Mob texture upload ---
+        const mobTextureInput = document.getElementById('mob-texture');
+        const mobDropZone     = document.getElementById('mob-drop-zone');
+
+        function rebuildMobPreview(textureDataUrl) {
+            if (mobGeoJsonStr) {
+                buildMobMeshFromGeoJson(mobGeoJsonStr, textureDataUrl);
+            } else {
+                buildMobMesh(textureDataUrl, getMobModelType());
+            }
+        }
+
+        function showMobTexturePreview(file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const dataUrl = e.target.result;
+                document.getElementById('mob-texture-preview').src = dataUrl;
+                document.getElementById('mob-texture-name').textContent = file.name;
+                document.getElementById('mob-upload-placeholder').classList.add('hidden');
+                const pc = document.getElementById('mob-preview-container');
+                pc.classList.remove('hidden'); pc.classList.add('flex');
+                if (currentMode === 'mob') rebuildMobPreview(dataUrl);
+
+                // Auto-detect spawn egg colors from texture
+                const img = new Image();
+                img.onload = () => {
+                    const [primary, secondary] = extractSpawnEggColors(img);
+                    applySpawnEggColors(primary, secondary);
+                };
+                img.src = dataUrl;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        mobTextureInput.addEventListener('change', e => {
+            if (e.target.files[0]) showMobTexturePreview(e.target.files[0]);
+        });
+        mobDropZone.addEventListener('dragover', e => { e.preventDefault(); mobDropZone.classList.add('border-purple-500'); });
+        mobDropZone.addEventListener('dragleave', () => mobDropZone.classList.remove('border-purple-500'));
+        mobDropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            mobDropZone.classList.remove('border-purple-500');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                mobTextureInput.files = dt.files;
+                showMobTexturePreview(file);
+            }
+        });
+
+        // --- Mob form event listeners ---
+        document.getElementById('mob-name').addEventListener('input', function () {
+            if (!document.getElementById('mob-identifier').dataset.manual) {
+                document.getElementById('mob-identifier').value = this.value
+                    .toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+                    .replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+            }
+            updateMobPreview();
+        });
+        document.getElementById('mob-identifier').addEventListener('input', function () {
+            this.dataset.manual = 'true'; updateMobPreview();
+        });
+        document.getElementById('mob-health').addEventListener('input', updateMobPreview);
+        document.getElementById('mob-speed').addEventListener('input', updateMobPreview);
+
+        document.querySelectorAll('input[name="model_type"]').forEach(r => r.addEventListener('change', () => {
+            updateMobPreview();
+            const mobTex = document.getElementById('mob-texture');
+            if (mobTex.files[0] && currentMode === 'mob') {
+                const rd = new FileReader();
+                rd.onload = e => rebuildMobPreview(e.target.result);
+                rd.readAsDataURL(mobTex.files[0]);
+            }
+        }));
+
+        // --- Geo JSON file input ---
+        const mobGeoFileInput = document.getElementById('mob-geo-file');
+        const mobGeoDrop      = document.getElementById('mob-geo-drop');
+
+        function loadMobGeoFile(file) {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                mobGeoJsonStr = ev.target.result;
+                document.getElementById('mob-geo-placeholder').classList.add('hidden');
+                const loaded = document.getElementById('mob-geo-loaded');
+                loaded.classList.remove('hidden'); loaded.classList.add('flex');
+                document.getElementById('mob-geo-name').textContent = file.name;
+                if (currentMode === 'mob') {
+                    const texInput = document.getElementById('mob-texture');
+                    if (texInput.files[0]) {
+                        const tr = new FileReader();
+                        tr.onload = te => buildMobMeshFromGeoJson(mobGeoJsonStr, te.target.result);
+                        tr.readAsDataURL(texInput.files[0]);
+                    }
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        mobGeoFileInput.addEventListener('change', e => { if (e.target.files[0]) loadMobGeoFile(e.target.files[0]); });
+        mobGeoDrop.addEventListener('dragover',  e => { e.preventDefault(); mobGeoDrop.classList.add('border-purple-500'); });
+        mobGeoDrop.addEventListener('dragleave', () => mobGeoDrop.classList.remove('border-purple-500'));
+        mobGeoDrop.addEventListener('drop', e => {
+            e.preventDefault();
+            mobGeoDrop.classList.remove('border-purple-500');
+            const file = e.dataTransfer.files[0];
+            if (!file) return;
+            const dt = new DataTransfer(); dt.items.add(file);
+            mobGeoFileInput.files = dt.files;
+            loadMobGeoFile(file);
+        });
+
+        document.querySelectorAll('input[name="behavior_type"]').forEach(r => r.addEventListener('change', () => {
+            const aggressive = ['hostile','neutral'].includes(
+                document.querySelector('input[name="behavior_type"]:checked')?.value
+            );
+            document.getElementById('mob-attack-row').classList.toggle('hidden', !aggressive);
+            updateMobPreview();
+        }));
+
+        // Spawn egg color sync
+        ['primary','secondary'].forEach(side => {
+            const colorPicker = document.getElementById('mob-egg-' + side);
+            const textField   = document.getElementById('mob-egg-' + side + '-text');
+            colorPicker.addEventListener('input', () => { textField.value = colorPicker.value; });
+            textField.addEventListener('input', () => {
+                if (/^#[0-9a-fA-F]{6}$/.test(textField.value)) colorPicker.value = textField.value;
+            });
+        });
+
+        // --- Mob form submission ---
+        document.getElementById('mob-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const name       = document.getElementById('mob-name').value.trim();
+            const identifier = document.getElementById('mob-identifier').value.trim();
+            const mobTex     = document.getElementById('mob-texture');
+            const errors = [];
+            if (!name) errors.push('Le nom du mob est requis.');
+            if (!identifier || !/^[a-z0-9_]+$/.test(identifier)) errors.push('L\'identifiant est invalide (minuscules et underscores).');
+            if (!mobTex.files[0]) errors.push('Une texture PNG est requise.');
+            if (errors.length) { alert(errors.join('\n')); return; }
+
+            const btn = document.getElementById('mob-submit-btn');
+            btn.disabled = true;
+            btn.querySelector('span:last-child').textContent = 'Génération…';
+
+            let success = false;
+            try {
+                const formData = new FormData(this);
+                formData.set('is_spawnable',  document.getElementById('mob-spawnable').checked  ? '1' : '0');
+                formData.set('is_summonable', document.getElementById('mob-summonable').checked ? '1' : '0');
+
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    if (data.errors) {
+                        alert(Object.values(data.errors).flat().join('\n'));
+                    } else {
+                        throw new Error(data.message || 'Erreur serveur (' + response.status + ')');
+                    }
+                    return;
+                }
+
+                const ct = response.headers.get('content-type') || '';
+                if (!ct.includes('application/zip') && !ct.includes('application/octet-stream')) {
+                    throw new Error('Réponse inattendue du serveur.');
+                }
+
+                const blob = await response.blob();
+                const url  = URL.createObjectURL(blob);
+                const a    = document.createElement('a');
+                a.href = url; a.download = identifier + '_mob_pack.zip';
+                document.body.appendChild(a); a.click();
+                setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+                success = true;
+            } catch (err) {
+                console.error(err);
+                alert('Une erreur est survenue : ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.querySelector('span:last-child').textContent = 'Générer mon mob';
+            }
+
+            if (success) {
+                document.getElementById('toast-name').textContent = name;
+                const toast = document.getElementById('success-toast');
+                toast.classList.remove('opacity-0', '-translate-y-4', 'pointer-events-none');
+                toast.classList.add('opacity-100', 'translate-y-0');
+                setTimeout(() => closeToast(), 5000);
+            }
+        });
     </script>
 </body>
 </html>

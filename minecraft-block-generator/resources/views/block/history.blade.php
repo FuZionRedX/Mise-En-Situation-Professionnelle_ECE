@@ -45,7 +45,7 @@
                     <h1 class="text-xl font-bold minecraft-font text-green-400 flex items-center gap-2">
                         <span class="text-2xl">⛏️</span> Minecraft Block Generator
                     </h1>
-                    <p class="text-xs text-gray-400">Tous les blocs générés</p>
+                    <p class="text-xs text-gray-400">Blocs &amp; Mobs générés</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -55,7 +55,7 @@
                 </a>
                 <a href="{{ route('block.new') }}"
                    class="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
-                    <span>+</span> Nouveau bloc
+                    <span>+</span> Nouveau
                 </a>
             </div>
         </div>
@@ -69,34 +69,37 @@
             </div>
         @endif
 
+        {{-- ===== BLOCKS SECTION ===== --}}
+        <div class="flex items-center gap-3 mb-6">
+            <span class="text-2xl">🧱</span>
+            <h2 class="text-lg font-bold text-white minecraft-font">Blocs</h2>
+            <span class="text-xs text-gray-500 bg-gray-800 border border-gray-700 rounded-full px-2 py-0.5">{{ $blocks->total() }}</span>
+        </div>
+
         @if ($blocks->isEmpty())
-            <div class="text-center py-20">
-                <div class="text-8xl mb-6 animate-float">📦</div>
-                <p class="text-gray-400 text-xl mb-2">Aucun bloc généré pour l'instant.</p>
-                <p class="text-gray-600 text-sm mb-6">Commencez par créer votre premier bloc personnalisé !</p>
-                <a href="{{ route('block.new') }}" class="inline-block bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-semibold px-6 py-3 rounded-lg transition-all hover:scale-105 hover:shadow-lg">
+            <div class="text-center py-12 bg-gray-800/40 rounded-xl border border-gray-700 mb-12">
+                <div class="text-6xl mb-4 animate-float">📦</div>
+                <p class="text-gray-400 text-base mb-1">Aucun bloc généré pour l'instant.</p>
+                <p class="text-gray-600 text-sm mb-4">Commencez par créer votre premier bloc personnalisé !</p>
+                <a href="{{ route('block.new') }}" class="inline-block bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-semibold px-5 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg text-sm">
                     ➕ Créer mon premier bloc →
                 </a>
             </div>
         @else
-            <div class="flex items-center justify-between mb-6">
-                <p class="text-gray-400 text-sm flex items-center gap-2">
-                    <span>📊</span> {{ $blocks->total() }} bloc(s) généré(s)
-                </p>
+            <div class="flex items-center justify-end mb-4">
                 <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer hover:text-gray-200 transition-colors select-none">
                     <input type="checkbox" id="select-all" class="w-4 h-4 accent-green-500 cursor-pointer">
                     Tout sélectionner
                 </label>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                 @foreach ($blocks as $block)
                     <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden hover:border-green-600 transition-all card-hover block-card"
                          data-id="{{ $block->id }}">
 
                         <!-- Texture -->
                         <div class="bg-gray-900 h-40 flex items-center justify-center relative overflow-hidden">
-                            <!-- Checkbox overlay -->
                             <label class="absolute top-2 left-2 z-10 cursor-pointer">
                                 <input type="checkbox" class="block-checkbox w-5 h-5 accent-green-500 cursor-pointer rounded"
                                        value="{{ $block->id }}">
@@ -111,13 +114,15 @@
                             @else
                                 <div class="text-6xl opacity-30">🧱</div>
                             @endif
-                            <!-- Overlay gradient -->
                             <div class="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent"></div>
                         </div>
 
                         <!-- Infos -->
                         <div class="p-5">
-                            <h2 class="font-bold text-white text-lg truncate mb-1">{{ $block->name }}</h2>
+                            <div class="flex items-start justify-between mb-1">
+                                <h2 class="font-bold text-white text-lg truncate">{{ $block->name }}</h2>
+                                <span class="text-xs bg-green-900/50 text-green-400 border border-green-700 rounded-full px-2 py-0.5 ml-2 whitespace-nowrap">🧱 Bloc</span>
+                            </div>
                             <p class="text-green-400 text-xs font-mono mb-4">custom:{{ $block->identifier }}</p>
 
                             <div class="grid grid-cols-3 gap-2 text-xs mb-4">
@@ -167,9 +172,115 @@
                 @endforeach
             </div>
 
-            <!-- Pagination -->
-            <div class="mt-10 flex justify-center">
+            <div class="mt-4 flex justify-center">
                 {{ $blocks->links('pagination::tailwind') }}
+            </div>
+        @endif
+
+        {{-- ===== MOBS SECTION ===== --}}
+        <div class="flex items-center gap-3 mt-14 mb-6">
+            <span class="text-2xl">🐾</span>
+            <h2 class="text-lg font-bold text-white minecraft-font">Mobs</h2>
+            <span class="text-xs text-gray-500 bg-gray-800 border border-gray-700 rounded-full px-2 py-0.5">{{ $mobs->total() }}</span>
+        </div>
+
+        @if ($mobs->isEmpty())
+            <div class="text-center py-12 bg-gray-800/40 rounded-xl border border-gray-700">
+                <div class="text-6xl mb-4">🐾</div>
+                <p class="text-gray-400 text-base mb-1">Aucun mob généré pour l'instant.</p>
+                <p class="text-gray-600 text-sm mb-4">Créez votre premier mob personnalisé !</p>
+                <a href="{{ route('block.new') }}#mob" class="inline-block bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold px-5 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg text-sm">
+                    ➕ Créer mon premier mob →
+                </a>
+            </div>
+        @else
+            @php
+                $behaviorLabels = ['passive' => 'Passif', 'neutral' => 'Neutre', 'hostile' => 'Hostile'];
+                $behaviorColors = ['passive' => 'text-green-400', 'neutral' => 'text-yellow-400', 'hostile' => 'text-red-400'];
+                $modelIcons     = ['humanoid' => '🚶', 'quadruped' => '🐄', 'creeper' => '💚'];
+            @endphp
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                @foreach ($mobs as $mob)
+                    <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden hover:border-purple-600 transition-all card-hover">
+
+                        <!-- Texture thumbnail -->
+                        <div class="bg-gray-900 h-40 flex items-center justify-center relative overflow-hidden">
+                            @if (Storage::exists($mob->texture_path))
+                                <img
+                                    src="{{ route('mob.texture', $mob->id) }}"
+                                    alt="Skin {{ $mob->name }}"
+                                    class="h-32 object-contain"
+                                    style="image-rendering: pixelated;"
+                                >
+                            @else
+                                <div class="text-6xl opacity-30">🐾</div>
+                            @endif
+                            <div class="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent"></div>
+                            <!-- Model type badge -->
+                            <div class="absolute top-2 right-2 text-xs bg-gray-900/80 border border-gray-600 rounded-full px-2 py-0.5">
+                                {{ $modelIcons[$mob->model_type] ?? '🐾' }} {{ ucfirst($mob->model_type) }}
+                            </div>
+                        </div>
+
+                        <!-- Infos -->
+                        <div class="p-5">
+                            <div class="flex items-start justify-between mb-1">
+                                <h2 class="font-bold text-white text-lg truncate">{{ $mob->name }}</h2>
+                                <span class="text-xs bg-purple-900/50 text-purple-300 border border-purple-700 rounded-full px-2 py-0.5 ml-2 whitespace-nowrap">🐾 Mob</span>
+                            </div>
+                            <p class="text-purple-400 text-xs font-mono mb-4">custom:{{ $mob->identifier }}</p>
+
+                            <div class="grid grid-cols-3 gap-2 text-xs mb-4">
+                                <div class="bg-gray-700/50 rounded-lg p-3 text-center">
+                                    <div class="text-gray-400 mb-1">❤️ Santé</div>
+                                    <div class="text-white font-bold">{{ $mob->health }}</div>
+                                </div>
+                                <div class="bg-gray-700/50 rounded-lg p-3 text-center">
+                                    <div class="text-gray-400 mb-1">⚡ Vitesse</div>
+                                    <div class="text-white font-bold">{{ $mob->speed }}</div>
+                                </div>
+                                <div class="bg-gray-700/50 rounded-lg p-3 text-center">
+                                    <div class="text-gray-400 mb-1">🗡 Comport.</div>
+                                    <div class="{{ $behaviorColors[$mob->behavior_type] ?? 'text-gray-300' }} font-semibold">
+                                        {{ $behaviorLabels[$mob->behavior_type] ?? $mob->behavior_type }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Spawn egg colors -->
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="text-xs text-gray-500">Œuf :</span>
+                                <span class="w-4 h-4 rounded-sm border border-gray-600 inline-block" style="background:{{ $mob->spawn_egg_primary }}"></span>
+                                <span class="w-4 h-4 rounded-sm border border-gray-600 inline-block" style="background:{{ $mob->spawn_egg_secondary }}"></span>
+                                <span class="text-xs text-gray-500 font-mono">{{ $mob->spawn_egg_primary }} / {{ $mob->spawn_egg_secondary }}</span>
+                            </div>
+
+                            <p class="text-gray-600 text-xs mb-4 flex items-center gap-2">
+                                <span>📅</span> Créé le {{ $mob->created_at->format('d/m/Y à H:i') }}
+                            </p>
+
+                            <div class="flex gap-2 items-stretch">
+                                <a href="{{ route('mob.download', $mob->id) }}"
+                                   class="flex-1 flex items-center justify-center bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white text-sm font-bold py-2.5 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg">
+                                    ⬇ Télécharger
+                                </a>
+                                <form action="{{ route('mob.destroy', $mob->id) }}" method="POST"
+                                      class="flex" onsubmit="return confirm('Supprimer ce mob ?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            class="flex items-center justify-center bg-gray-700 hover:bg-red-600 text-gray-300 hover:text-white px-2.5 py-2.5 rounded-lg transition-all hover:scale-105 text-xs">
+                                        🗑
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="mt-4 flex justify-center">
+                {{ $mobs->links('pagination::tailwind') }}
             </div>
         @endif
     </main>

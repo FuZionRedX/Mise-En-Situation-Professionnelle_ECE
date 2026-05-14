@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BlockRequest;
 use App\Models\Block;
+use App\Models\Mob;
 use App\Services\BlockZipService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -154,7 +155,8 @@ class BlockController extends Controller
     public function history()
     {
         $blocks = Block::latest()->paginate(12);
-        return view('block.history', compact('blocks'));
+        $mobs   = Mob::latest()->paginate(12, ['*'], 'mob_page');
+        return view('block.history', compact('blocks', 'mobs'));
     }
 
     /**
