@@ -1,4 +1,11 @@
 *
-
-!public/
 !.gitignore
+!public/
+!public/**/*.png
+!public/**/*.json
+!private/
+!private/**/*.png
+!private/**/*.json
+!textures/
+!textures/**/*.png
+!textures/**/*.json
