@@ -53,6 +53,15 @@
                    class="bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
                     🖼 Télécharger toutes les textures
                 </a>
+                @auth
+                    <form action="{{ route('auth.logout') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg">
+                            Déconnexion
+                        </button>
+                    </form>
+                @endauth
+
                 <a href="{{ route('block.new') }}"
                    class="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
                     <span>+</span> Nouveau
