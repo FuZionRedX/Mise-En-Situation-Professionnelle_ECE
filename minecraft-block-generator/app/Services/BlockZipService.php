@@ -272,7 +272,15 @@ class BlockZipService
      */
     private function splitNetTexture(string $texturePath, string $identifier): array
     {
-        $img = imagecreatefrompng($texturePath);
+        if (!file_exists($texturePath)) {
+            throw new \RuntimeException("Texture file not found: {$texturePath}");
+        }
+
+        $img = @imagecreatefrompng($texturePath);
+        if (!$img) {
+            throw new \RuntimeException("Failed to load PNG image: {$texturePath}");
+        }
+
         $w   = imagesx($img);
         $C   = intval($w / 4);
 
