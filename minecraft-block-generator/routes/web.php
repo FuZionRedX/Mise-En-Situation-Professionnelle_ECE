@@ -6,7 +6,22 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
 Route::get('/', [BlockController::class, 'history'])->name('block.index');
-Route::get('/block/new', [BlockController::class, 'index'])->name('block.new');
+
+// Nouveau : si l'utilisateur n'est pas connecté, on redirige vers le choix connexion/inscription
+Route::get('/block/new', function () {
+    if (auth()->check()) {
+        return app(BlockController::class)->index();
+    }
+    return redirect()->route('auth.choice');
+})->name('block.new');
+
+// Auth light routes
+Route::get('/auth/choice', [\App\Http\Controllers\AuthController::class, 'choice'])->name('auth.choice');
+Route::get('/auth/login', [\App\Http\Controllers\AuthController::class, 'showLogin'])->name('auth.login');
+Route::post('/auth/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('auth.login.post');
+Route::get('/auth/register', [\App\Http\Controllers\AuthController::class, 'showRegister'])->name('auth.register');
+Route::post('/auth/register', [\App\Http\Controllers\AuthController::class, 'register'])->name('auth.register.post');
+Route::post('/auth/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('auth.logout');
 Route::post('/block/create', [BlockController::class, 'create'])->name('block.create');
 Route::get('/block/{block}/edit', [BlockController::class, 'edit'])->name('block.edit');
 Route::post('/block/{block}/update', [BlockController::class, 'update'])->name('block.update');

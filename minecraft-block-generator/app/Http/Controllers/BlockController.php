@@ -6,6 +6,7 @@ use App\Http\Requests\BlockRequest;
 use App\Models\Block;
 use App\Models\Mob;
 use App\Services\BlockZipService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -50,9 +51,11 @@ class BlockController extends Controller
         $geometryJsonPath = $this->storeGeometryJson($request, $identifier);
 
         // Sauvegarder en base
+        $creatorIdentifier = Auth::check() ? Auth::user()->identifier : null;
         Block::create([
             'name'              => $request->input('name'),
             'identifier'        => $identifier,
+            'creator_identifier'=> $creatorIdentifier,
             'solid'             => (bool) $request->input('solid'),
             'destructible'      => (bool) $request->input('destructible'),
             'resistance'        => (float) $request->input('resistance'),
@@ -60,6 +63,12 @@ class BlockController extends Controller
             'geometry'          => $geometry,
             'geometry_json_path'=> $geometryJsonPath,
         ]);
+
+        if ($creatorIdentifier) {
+            session()->flash('success', 'Bloc créé avec succès — Créateur : ' . $creatorIdentifier);
+        } else {
+            session()->flash('success', 'Bloc créé avec succès');
+        }
 
         // Générer le ZIP
         $customGeometryJson = $geometryJsonPath ? Storage::get($geometryJsonPath) : null;
