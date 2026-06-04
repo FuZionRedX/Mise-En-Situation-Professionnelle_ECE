@@ -6,6 +6,9 @@ services:
     volumes:
       - ./storage:/var/www/storage
       - ./database:/var/www/database
+      - ./resources:/var/www/resources
+      - ./app:/var/www/app
+      - ./routes:/var/www/routes
     depends_on: []
 
   nginx:
