@@ -272,8 +272,16 @@ class BlockZipService
      */
     private function splitNetTexture(string $texturePath, string $identifier): array
     {
-        $img = imagecreatefrompng($texturePath);
-        $w   = imagesx($img);
+        if (!file_exists($texturePath)) {
+            throw new \RuntimeException("Texture file not found: {$texturePath}");
+        }
+
+        $img = @\imagecreatefrompng($texturePath);
+        if (!$img) {
+            throw new \RuntimeException("Failed to load PNG image: {$texturePath}");
+        }
+
+        $w   = \imagesx($img);
         $C   = intval($w / 4);
 
         $regions = [
@@ -287,18 +295,18 @@ class BlockZipService
 
         $paths = [];
         foreach ($regions as $face => [$sx, $sy]) {
-            $faceImg = imagecreatetruecolor($C, $C);
-            imagealphablending($faceImg, false);
-            imagesavealpha($faceImg, true);
-            imagecopy($faceImg, $img, 0, 0, $sx, $sy, $C, $C);
+            $faceImg = \imagecreatetruecolor($C, $C);
+            \imagealphablending($faceImg, false);
+            \imagesavealpha($faceImg, true);
+            \imagecopy($faceImg, $img, 0, 0, $sx, $sy, $C, $C);
 
             $facePath = tempnam(sys_get_temp_dir(), "mc_{$identifier}_{$face}_") . '.png';
-            imagepng($faceImg, $facePath);
-            imagedestroy($faceImg);
+            \imagepng($faceImg, $facePath);
+            \imagedestroy($faceImg);
             $paths[$face] = $facePath;
         }
 
-        imagedestroy($img);
+        \imagedestroy($img);
         return $paths;
     }
 }

@@ -222,24 +222,24 @@ class BlockController extends Controller
      */
     private function detectGeometry(string $imagePath): string
     {
-        $img = @imagecreatefrompng($imagePath);
+        $img = @\imagecreatefrompng($imagePath);
         if (!$img) {
             return 'cube';
         }
 
-        $w = imagesx($img);
-        $h = imagesy($img);
+        $w = \imagesx($img);
+        $h = \imagesy($img);
 
         // Net texture: exact 4:3 ratio (e.g. 64×48)
         if ($h > 0 && $w % 4 === 0 && $h % 3 === 0 && ($w / 4) === ($h / 3)) {
-            imagedestroy($img);
+            \imagedestroy($img);
             return 'net';
         }
 
         // Net cross pattern on any canvas (e.g. square 64×64 with transparent corners)
         $C = intval($w / 4);
         if ($C > 0 && $this->isNetPattern($img, $w, $h, $C)) {
-            imagedestroy($img);
+            \imagedestroy($img);
             return 'net';
         }
 
@@ -249,7 +249,7 @@ class BlockController extends Controller
         $total = $w * $h;
         for ($y = 0; $y < $h; $y++) {
             for ($x = 0; $x < $w; $x++) {
-                $alpha = (imagecolorat($img, $x, $y) >> 24) & 0x7F; // GD: 0=opaque, 127=transparent
+                $alpha = (\imagecolorat($img, $x, $y) >> 24) & 0x7F; // GD: 0=opaque, 127=transparent
                 if ($alpha > 10) {
                     $transparent++;
                 }
@@ -259,7 +259,7 @@ class BlockController extends Controller
             }
         }
 
-        imagedestroy($img);
+        \imagedestroy($img);
 
         // Continuous (partial) transparency > 5% → glass-like block, use blend render_method
         if (($partialAlpha / $total) > 0.05) {
@@ -276,13 +276,13 @@ class BlockController extends Controller
             $sx = intval(($col + 0.5) * $C);
             $sy = intval(($row + 0.5) * $C);
             if ($sx >= $w || $sy >= $h) return true;
-            return (imagecolorat($img, $sx, $sy) >> 24 & 0x7F) > 32;
+            return (\imagecolorat($img, $sx, $sy) >> 24 & 0x7F) > 32;
         };
         $opaqueAt = function (int $col, int $row) use ($img, $w, $h, $C): bool {
             $sx = intval(($col + 0.5) * $C);
             $sy = intval(($row + 0.5) * $C);
             if ($sx >= $w || $sy >= $h) return false;
-            return (imagecolorat($img, $sx, $sy) >> 24 & 0x7F) <= 32;
+            return (\imagecolorat($img, $sx, $sy) >> 24 & 0x7F) <= 32;
         };
 
         // 6 corner cells must be transparent
