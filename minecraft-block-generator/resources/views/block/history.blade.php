@@ -51,9 +51,19 @@
             <div class="flex items-center gap-3">
                 <a href="{{ route('block.download-textures') }}"
                    class="bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
-                    🖼 Télécharger toutes les textures
+                    📦 Exporter tous les blocs
                 </a>
                 @auth
+                    @if(Auth::user()->isAdmin())
+                        <a href="{{ route('admin.users') }}"
+                           class="bg-purple-700 hover:bg-purple-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
+                            👥 Utilisateurs
+                        </a>
+                    @endif
+                    <a href="{{ route('block.index', ['filter' => 'mine']) }}"
+                       class="{{ ($mine ?? false) ? 'bg-green-700 text-white' : 'bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600' }} text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
+                        👤 Mes créations
+                    </a>
                     <form action="{{ route('auth.logout') }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg">
@@ -169,23 +179,31 @@
                             </p>
 
                             <div class="flex gap-2 items-stretch">
-                                <a href="{{ route('block.edit', $block->id) }}"
-                                   class="flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-2.5 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg whitespace-nowrap">
-                                    ✏️ Modifier
-                                </a>
+                                @auth
+                                    @if(Auth::user()->isAdmin())
+                                        <a href="{{ route('block.edit', $block->id) }}"
+                                           class="flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-2.5 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg whitespace-nowrap">
+                                            ✏️ Modifier
+                                        </a>
+                                    @endif
+                                @endauth
                                 <a href="{{ route('block.download', $block->id) }}"
                                    class="flex-1 flex items-center justify-center bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white text-sm font-bold py-2.5 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg">
                                     ⬇ Télécharger
                                 </a>
-                                <form action="{{ route('block.destroy', $block->id) }}" method="POST"
-                                      class="flex" onsubmit="return confirm('Supprimer ce bloc ?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="flex items-center justify-center bg-gray-700 hover:bg-red-600 text-gray-300 hover:text-white px-2.5 py-2.5 rounded-lg transition-all hover:scale-105 text-xs">
-                                        🗑
-                                    </button>
-                                </form>
+                                @auth
+                                    @if(Auth::user()->isAdmin() || Auth::user()->isOwnerOf($block->creator_identifier))
+                                        <form action="{{ route('block.destroy', $block->id) }}" method="POST"
+                                              class="flex" onsubmit="return confirm('Supprimer ce bloc ?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="flex items-center justify-center bg-gray-700 hover:bg-red-600 text-gray-300 hover:text-white px-2.5 py-2.5 rounded-lg transition-all hover:scale-105 text-xs">
+                                                🗑
+                                            </button>
+                                        </form>
+                                    @endif
+                                @endauth
                             </div>
                         </div>
                     </div>
@@ -283,23 +301,31 @@
                             </p>
 
                             <div class="flex gap-2 items-stretch">
-                                <a href="{{ route('mob.edit', $mob->id) }}"
-                                   class="flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-2.5 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg whitespace-nowrap">
-                                    ✏️ Modifier
-                                </a>
+                                @auth
+                                    @if(Auth::user()->isAdmin())
+                                        <a href="{{ route('mob.edit', $mob->id) }}"
+                                           class="flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-2.5 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg whitespace-nowrap">
+                                            ✏️ Modifier
+                                        </a>
+                                    @endif
+                                @endauth
                                 <a href="{{ route('mob.download', $mob->id) }}"
                                    class="flex-1 flex items-center justify-center bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white text-sm font-bold py-2.5 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg">
                                     ⬇ Télécharger
                                 </a>
-                                <form action="{{ route('mob.destroy', $mob->id) }}" method="POST"
-                                      class="flex" onsubmit="return confirm('Supprimer ce mob ?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="flex items-center justify-center bg-gray-700 hover:bg-red-600 text-gray-300 hover:text-white px-2.5 py-2.5 rounded-lg transition-all hover:scale-105 text-xs">
-                                        🗑
-                                    </button>
-                                </form>
+                                @auth
+                                    @if(Auth::user()->isAdmin() || Auth::user()->isOwnerOf($mob->creator_identifier))
+                                        <form action="{{ route('mob.destroy', $mob->id) }}" method="POST"
+                                              class="flex" onsubmit="return confirm('Supprimer ce mob ?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="flex items-center justify-center bg-gray-700 hover:bg-red-600 text-gray-300 hover:text-white px-2.5 py-2.5 rounded-lg transition-all hover:scale-105 text-xs">
+                                                🗑
+                                            </button>
+                                        </form>
+                                    @endif
+                                @endauth
                             </div>
                         </div>
                     </div>

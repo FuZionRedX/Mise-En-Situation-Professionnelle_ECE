@@ -192,6 +192,11 @@ class MobController extends Controller
 
     public function destroy(Mob $mob)
     {
+        $user = Auth::user();
+        if (!$user->isAdmin() && !$user->isOwnerOf($mob->creator_identifier)) {
+            abort(403);
+        }
+
         Storage::delete($mob->texture_path);
         if ($mob->geometry_json_path) {
             Storage::delete($mob->geometry_json_path);

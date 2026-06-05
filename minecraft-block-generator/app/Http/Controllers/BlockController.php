@@ -6,6 +6,7 @@ use App\Http\Requests\BlockRequest;
 use App\Models\Block;
 use App\Models\Mob;
 use App\Services\BlockZipService;
+use App\Services\MobZipService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +15,10 @@ use ZipArchive;
 
 class BlockController extends Controller
 {
-    public function __construct(private BlockZipService $zipService) {}
+    public function __construct(
+        private BlockZipService $zipService,
+        private MobZipService   $mobZipService,
+    ) {}
 
     /**
      * Affiche le formulaire de création de bloc.
@@ -161,11 +165,19 @@ class BlockController extends Controller
     /**
      * Affiche l'historique des blocs générés.
      */
-    public function history()
+    public function history(Request $request)
     {
-        $blocks = Block::latest()->paginate(12);
-        $mobs   = Mob::latest()->paginate(12, ['*'], 'mob_page');
-        return view('block.history', compact('blocks', 'mobs'));
+        $mine      = $request->query('filter') === 'mine' && Auth::check();
+        $creatorId = $mine ? Auth::user()->identifier : null;
+
+        $blocks = Block::latest()
+            ->when($creatorId, fn ($q) => $q->where('creator_identifier', $creatorId))
+            ->paginate(12);
+        $mobs   = Mob::latest()
+            ->when($creatorId, fn ($q) => $q->where('creator_identifier', $creatorId))
+            ->paginate(12, ['*'], 'mob_page');
+
+        return view('block.history', compact('blocks', 'mobs', 'mine'));
     }
 
     /**
@@ -330,28 +342,56 @@ class BlockController extends Controller
     }
 
     /**
-     * Télécharge toutes les textures en un ZIP plat.
+     * Exporte tous les blocs et mobs en un seul ZIP (behavior + resource packs séparés).
      */
     public function downloadAllTextures(): BinaryFileResponse
     {
-        $blocks  = Block::all();
-        $zipPath = tempnam(sys_get_temp_dir(), 'mc_textures_') . '.zip';
+        $blocks = Block::all();
+        $mobs   = Mob::all();
 
-        $zip = new ZipArchive();
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new \RuntimeException('Impossible de créer l\'archive ZIP.');
+        if ($blocks->isEmpty() && $mobs->isEmpty()) {
+            abort(404, 'Aucun contenu à exporter.');
         }
 
-        foreach ($blocks as $block) {
-            $path = Storage::path($block->texture_path);
-            if (file_exists($path)) {
-                $zip->addFile($path, $block->identifier . '.png');
+        $blockZipPath = $blocks->isNotEmpty() ? $this->zipService->generateMulti($blocks->all())    : null;
+        $mobZipPath   = $mobs->isNotEmpty()   ? $this->mobZipService->generateMulti($mobs->all())  : null;
+
+        // Only one type present — return directly
+        if ($blockZipPath && !$mobZipPath) {
+            return response()->download($blockZipPath, 'all_blocks_pack.zip', [
+                'Content-Type' => 'application/zip',
+            ])->deleteFileAfterSend(true);
+        }
+        if ($mobZipPath && !$blockZipPath) {
+            return response()->download($mobZipPath, 'all_mobs_pack.zip', [
+                'Content-Type' => 'application/zip',
+            ])->deleteFileAfterSend(true);
+        }
+
+        // Both exist — merge into one combined archive
+        $combinedPath = tempnam(sys_get_temp_dir(), 'mc_all_') . '.zip';
+        $combined     = new ZipArchive();
+        $combined->open($combinedPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+
+        foreach ([$blockZipPath, $mobZipPath] as $sourcePath) {
+            $source = new ZipArchive();
+            $source->open($sourcePath);
+            for ($i = 0; $i < $source->numFiles; $i++) {
+                $name    = $source->getNameIndex($i);
+                $content = $source->getFromIndex($i);
+                if (str_ends_with($name, '/')) {
+                    $combined->addEmptyDir($name);
+                } elseif ($content !== false) {
+                    $combined->addFromString($name, $content);
+                }
             }
+            $source->close();
+            unlink($sourcePath);
         }
 
-        $zip->close();
+        $combined->close();
 
-        return response()->download($zipPath, 'all_textures.zip', [
+        return response()->download($combinedPath, 'all_packs.zip', [
             'Content-Type' => 'application/zip',
         ])->deleteFileAfterSend(true);
     }
@@ -361,6 +401,11 @@ class BlockController extends Controller
      */
     public function destroy(Block $block)
     {
+        $user = Auth::user();
+        if (!$user->isAdmin() && !$user->isOwnerOf($block->creator_identifier)) {
+            abort(403);
+        }
+
         Storage::delete($block->texture_path);
         if ($block->geometry_json_path) {
             Storage::delete($block->geometry_json_path);

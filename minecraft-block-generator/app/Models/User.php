@@ -23,7 +23,18 @@ class User extends Authenticatable
         'email',
         'password',
         'identifier',
+        'role',
     ];
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isOwnerOf(?string $creatorIdentifier): bool
+    {
+        return $creatorIdentifier !== null && $this->identifier === $creatorIdentifier;
+    }
 
     /**
      * The attributes that should be hidden for serialization.
