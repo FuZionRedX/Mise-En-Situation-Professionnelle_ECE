@@ -17,6 +17,9 @@ php artisan key:generate --force
 # Ensure SQLite database file exists
 touch database/database.sqlite
 
+# Ensure geometry storage directories exist
+mkdir -p storage/app/geometry storage/app/mob_geometry
+
 # Fix permissions on writable directories
 chown -R www-data:www-data storage bootstrap/cache database 2>/dev/null || true
 chmod -R 775 storage bootstrap/cache database

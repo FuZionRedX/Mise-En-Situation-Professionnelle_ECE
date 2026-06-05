@@ -70,6 +70,15 @@
         </div>
     </header>
 
+    <!-- View switcher -->
+    <div class="bg-gray-800/90 border-b border-gray-700 backdrop-blur-md sticky top-[73px] z-30">
+        <div class="max-w-5xl mx-auto px-4 py-2 flex items-center gap-2">
+            <button id="view-all"    onclick="setView('all')"    class="view-btn px-4 py-1.5 text-sm font-semibold rounded-lg transition-all">Tout</button>
+            <button id="view-blocks" onclick="setView('blocks')" class="view-btn px-4 py-1.5 text-sm font-semibold rounded-lg transition-all">🧱 Blocs</button>
+            <button id="view-mobs"   onclick="setView('mobs')"   class="view-btn px-4 py-1.5 text-sm font-semibold rounded-lg transition-all">🐾 Mobs</button>
+        </div>
+    </div>
+
     <main class="max-w-5xl mx-auto px-4 py-8">
 
         @if (session('success'))
@@ -79,6 +88,7 @@
         @endif
 
         {{-- ===== BLOCKS SECTION ===== --}}
+        <div id="section-blocks">
         <div class="flex items-center gap-3 mb-6">
             <span class="text-2xl">🧱</span>
             <h2 class="text-lg font-bold text-white minecraft-font">Blocs</h2>
@@ -186,8 +196,10 @@
                 {{ $blocks->links('pagination::tailwind') }}
             </div>
         @endif
+        </div>{{-- #section-blocks --}}
 
         {{-- ===== MOBS SECTION ===== --}}
+        <div id="section-mobs">
         <div class="flex items-center gap-3 mt-14 mb-6">
             <span class="text-2xl">🐾</span>
             <h2 class="text-lg font-bold text-white minecraft-font">Mobs</h2>
@@ -238,7 +250,8 @@
                                 <h2 class="font-bold text-white text-lg truncate">{{ $mob->name }}</h2>
                                 <span class="text-xs bg-purple-900/50 text-purple-300 border border-purple-700 rounded-full px-2 py-0.5 ml-2 whitespace-nowrap">🐾 Mob</span>
                             </div>
-                            <p class="text-purple-400 text-xs font-mono mb-4">custom:{{ $mob->identifier }}</p>
+                            <p class="text-purple-400 text-xs font-mono mb-2">custom:{{ $mob->identifier }}</p>
+                            <p class="text-gray-400 text-xs mb-4">Créé par : <span class="text-purple-300 font-mono">{{ $mob->creator_identifier ?? '—' }}</span></p>
 
                             <div class="grid grid-cols-3 gap-2 text-xs mb-4">
                                 <div class="bg-gray-700/50 rounded-lg p-3 text-center">
@@ -297,6 +310,7 @@
                 {{ $mobs->links('pagination::tailwind') }}
             </div>
         @endif
+        </div>{{-- #section-mobs --}}
     </main>
 
     <!-- Selection action bar -->
@@ -395,6 +409,19 @@
             if (selectAllCheckbox) selectAllCheckbox.checked = false;
             updateBar();
         }
+
+        // --- View switcher ---
+        function setView(v) {
+            document.getElementById('section-blocks').classList.toggle('hidden', v === 'mobs');
+            document.getElementById('section-mobs').classList.toggle('hidden',   v === 'blocks');
+            document.querySelectorAll('.view-btn').forEach(b => {
+                const active = b.id === 'view-' + v;
+                b.className = 'view-btn px-4 py-1.5 text-sm font-semibold rounded-lg transition-all '
+                    + (active ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700');
+            });
+            localStorage.setItem('mcgen_history_view', v);
+        }
+        setView(localStorage.getItem('mcgen_history_view') || 'all');
     </script>
 </body>
 </html>

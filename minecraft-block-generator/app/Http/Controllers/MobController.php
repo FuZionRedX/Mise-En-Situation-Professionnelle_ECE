@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\MobRequest;
 use App\Models\Mob;
 use App\Services\MobZipService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -26,6 +27,7 @@ class MobController extends Controller
         Mob::create([
             'name'                => $request->input('name'),
             'identifier'          => $identifier,
+            'creator_identifier'  => Auth::check() ? Auth::user()->identifier : null,
             'health'              => (int)   $request->input('health'),
             'speed'               => (float) $request->input('speed'),
             'behavior_type'       => $request->input('behavior_type'),
