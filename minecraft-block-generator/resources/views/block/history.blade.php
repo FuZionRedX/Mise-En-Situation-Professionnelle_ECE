@@ -60,10 +60,6 @@
                             👥 Utilisateurs
                         </a>
                     @endif
-                    <a href="{{ route('block.index', ['filter' => 'mine']) }}"
-                       class="{{ ($mine ?? false) ? 'bg-green-700 text-white' : 'bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600' }} text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
-                        👤 Mes créations
-                    </a>
                     <button onclick="document.getElementById('logout-modal').classList.remove('hidden')"
                             class="bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg">
                         Déconnexion
@@ -92,6 +88,9 @@
                 <button id="view-all"    onclick="setView('all')"    class="view-btn px-5 py-2 text-sm font-semibold rounded-lg transition-all">Tout</button>
                 <button id="view-blocks" onclick="setView('blocks')" class="view-btn px-5 py-2 text-sm font-semibold rounded-lg transition-all">🧱 Blocs</button>
                 <button id="view-mobs"   onclick="setView('mobs')"   class="view-btn px-5 py-2 text-sm font-semibold rounded-lg transition-all">🐾 Mobs</button>
+                @auth
+                <button id="view-mine"   onclick="setView('mine')"   class="view-btn px-5 py-2 text-sm font-semibold rounded-lg transition-all">👤 Mes créations</button>
+                @endauth
             </div>
         </div>
 
@@ -123,7 +122,8 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                 @foreach ($blocks as $block)
                     <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden hover:border-green-600 transition-all card-hover block-card"
-                         data-id="{{ $block->id }}">
+                         data-id="{{ $block->id }}"
+                         data-creator="{{ $block->creator_identifier }}">
 
                         <!-- Texture -->
                         <div class="bg-gray-900 h-40 flex items-center justify-center relative overflow-hidden">
@@ -239,7 +239,8 @@
             @endphp
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                 @foreach ($mobs as $mob)
-                    <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden hover:border-purple-600 transition-all card-hover">
+                    <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden hover:border-purple-600 transition-all card-hover mob-card"
+                         data-creator="{{ $mob->creator_identifier }}">
 
                         <!-- Texture thumbnail -->
                         <div class="bg-gray-900 h-40 flex items-center justify-center relative overflow-hidden">
@@ -435,12 +436,31 @@
         }
 
         // --- View switcher ---
+        const currentUserIdentifier = @auth '{{ Auth::user()->identifier }}' @else null @endauth;
+
         function setView(v) {
-            document.getElementById('section-blocks').classList.toggle('hidden', v === 'mobs');
-            document.getElementById('section-mobs').classList.toggle('hidden',   v === 'blocks');
+            const allCards = document.querySelectorAll('.block-card, .mob-card');
+
+            // Reset individual card visibility
+            allCards.forEach(c => c.classList.remove('hidden'));
+
+            if (v === 'mine') {
+                // Show both sections, but hide cards not owned by current user
+                document.getElementById('section-blocks').classList.remove('hidden');
+                document.getElementById('section-mobs').classList.remove('hidden');
+                allCards.forEach(card => {
+                    if (card.dataset.creator !== currentUserIdentifier) {
+                        card.classList.add('hidden');
+                    }
+                });
+            } else {
+                document.getElementById('section-blocks').classList.toggle('hidden', v === 'mobs');
+                document.getElementById('section-mobs').classList.toggle('hidden',   v === 'blocks');
+            }
+
             document.querySelectorAll('.view-btn').forEach(b => {
                 const active = b.id === 'view-' + v;
-                b.className = 'view-btn px-4 py-1.5 text-sm font-semibold rounded-lg transition-all '
+                b.className = 'view-btn px-5 py-2 text-sm font-semibold rounded-lg transition-all '
                     + (active ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700');
             });
             localStorage.setItem('mcgen_history_view', v);
