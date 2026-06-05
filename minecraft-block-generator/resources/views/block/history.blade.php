@@ -64,12 +64,10 @@
                        class="{{ ($mine ?? false) ? 'bg-green-700 text-white' : 'bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600' }} text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
                         👤 Mes créations
                     </a>
-                    <form action="{{ route('auth.logout') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg">
-                            Déconnexion
-                        </button>
-                    </form>
+                    <button onclick="document.getElementById('logout-modal').classList.remove('hidden')"
+                            class="bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg">
+                        Déconnexion
+                    </button>
                 @endauth
 
                 <a href="{{ route('block.new') }}"
@@ -449,5 +447,29 @@
         }
         setView(localStorage.getItem('mcgen_history_view') || 'all');
     </script>
+
+    <!-- Logout confirmation modal -->
+    <div id="logout-modal"
+         class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+         onclick="if(event.target===this)this.classList.add('hidden')">
+        <div class="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl p-8 w-full max-w-sm mx-4 text-center">
+            <div class="text-5xl mb-4">🚪</div>
+            <h2 class="text-xl font-bold text-white minecraft-font mb-2">Déconnexion</h2>
+            <p class="text-gray-400 text-sm mb-6">Voulez-vous vraiment vous déconnecter&nbsp;?</p>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('logout-modal').classList.add('hidden')"
+                        class="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white font-semibold py-2.5 rounded-xl transition-all">
+                    Annuler
+                </button>
+                <form action="{{ route('auth.logout') }}" method="POST" class="flex-1">
+                    @csrf
+                    <button type="submit"
+                            class="w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-2.5 rounded-xl transition-all">
+                        Se déconnecter
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
