@@ -80,15 +80,6 @@
         </div>
     </header>
 
-    <!-- View switcher -->
-    <div class="bg-gray-800/90 border-b border-gray-700 backdrop-blur-md sticky top-[73px] z-30">
-        <div class="max-w-5xl mx-auto px-4 py-2 flex items-center gap-2">
-            <button id="view-all"    onclick="setView('all')"    class="view-btn px-4 py-1.5 text-sm font-semibold rounded-lg transition-all">Tout</button>
-            <button id="view-blocks" onclick="setView('blocks')" class="view-btn px-4 py-1.5 text-sm font-semibold rounded-lg transition-all">🧱 Blocs</button>
-            <button id="view-mobs"   onclick="setView('mobs')"   class="view-btn px-4 py-1.5 text-sm font-semibold rounded-lg transition-all">🐾 Mobs</button>
-        </div>
-    </div>
-
     <main class="max-w-5xl mx-auto px-4 py-8">
 
         @if (session('success'))
@@ -96,6 +87,15 @@
                 {{ session('success') }}
             </div>
         @endif
+
+        <!-- View switcher island -->
+        <div class="flex justify-center mb-8">
+            <div class="bg-gray-800 border border-gray-700 rounded-xl p-1.5 inline-flex gap-1 shadow-lg">
+                <button id="view-all"    onclick="setView('all')"    class="view-btn px-5 py-2 text-sm font-semibold rounded-lg transition-all">Tout</button>
+                <button id="view-blocks" onclick="setView('blocks')" class="view-btn px-5 py-2 text-sm font-semibold rounded-lg transition-all">🧱 Blocs</button>
+                <button id="view-mobs"   onclick="setView('mobs')"   class="view-btn px-5 py-2 text-sm font-semibold rounded-lg transition-all">🐾 Mobs</button>
+            </div>
+        </div>
 
         {{-- ===== BLOCKS SECTION ===== --}}
         <div id="section-blocks">
