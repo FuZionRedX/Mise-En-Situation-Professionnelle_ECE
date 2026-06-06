@@ -124,7 +124,7 @@
                     ➕ Créer mon premier bloc →
                 </a>
             </div>
-            <div class="flex items-center justify-end mb-4">
+            <div id="select-all-container" class="hidden flex items-center justify-end mb-4">
                 <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer hover:text-gray-200 transition-colors select-none">
                     <input type="checkbox" id="select-all" class="w-4 h-4 accent-green-500 cursor-pointer">
                     Tout sélectionner
@@ -574,9 +574,14 @@
             }
 
             // Show/hide empty boxes and counters based on visible cards
-            const blockCards = document.querySelectorAll('.block-card:not(.hidden)');
-            const mobCards = document.querySelectorAll('.mob-card:not(.hidden)');
-            const itemCards = document.querySelectorAll('.item-card:not(.hidden)');
+            const blockSection = document.getElementById('section-blocks');
+            const mobSection = document.getElementById('section-mobs');
+            const itemSection = document.getElementById('section-items');
+
+            const blockCards = blockSection.classList.contains('hidden') ? [] : document.querySelectorAll('.block-card:not(.hidden)');
+            const mobCards = mobSection.classList.contains('hidden') ? [] : document.querySelectorAll('.mob-card:not(.hidden)');
+            const itemCards = itemSection.classList.contains('hidden') ? [] : document.querySelectorAll('.item-card:not(.hidden)');
+            const totalCards = blockCards.length + mobCards.length + itemCards.length;
 
             document.getElementById('blocks-empty-box').classList.toggle('hidden', blockCards.length > 0);
             document.getElementById('mobs-empty-box').classList.toggle('hidden', mobCards.length > 0);
@@ -585,6 +590,9 @@
             document.getElementById('blocks-counter').classList.toggle('hidden', blockCards.length === 0);
             document.getElementById('mobs-counter').classList.toggle('hidden', mobCards.length === 0);
             document.getElementById('items-counter').classList.toggle('hidden', itemCards.length === 0);
+
+            // Show/hide select all button only if there are at least 2 cards total
+            document.getElementById('select-all-container').classList.toggle('hidden', totalCards < 2);
 
             document.querySelectorAll('.view-btn').forEach(b => {
                 const active = b.id === 'view-' + v;
