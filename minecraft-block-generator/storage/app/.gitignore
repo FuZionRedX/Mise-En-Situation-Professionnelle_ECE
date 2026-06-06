@@ -14,6 +14,8 @@
 !geometry/
 !geometry/**
 !geometry/**/*.geojson
+!mob_textures/
+!mob_textures/**/*.png
 !mob_geometry/
 !mob_geometry/**
 !mob_geometry/**/*.geojson
