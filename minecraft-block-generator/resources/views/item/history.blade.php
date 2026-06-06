@@ -117,7 +117,7 @@
                                 <img
                                     src="{{ route('item.texture', $item->id) }}"
                                     alt="Texture {{ $item->name }}"
-                                    class="w-24 h-24 object-contain"
+                                    class="w-28 h-28 object-contain"
                                     style="image-rendering: pixelated;"
                                 >
                             @else
@@ -130,31 +130,33 @@
                         <div class="p-5">
                             <div class="flex items-start justify-between mb-1">
                                 <h2 class="font-bold text-white text-lg truncate">{{ $item->name }}</h2>
+                                <span class="text-xs bg-green-900/50 text-green-400 border border-green-700 rounded-full px-2 py-0.5 ml-2 whitespace-nowrap">🎁 Item</span>
                             </div>
-                            <p class="text-gray-400 text-xs mb-3">
-                                <code class="text-green-400">custom:{{ $item->identifier }}</code>
-                            </p>
-                            <p class="text-gray-500 text-xs mb-4">
-                                {{ $item->created_at->translatedFormat('d M Y à H:i') }}
-                                @if($item->creator_identifier)
-                                    <br><span class="text-gray-600">par {{ $item->creator_identifier }}</span>
-                                @endif
+                            <p class="text-green-400 text-xs font-mono mb-2">custom:{{ $item->identifier }}</p>
+                            <p class="text-gray-400 text-xs mb-4">Créé par : <span class="text-green-300 font-mono">{{ $item->creator_identifier ?? '—' }}</span></p>
+
+                            <p class="text-gray-600 text-xs mb-4 flex items-center gap-2">
+                                <span>📅</span> Créé le {{ $item->created_at->format('d/m/Y à H:i') }}
                             </p>
 
                             <!-- Actions -->
-                            <div class="flex gap-2">
+                            <div class="flex gap-2 items-stretch">
+                                @auth
+                                    @if(Auth::user()->isAdmin() || Auth::user()->identifier === $item->creator_identifier)
+                                        <a href="{{ route('item.edit', $item->id) }}"
+                                           class="flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg whitespace-nowrap">
+                                            ✏️ Modifier
+                                        </a>
+                                    @endif
+                                @endauth
                                 <a href="{{ route('item.download', $item->id) }}"
-                                   class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition-all text-sm text-center">
-                                    ⬇️ Télécharger
+                                   class="flex-1 flex items-center justify-center bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white text-xs font-bold py-2 px-2 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg whitespace-nowrap">
+                                    ⬇ Télécharger
                                 </a>
                                 @auth
-                                    @if(Auth::user()->identifier === $item->creator_identifier || Auth::user()->isAdmin())
-                                        <a href="{{ route('item.edit', $item->id) }}"
-                                           class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded-lg transition-all text-sm">
-                                            ✏️
-                                        </a>
+                                    @if(Auth::user()->isAdmin() || Auth::user()->identifier === $item->creator_identifier)
                                         <button onclick="confirmDelete({{ $item->id }}, '{{ $item->name }}')"
-                                                class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-3 rounded-lg transition-all text-sm">
+                                                class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg transition-all text-xs">
                                             🗑️
                                         </button>
                                     @endif
