@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Block extends Model
 {
@@ -13,4 +14,9 @@ class Block extends Model
         'destructible' => 'boolean',
         'resistance'   => 'float',
     ];
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creator_identifier', 'identifier');
+    }
 }

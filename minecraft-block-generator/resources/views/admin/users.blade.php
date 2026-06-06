@@ -18,7 +18,7 @@
                 </h1>
             </div>
             <span class="text-xs text-gray-500 bg-gray-700 border border-gray-600 rounded-full px-3 py-1">
-                Admin : {{ Auth::user()->identifier }}
+                Admin : {{ Auth::user()->name }}
             </span>
         </div>
     </header>

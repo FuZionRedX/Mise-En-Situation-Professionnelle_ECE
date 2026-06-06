@@ -133,7 +133,7 @@
                                 <span class="text-xs bg-green-900/50 text-green-400 border border-green-700 rounded-full px-2 py-0.5 ml-2 whitespace-nowrap">🎁 Item</span>
                             </div>
                             <p class="text-green-400 text-xs font-mono mb-2">custom:{{ $item->identifier }}</p>
-                            <p class="text-gray-400 text-xs mb-4">Créé par : <span class="text-green-300 font-mono">{{ $item->creator_identifier ?? '—' }}</span></p>
+                            <p class="text-gray-400 text-xs mb-4">Créé par : <span class="text-green-300 font-mono">{{ $item->creator->name ?? '—' }}</span></p>
 
                             <p class="text-gray-600 text-xs mb-4 flex items-center gap-2">
                                 <span>📅</span> Créé le {{ $item->created_at->format('d/m/Y à H:i') }}

@@ -34,13 +34,18 @@
 
         <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
 
-            <div class="mb-5 p-3 bg-gray-700/50 rounded-lg text-sm text-gray-400">
-                Identifiant : <span class="text-green-400 font-mono">{{ $user->identifier }}</span>
-                <span class="text-gray-600 ml-2">(non modifiable)</span>
-            </div>
-
             <form action="{{ route('admin.users.update', $user->id) }}" method="POST" class="space-y-5">
                 @csrf
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Identifiant</label>
+                    <input type="text" name="identifier" value="{{ old('identifier', $user->identifier) }}" pattern="[a-zA-Z0-9_]+"
+                           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 @error('identifier') border-red-500 @enderror"
+                           placeholder="ex: olivier_bonneyrat">
+                    @error('identifier')
+                        <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-1">Nom</label>

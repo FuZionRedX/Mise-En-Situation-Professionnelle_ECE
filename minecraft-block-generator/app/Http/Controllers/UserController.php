@@ -22,12 +22,13 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name'  => ['required', 'string', 'max:50'],
-            'email' => ['required', 'email', 'unique:users,email,' . $user->id],
-            'role'  => ['required', 'in:user,admin'],
+            'identifier' => ['required', 'string', 'regex:/^[a-zA-Z0-9_]+$/', 'unique:users,identifier,' . $user->id],
+            'name'       => ['required', 'string', 'max:50'],
+            'email'      => ['required', 'email', 'unique:users,email,' . $user->id],
+            'role'       => ['required', 'in:user,admin'],
         ]);
 
-        $user->update($request->only('name', 'email', 'role'));
+        $user->update($request->only('identifier', 'name', 'email', 'role'));
 
         return redirect()->route('admin.users')->with('success', 'Utilisateur mis à jour.');
     }
