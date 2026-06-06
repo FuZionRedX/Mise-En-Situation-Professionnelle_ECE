@@ -70,7 +70,7 @@ class ItemController extends Controller
         ])->deleteFileAfterSend(true);
     }
 
-    public function update(ItemRequest $request, Item $item): BinaryFileResponse
+    public function update(ItemRequest $request, Item $item)
     {
         $identifier = $item->identifier;
 
@@ -95,10 +95,21 @@ class ItemController extends Controller
             'hand_equipped'       => (bool) $request->input('hand_equipped'),
         ]);
 
+        return redirect()->route('block.index')->with('success', 'Informations bien mises à jour');
+    }
+
+    public function downloadUpdated(Item $item): BinaryFileResponse
+    {
+        $texturePath = Storage::path($item->texture_path);
+
+        if (!file_exists($texturePath)) {
+            abort(404, 'Texture introuvable pour cet item.');
+        }
+
         $zipPath = $this->zipService->generateFromPath(
             name:            $item->name,
-            identifier:      $identifier,
-            texturePath:     Storage::path($texturePath),
+            identifier:      $item->identifier,
+            texturePath:     $texturePath,
             maxStackSize:    $item->max_stack_size,
             maxDurability:   $item->max_durability,
             itemTier:        $item->item_tier,
@@ -107,7 +118,7 @@ class ItemController extends Controller
             handEquipped:    $item->hand_equipped,
         );
 
-        return response()->download($zipPath, $identifier . '_item_pack.zip', [
+        return response()->download($zipPath, $item->identifier . '_item_pack.zip', [
             'Content-Type' => 'application/zip',
         ])->deleteFileAfterSend(true);
     }

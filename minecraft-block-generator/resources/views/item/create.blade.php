@@ -339,7 +339,7 @@
                             class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-all hover:shadow-lg hover:scale-105 btn-minecraft flex items-center justify-center gap-2"
                         >
                             <span class="text-xl">{{ isset($item) ? '💾' : '⬇️' }}</span>
-                            {{ isset($item) ? 'Mettre à jour et télécharger' : 'Créer et télécharger' }}
+                            {{ isset($item) ? 'Mettre à jour' : 'Créer et télécharger' }}
                         </button>
                     </section>
                 </div>
