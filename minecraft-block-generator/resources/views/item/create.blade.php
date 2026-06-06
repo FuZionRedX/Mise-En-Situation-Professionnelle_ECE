@@ -86,10 +86,16 @@
                     <p class="text-xs text-gray-400">Bedrock Edition — Créez votre item personnalisé</p>
                 </div>
             </div>
-            <a href="{{ route('block.index') }}"
-               class="bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
-                <span>📜</span> Liste
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('block.index') }}"
+                   class="bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
+                    <span>📜</span> Historique
+                </a>
+                <a href="{{ route('block.new') }}"
+                   class="bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
+                    <span>🧱</span> Blocs
+                </a>
+            </div>
         </div>
     </header>
 
@@ -140,7 +146,6 @@
                                 @error('name')
                                     <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                                 @enderror
-                                <p class="text-gray-500 text-xs mt-1">1–50 caractères, lettres, chiffres et espaces uniquement.</p>
                             </div>
 
                             <!-- Identifiant technique -->
@@ -164,7 +169,6 @@
                                 @error('identifier')
                                     <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                                 @enderror
-                                <p class="text-gray-500 text-xs mt-1">{{ isset($item) ? 'Cet identifiant ne peut pas être modifié.' : 'Minuscules et underscores uniquement (ex: <code class="text-green-400">my_item</code>).' }}</p>
                             </div>
                         </div>
                     </section>
@@ -177,7 +181,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">
-                                Fichier PNG {{ !isset($item) ? '<span class="text-red-400">*</span>' : '(optionnel pour modifier)' }}
+                                Fichier PNG {{ !isset($item) ? '<span class="text-red-400">*</span>' : '' }}
                             </label>
                             <div class="relative border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-green-500 transition-colors cursor-pointer" id="texture-drop">
                                 <input
@@ -197,7 +201,6 @@
                             @error('texture')
                                 <p class="text-red-400 text-xs mt-2">{{ $message }}</p>
                             @enderror
-                            <p class="text-gray-500 text-xs mt-3">Recommandé : 16×16, 32×32 ou 64×64 pixels pour un aspect Minecraft authentique.</p>
                         </div>
                     </section>
                 </div>
@@ -207,18 +210,26 @@
                     <section class="bg-gray-800 rounded-xl p-6 border border-gray-700 card-hover sticky top-24">
                         <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font text-center">Aperçu</h2>
 
-                        <div id="preview-container" class="mb-6">
+                        <div id="preview-container" class="mb-4 text-center">
                             @if (isset($item))
                                 <img src="{{ route('item.texture', $item->id) }}" alt="Aperçu" class="texture-preview">
                             @else
-                                <div class="texture-preview opacity-50 flex items-center justify-center text-gray-500">
+                                <div class="texture-preview opacity-50 flex items-center justify-center text-gray-500 mx-auto">
                                     <span class="text-center">
                                         <p class="text-2xl mb-1">❓</p>
-                                        <p class="text-xs">Aperçu de texture</p>
+                                        <p class="text-xs">Aperçu</p>
                                     </span>
                                 </div>
                             @endif
                         </div>
+
+                        <p id="texture-filename" class="text-green-400 text-sm font-mono text-center mb-6">
+                            @if(isset($item))
+                                {{ basename($item->texture_path) }}
+                            @else
+                                <span class="text-gray-500">Aucun fichier</span>
+                            @endif
+                        </p>
 
                         <!-- Bouton de soumission -->
                         <button
@@ -235,9 +246,9 @@
     </div>
 
     <script>
-        // Texture file handling
         const textureInput = document.getElementById('texture');
         const previewContainer = document.getElementById('preview-container');
+        const textureFilename = document.getElementById('texture-filename');
         const textureDrop = document.getElementById('texture-drop');
 
         function updatePreview(file) {
@@ -247,6 +258,8 @@
                     previewContainer.innerHTML = `<img src="${e.target.result}" alt="Aperçu" class="texture-preview">`;
                 };
                 reader.readAsDataURL(file);
+                textureFilename.innerHTML = `<span class="text-green-400">${file.name}</span>`;
+                textureFilename.style.display = 'block';
             }
         }
 

@@ -176,8 +176,11 @@ class BlockController extends Controller
         $mobs   = Mob::latest()
             ->when($creatorId, fn ($q) => $q->where('creator_identifier', $creatorId))
             ->paginate(12, ['*'], 'mob_page');
+        $items  = \App\Models\Item::latest()
+            ->when($creatorId, fn ($q) => $q->where('creator_identifier', $creatorId))
+            ->paginate(12, ['*'], 'item_page');
 
-        return view('block.history', compact('blocks', 'mobs', 'mine'));
+        return view('block.history', compact('blocks', 'mobs', 'items', 'mine'));
     }
 
     /**

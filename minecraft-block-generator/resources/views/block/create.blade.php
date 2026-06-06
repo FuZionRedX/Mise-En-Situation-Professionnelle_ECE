@@ -118,7 +118,7 @@
             </div>
             <a href="{{ route('block.index') }}"
                class="bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2">
-                <span>📜</span> Liste de blocs
+                <span>📜</span> <span id="history-link-text">Liste de blocs</span>
             </a>
         </div>
     </header>
@@ -133,6 +133,10 @@
                 <button id="mode-btn-mob" onclick="setMode('mob')"
                     class="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-700">
                     🐾 Mob
+                </button>
+                <button id="mode-btn-item" onclick="setMode('item')"
+                    class="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-700">
+                    🎁 Item
                 </button>
             </div>
         </div>
@@ -783,6 +787,110 @@
                 </form>
             </div>
 
+            <!-- Formulaire Item (caché par défaut) -->
+            <div id="item-form-col" class="lg:col-span-2 hidden">
+                <form id="item-form" action="{{ route('item.create') }}" method="POST" enctype="multipart/form-data" novalidate>
+                    @csrf
+
+                    <!-- Identité de l'item -->
+                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
+                        <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
+                            <span class="text-2xl animate-bounce">🎁</span> Identité de l'item
+                        </h2>
+
+                        <div class="space-y-4">
+                            <!-- Nom de l'item -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1" for="item-name">
+                                    Nom de l'item <span class="text-red-400">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="item-name"
+                                    name="name"
+                                    placeholder="Ex: Épée magique"
+                                    maxlength="50"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30 input-enhanced"
+                                >
+                                @error('name')
+                                    <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Identifiant technique -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1" for="item-identifier">
+                                    Identifiant technique <span class="text-red-400">*</span>
+                                </label>
+                                <div class="flex items-center">
+                                    <span class="bg-gray-600 border border-r-0 border-gray-600 rounded-l-lg px-3 py-2 text-gray-400 text-sm">custom:</span>
+                                    <input
+                                        type="text"
+                                        id="item-identifier"
+                                        name="identifier"
+                                        placeholder="magic_sword"
+                                        pattern="[a-z0-9_]+"
+                                        class="flex-1 bg-gray-700 border border-gray-600 rounded-r-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                                    >
+                                </div>
+                                @error('identifier')
+                                    <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Texture de l'item -->
+                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
+                        <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
+                            <span class="text-2xl">🎨</span> Texture
+                        </h2>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                Fichier PNG <span class="text-red-400">*</span>
+                            </label>
+                            <div class="relative border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-green-500 transition-colors cursor-pointer" id="item-texture-drop">
+                                <input
+                                    type="file"
+                                    name="texture"
+                                    id="item-texture"
+                                    accept="image/png"
+                                    class="hidden"
+                                    required
+                                >
+                                <div id="item-texture-placeholder">
+                                    <label for="item-texture" class="cursor-pointer block">
+                                        <p class="text-2xl mb-2">🖼️</p>
+                                        <p class="text-gray-300 font-medium">Cliquez ou glissez votre texture</p>
+                                        <p class="text-gray-500 text-xs mt-2">PNG uniquement, max 512 Ko</p>
+                                    </label>
+                                </div>
+                                <div id="item-texture-preview" class="hidden text-center">
+                                    <img id="item-texture-img" src="" alt="Aperçu" class="w-32 h-32 mx-auto mb-2" style="image-rendering: pixelated;">
+                                    <p id="item-texture-filename" class="text-green-400 text-sm font-mono">texture.png</p>
+                                    <p class="text-gray-500 text-xs mt-2 cursor-pointer hover:text-gray-400" onclick="document.getElementById('item-texture').click()">Cliquez pour changer</p>
+                                </div>
+                            </div>
+                            @error('texture')
+                                <p class="text-red-400 text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </section>
+
+                    <!-- Bouton de soumission -->
+                    <button
+                        type="submit"
+                        id="item-submit-btn"
+                        class="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-4 px-6 rounded-xl transition-all minecraft-font text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed btn-minecraft shadow-lg hover:shadow-green-600/30 hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                        <span class="text-2xl">⬇️</span>
+                        <span>Générer mon item</span>
+                    </button>
+
+                </form>
+            </div>
+
             <!-- Panneau de prévisualisation -->
             <div class="lg:col-span-1">
                 <div class="sticky top-24">
@@ -895,6 +1003,47 @@
     ├── animation_controllers/
     └── textures/entity/
         └── <span id="mob-zip-id3" class="text-purple-400">mon_mob</span>.png</pre>
+                        </div>
+
+                        <!-- Infos Item -->
+                        <div id="item-preview-info" class="hidden space-y-3 text-sm bg-gray-700/30 p-4 rounded-lg">
+                            <!-- Image aperçu -->
+                            <div class="text-center py-3">
+                                <div id="item-preview-container" class="mx-auto w-24 h-24 bg-gray-900/50 rounded flex items-center justify-center border border-gray-600">
+                                    <img id="item-preview-texture" src="" alt="Aperçu" class="w-20 h-20" style="image-rendering: pixelated; display: none;">
+                                    <span id="item-preview-placeholder" class="text-4xl">🎁</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">📛 Nom</span>
+                                <span id="item-preview-name" class="text-white font-medium truncate ml-2 max-w-32">—</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">🔖 ID</span>
+                                <span id="item-preview-id" class="text-green-400 font-mono text-xs truncate ml-2 max-w-32">—</span>
+                            </div>
+                            <div class="text-center py-2 bg-green-900/30 border border-green-600/50 rounded text-green-400 text-xs">
+                                Item générique sans propriétés avancées
+                            </div>
+                        </div>
+
+                        <!-- Structure ZIP Item -->
+                        <div id="item-zip-structure" class="hidden bg-gray-900/50 p-4 rounded-lg">
+                            <p class="text-gray-400 text-xs font-medium mb-2 flex items-center gap-2">
+                                <span>📦</span> Structure de l'archive :
+                            </p>
+                            <pre class="text-xs text-gray-500 leading-5 font-mono overflow-x-auto"><span id="item-zip-id" class="text-green-400">mon_item</span>_item_pack/
+├── behavior_pack/
+│   ├── manifest.json
+│   └── items/
+│       └── <span id="item-zip-id2" class="text-green-400">mon_item</span>.json
+└── resource_pack/
+    ├── manifest.json
+    ├── items.json
+    ├── item_texture.json
+    └── textures/items/
+        └── <span id="item-zip-id3" class="text-green-400">mon_item</span>.png</pre>
                         </div>
                     </div>
                 </div>
@@ -1938,40 +2087,67 @@
 
         let currentMode = 'block';
 
+        // Check URL parameter for mode
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialMode = urlParams.get('mode');
+        if (initialMode && ['block', 'mob', 'item'].includes(initialMode)) {
+            currentMode = initialMode;
+        }
+
         function setMode(mode) {
             currentMode = mode;
             const blockCol  = document.getElementById('block-form-col');
             const mobCol    = document.getElementById('mob-form-col');
+            const itemCol   = document.getElementById('item-form-col');
             const blockInfo = document.getElementById('block-preview-info');
             const mobInfo   = document.getElementById('mob-preview-info');
+            const itemInfo  = document.getElementById('item-preview-info');
             const blockZip  = document.getElementById('block-zip-structure');
             const mobZip    = document.getElementById('mob-zip-structure');
+            const itemZip   = document.getElementById('item-zip-structure');
             const mobLabel  = document.getElementById('mob-preview-label');
             const btnBlock  = document.getElementById('mode-btn-block');
             const btnMob    = document.getElementById('mode-btn-mob');
+            const btnItem   = document.getElementById('mode-btn-item');
+            const cubeCanvas = document.getElementById('cube-canvas');
+            const cubePlaceholder = document.getElementById('cube-placeholder-text');
 
             if (mode === 'block') {
                 blockCol.classList.remove('hidden');
                 mobCol.classList.add('hidden');
+                itemCol.classList.add('hidden');
                 blockInfo.classList.remove('hidden');
                 mobInfo.classList.add('hidden');
+                itemInfo.classList.add('hidden');
                 blockZip.classList.remove('hidden');
                 mobZip.classList.add('hidden');
+                itemZip.classList.add('hidden');
                 mobLabel.classList.add('hidden');
                 btnBlock.className = 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all bg-green-600 text-white shadow-md';
                 btnMob.className   = 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-700';
+                btnItem.className  = 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-700';
+                document.getElementById('history-link-text').textContent = 'Liste de blocs';
+                if (cubeCanvas) cubeCanvas.style.display = 'block';
+                if (cubePlaceholder) cubePlaceholder.style.display = 'block';
                 if (blockMesh) { scene.remove(blockMesh); blockMesh = null; }
                 if (textureInput && textureInput.files[0]) showPreview(textureInput.files[0]);
-            } else {
+            } else if (mode === 'mob') {
                 blockCol.classList.add('hidden');
                 mobCol.classList.remove('hidden');
+                itemCol.classList.add('hidden');
                 blockInfo.classList.add('hidden');
                 mobInfo.classList.remove('hidden');
+                itemInfo.classList.add('hidden');
                 blockZip.classList.add('hidden');
                 mobZip.classList.remove('hidden');
+                itemZip.classList.add('hidden');
                 mobLabel.classList.remove('hidden');
                 btnMob.className   = 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all bg-purple-600 text-white shadow-md';
                 btnBlock.className = 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-700';
+                btnItem.className  = 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-700';
+                document.getElementById('history-link-text').textContent = 'Liste de mobs';
+                if (cubeCanvas) cubeCanvas.style.display = 'block';
+                if (cubePlaceholder) cubePlaceholder.style.display = 'block';
                 if (blockMesh) { scene.remove(blockMesh); blockMesh = null; }
                 const mobTex = document.getElementById('mob-texture');
                 if (mobTex.files[0]) {
@@ -1980,6 +2156,24 @@
                     r.readAsDataURL(mobTex.files[0]);
                 }
                 updateMobPreview();
+            } else if (mode === 'item') {
+                blockCol.classList.add('hidden');
+                mobCol.classList.add('hidden');
+                itemCol.classList.remove('hidden');
+                blockInfo.classList.add('hidden');
+                mobInfo.classList.add('hidden');
+                itemInfo.classList.remove('hidden');
+                blockZip.classList.add('hidden');
+                mobZip.classList.add('hidden');
+                itemZip.classList.remove('hidden');
+                mobLabel.classList.add('hidden');
+                btnItem.className  = 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all bg-green-600 text-white shadow-md';
+                btnBlock.className = 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-700';
+                btnMob.className   = 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-700';
+                document.getElementById('history-link-text').textContent = 'Liste d\'items';
+                if (cubeCanvas) cubeCanvas.style.display = 'none';
+                if (cubePlaceholder) cubePlaceholder.style.display = 'none';
+                if (blockMesh) { scene.remove(blockMesh); blockMesh = null; }
             }
         }
 
@@ -2589,6 +2783,146 @@
             @endif
         })();
         @endif
+
+        // ====================================================================
+        // ITEM MODE - Drag and drop + Preview
+        // ====================================================================
+        function setupItemForm() {
+            const itemTextureDrop = document.getElementById('item-texture-drop');
+            const itemTextureInput = document.getElementById('item-texture');
+            const itemNameInput = document.getElementById('item-name');
+            const itemIdInput = document.getElementById('item-identifier');
+
+            if (!itemTextureDrop || !itemTextureInput) return;
+
+            // Drag over
+            itemTextureDrop.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                itemTextureDrop.classList.add('border-green-500', 'bg-green-500/10');
+            });
+
+            // Drag leave
+            itemTextureDrop.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                itemTextureDrop.classList.remove('border-green-500', 'bg-green-500/10');
+            });
+
+            // Drop
+            itemTextureDrop.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                itemTextureDrop.classList.remove('border-green-500', 'bg-green-500/10');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.type === 'image/png') {
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        itemTextureInput.files = dataTransfer.files;
+                        updateItemPreview(file, itemNameInput, itemIdInput);
+                    }
+                }
+            });
+
+            // File change
+            itemTextureInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    updateItemPreview(e.target.files[0], itemNameInput, itemIdInput);
+                }
+            });
+
+            // Input changes
+            if (itemNameInput) {
+                itemNameInput.addEventListener('input', () => {
+                    const previewEl = document.getElementById('item-preview-name');
+                    if (previewEl) previewEl.textContent = itemNameInput.value || '—';
+
+                    // Auto-fill identifier from name
+                    if (itemIdInput) {
+                        const identifier = itemNameInput.value
+                            .toLowerCase()
+                            .trim()
+                            .replace(/\s+/g, '_')
+                            .replace(/[^a-z0-9_]/g, '');
+                        itemIdInput.value = identifier;
+
+                        // Update preview
+                        const previewIdEl = document.getElementById('item-preview-id');
+                        if (previewIdEl) previewIdEl.textContent = identifier || '—';
+
+                        // Update ZIP structure
+                        document.querySelectorAll('#item-zip-id, #item-zip-id2, #item-zip-id3').forEach(el => {
+                            el.textContent = identifier || 'mon_item';
+                        });
+                    }
+                });
+            }
+
+            if (itemIdInput) {
+                itemIdInput.addEventListener('input', () => {
+                    const previewEl = document.getElementById('item-preview-id');
+                    if (previewEl) previewEl.textContent = itemIdInput.value || '—';
+                    const id = itemIdInput.value || 'mon_item';
+                    document.querySelectorAll('#item-zip-id, #item-zip-id2, #item-zip-id3').forEach(el => {
+                        el.textContent = id;
+                    });
+                });
+            }
+        }
+
+        function updateItemPreview(file, nameInput, idInput) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const dataUrl = e.target.result;
+
+                // Show image preview in form (left)
+                const previewContainer = document.getElementById('item-texture-preview');
+                const placeholder = document.getElementById('item-texture-placeholder');
+                const imgElement = document.getElementById('item-texture-img');
+                const filenameEl = document.getElementById('item-texture-filename');
+
+                if (imgElement) imgElement.src = dataUrl;
+                if (filenameEl) filenameEl.textContent = file.name;
+                if (previewContainer) previewContainer.classList.remove('hidden');
+                if (placeholder) placeholder.classList.add('hidden');
+
+                // Show image preview in right panel (small)
+                const previewTexture = document.getElementById('item-preview-texture');
+                const previewPlaceholder = document.getElementById('item-preview-placeholder');
+                if (previewTexture) {
+                    previewTexture.src = dataUrl;
+                    previewTexture.style.display = 'block';
+                }
+                if (previewPlaceholder) previewPlaceholder.style.display = 'none';
+
+                // Update preview info
+                const nameEl = document.getElementById('item-preview-name');
+                const idEl = document.getElementById('item-preview-id');
+                if (nameEl) nameEl.textContent = nameInput.value || '—';
+                if (idEl) idEl.textContent = idInput.value || '—';
+
+                // Update ZIP structure
+                const id = idInput.value || 'mon_item';
+                document.querySelectorAll('#item-zip-id, #item-zip-id2, #item-zip-id3').forEach(el => {
+                    el.textContent = id;
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Setup when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setMode(currentMode);
+                setupItemForm();
+            });
+        } else {
+            setMode(currentMode);
+            setupItemForm();
+        }
     </script>
 </body>
 </html>
