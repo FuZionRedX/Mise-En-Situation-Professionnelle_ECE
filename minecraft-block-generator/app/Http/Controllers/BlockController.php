@@ -63,6 +63,7 @@ class BlockController extends Controller
             'solid'             => (bool) $request->input('solid'),
             'destructible'      => (bool) $request->input('destructible'),
             'resistance'        => (float) $request->input('resistance'),
+            'light_emission'    => (int) $request->input('light_emission', 0),
             'texture_path'      => $texturePath,
             'geometry'          => $geometry,
             'geometry_json_path'=> $geometryJsonPath,
@@ -85,6 +86,7 @@ class BlockController extends Controller
             texture:               $request->file('texture'),
             geometry:              $geometry,
             customGeometryJson:    $customGeometryJson,
+            lightEmission:         (int) $request->input('light_emission', 0),
         );
 
         return response()->download($zipPath, $identifier . '_pack.zip', [
@@ -126,6 +128,7 @@ class BlockController extends Controller
             'solid'             => (bool) $request->input('solid'),
             'destructible'      => (bool) $request->input('destructible'),
             'resistance'        => (float) $request->input('resistance'),
+            'light_emission'    => (int) $request->input('light_emission', 0),
             'texture_path'      => $texturePath,
             'geometry'          => $geometry,
             'geometry_json_path'=> $geometryJsonPath,
@@ -133,6 +136,7 @@ class BlockController extends Controller
 
         // Générer le ZIP
         $customGeometryJson = $geometryJsonPath ? Storage::get($geometryJsonPath) : null;
+        $lightEmission = (int) $request->input('light_emission', 0);
         if ($request->hasFile('texture')) {
             $zipPath = $this->zipService->generate(
                 name:                  $request->input('name'),
@@ -143,6 +147,7 @@ class BlockController extends Controller
                 texture:               $request->file('texture'),
                 geometry:              $geometry,
                 customGeometryJson:    $customGeometryJson,
+                lightEmission:         $lightEmission,
             );
         } else {
             $zipPath = $this->zipService->generateFromPath(
@@ -154,6 +159,7 @@ class BlockController extends Controller
                 texturePath:           Storage::path($texturePath),
                 geometry:              $geometry,
                 customGeometryJson:    $customGeometryJson,
+                lightEmission:         $lightEmission,
             );
         }
 
@@ -205,6 +211,7 @@ class BlockController extends Controller
             texturePath:        $texturePath,
             geometry:           $block->geometry ?? 'cube',
             customGeometryJson: $customGeometryJson,
+            lightEmission:      $block->light_emission ?? 0,
         );
 
         return response()->download($zipPath, $block->identifier . '_pack.zip', [

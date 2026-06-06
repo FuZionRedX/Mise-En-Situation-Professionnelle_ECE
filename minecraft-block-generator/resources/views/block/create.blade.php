@@ -491,6 +491,27 @@
                                     <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
+
+                            <!-- Luminosité -->
+                            <div>
+                                <p class="font-medium text-gray-200 mb-1 flex items-center gap-2">
+                                    <span>💡</span> Luminosité émise
+                                </p>
+                                <p class="text-gray-500 text-xs mb-2">Niveau de lumière émis par le bloc (0 = aucune, 15 = torche)</p>
+                                <input
+                                    type="number"
+                                    name="light_emission"
+                                    id="light-emission"
+                                    min="0"
+                                    max="15"
+                                    step="1"
+                                    value="{{ old('light_emission', isset($block) ? $block->light_emission : 0) }}"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                                >
+                                @error('light_emission')
+                                    <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
                     </section>
 
@@ -1028,6 +1049,10 @@
                             <div class="flex justify-between items-center">
                                 <span class="text-gray-400 flex items-center gap-2">💪 Résistance</span>
                                 <span id="preview-resistance" class="text-white font-bold">3</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 flex items-center gap-2">💡 Luminosité</span>
+                                <span id="preview-light" class="text-yellow-300 font-bold">0</span>
                             </div>
                             <div class="flex justify-between items-center">
                                 <span class="text-gray-400 flex items-center gap-2">📐 Forme</span>
@@ -1790,6 +1815,11 @@
         // --- Résistance → aperçu ---
         document.getElementById('resistance').addEventListener('input', function () {
             document.getElementById('preview-resistance').textContent = this.value || '0';
+        });
+
+        // --- Luminosité → aperçu ---
+        document.getElementById('light-emission').addEventListener('input', function () {
+            document.getElementById('preview-light').textContent = this.value;
         });
 
         // --- Mise à jour du panneau de prévisualisation ---

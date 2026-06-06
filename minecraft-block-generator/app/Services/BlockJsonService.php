@@ -63,7 +63,7 @@ class BlockJsonService
     /**
      * Génère le fichier de comportement du bloc (behavior pack).
      */
-    public function blockBehavior(string $identifier, bool $solid, bool $destructible, float $resistance, string $geometry = 'cube'): array
+    public function blockBehavior(string $identifier, bool $solid, bool $destructible, float $resistance, string $geometry = 'cube', int $lightEmission = 0): array
     {
         if ($geometry === 'net') {
             // Per-face textures from split net
@@ -95,6 +95,10 @@ class BlockJsonService
             'minecraft:friction'             => 0.6,
             'minecraft:explosion_resistance' => $resistance,
         ];
+
+        if ($lightEmission > 0) {
+            $components['minecraft:light_emission'] = $lightEmission;
+        }
 
         // net and glass use standard cube geometry — no custom .geo.json needed
         if ($geometry !== 'cube' && $geometry !== 'net' && $geometry !== 'glass') {

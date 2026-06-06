@@ -19,8 +19,9 @@ class BlockRequest extends FormRequest
             'name'        => ['required', 'string', 'min:1', 'max:50', 'regex:/^[a-zA-Z0-9 ]+$/'],
             'identifier'  => ['required', 'string', 'regex:/^[a-z0-9_]+$/', $isUpdate ? 'unique:blocks,identifier,' . $this->route('block')->id : 'unique:blocks'],
             'texture'     => [$isUpdate ? 'nullable' : 'required', 'file', 'mimes:png', 'max:512'],
-            'geometry_file' => ['nullable', 'file', 'mimes:json', 'max:256'],
-            'solid'       => ['required', 'in:0,1'],
+            'geometry_file'  => ['nullable', 'file', 'mimes:json', 'max:256'],
+            'light_emission' => ['required', 'integer', 'min:0', 'max:15'],
+            'solid'          => ['required', 'in:0,1'],
             'destructible'=> ['required', 'in:0,1'],
             'resistance'  => ['required', 'numeric', 'min:0', 'max:100'],
         ];

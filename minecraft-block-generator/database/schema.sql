@@ -1,5 +1,5 @@
 -- Minecraft Block Generator — SQLite schema
--- Generated 2026-05-14
+-- Generated 2026-06-06
 -- Usage: sqlite3 database.sqlite < schema.sql
 
 PRAGMA journal_mode = WAL;
@@ -66,10 +66,12 @@ CREATE TABLE IF NOT EXISTS "failed_jobs" (
 
 CREATE TABLE IF NOT EXISTS "users" (
     "id"                INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "identifier"        VARCHAR NOT NULL UNIQUE,
     "name"              VARCHAR NOT NULL,
     "email"             VARCHAR NOT NULL UNIQUE,
     "email_verified_at" DATETIME,
     "password"          VARCHAR NOT NULL,
+    "role"              VARCHAR CHECK("role" IN ('user','admin')) NOT NULL DEFAULT 'user',
     "remember_token"    VARCHAR,
     "created_at"        DATETIME,
     "updated_at"        DATETIME
@@ -102,9 +104,11 @@ CREATE TABLE IF NOT EXISTS "blocks" (
     "id"                 INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     "name"               VARCHAR NOT NULL,
     "identifier"         VARCHAR NOT NULL,
+    "creator_identifier" VARCHAR,
     "solid"              TINYINT(1) NOT NULL DEFAULT 1,
     "destructible"       TINYINT(1) NOT NULL DEFAULT 1,
     "resistance"         FLOAT NOT NULL,
+    "light_emission"     TINYINT UNSIGNED NOT NULL DEFAULT 0,
     "texture_path"       VARCHAR NOT NULL,
     "geometry"           VARCHAR NOT NULL DEFAULT 'cube',
     "geometry_json_path" TEXT,
@@ -116,6 +120,7 @@ CREATE TABLE IF NOT EXISTS "mobs" (
     "id"                   INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     "name"                 VARCHAR NOT NULL,
     "identifier"           VARCHAR NOT NULL UNIQUE,
+    "creator_identifier"   VARCHAR,
     "health"               INTEGER NOT NULL DEFAULT 20,
     "speed"                FLOAT NOT NULL DEFAULT 0.25,
     "behavior_type"        VARCHAR CHECK("behavior_type" IN ('passive','neutral','hostile')) NOT NULL DEFAULT 'passive',

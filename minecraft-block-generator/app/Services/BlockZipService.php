@@ -19,9 +19,10 @@ class BlockZipService
         float        $resistance,
         UploadedFile $texture,
         string       $geometry = 'cube',
-        ?string      $customGeometryJson = null
+        ?string      $customGeometryJson = null,
+        int          $lightEmission = 0
     ): string {
-        return $this->buildZip($name, $identifier, $solid, $destructible, $resistance, $texture->getRealPath(), $geometry, $customGeometryJson);
+        return $this->buildZip($name, $identifier, $solid, $destructible, $resistance, $texture->getRealPath(), $geometry, $customGeometryJson, $lightEmission);
     }
 
     public function generateFromPath(
@@ -32,9 +33,10 @@ class BlockZipService
         float  $resistance,
         string $texturePath,
         string $geometry = 'cube',
-        ?string $customGeometryJson = null
+        ?string $customGeometryJson = null,
+        int    $lightEmission = 0
     ): string {
-        return $this->buildZip($name, $identifier, $solid, $destructible, $resistance, $texturePath, $geometry, $customGeometryJson);
+        return $this->buildZip($name, $identifier, $solid, $destructible, $resistance, $texturePath, $geometry, $customGeometryJson, $lightEmission);
     }
 
     /**
@@ -90,7 +92,7 @@ class BlockZipService
             $blockJson = $customGeometryJson
                 ? $customGeometryJson
                 : $this->jsonService->encode(
-                    $this->jsonService->blockBehavior($identifier, $block->solid, $block->destructible, $block->resistance, $geometry)
+                    $this->jsonService->blockBehavior($identifier, $block->solid, $block->destructible, $block->resistance, $geometry, $block->light_emission ?? 0)
                 );
             $zip->addFromString($root . 'behavior_pack/blocks/' . $identifier . '.json', $blockJson);
 
@@ -163,7 +165,8 @@ class BlockZipService
         float  $resistance,
         string $texturePath,
         string $geometry = 'cube',
-        ?string $customGeometryJson = null
+        ?string $customGeometryJson = null,
+        int    $lightEmission = 0
     ): string {
         $zipPath = tempnam(sys_get_temp_dir(), 'mc_block_') . '.zip';
 
@@ -193,7 +196,7 @@ class BlockZipService
             $zip->addFromString(
                 $root . 'behavior_pack/blocks/' . $identifier . '.json',
                 $this->jsonService->encode(
-                    $this->jsonService->blockBehavior($identifier, $solid, $destructible, $resistance, $geometry)
+                    $this->jsonService->blockBehavior($identifier, $solid, $destructible, $resistance, $geometry, $lightEmission)
                 )
             );
         }

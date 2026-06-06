@@ -7,12 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Block extends Model
 {
-    protected $fillable = ['name', 'identifier', 'creator_identifier', 'solid', 'destructible', 'resistance', 'texture_path', 'geometry', 'geometry_json_path'];
+    protected $fillable = ['name', 'identifier', 'creator_identifier', 'solid', 'destructible', 'resistance', 'light_emission', 'texture_path', 'geometry', 'geometry_json_path'];
 
     protected $casts = [
-        'solid'        => 'boolean',
-        'destructible' => 'boolean',
-        'resistance'   => 'float',
+        'solid'          => 'boolean',
+        'destructible'   => 'boolean',
+        'resistance'     => 'float',
+        'light_emission' => 'integer',
     ];
 
     public function creator(): BelongsTo
