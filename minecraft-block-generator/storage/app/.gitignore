@@ -9,7 +9,11 @@
 !textures/
 !textures/**/*.png
 !textures/**/*.json
+!item_textures/
+!item_textures/**/*.png
 !geometry/
 !geometry/**
+!geometry/**/*.geojson
 !mob_geometry/
 !mob_geometry/**
+!mob_geometry/**/*.geojson
