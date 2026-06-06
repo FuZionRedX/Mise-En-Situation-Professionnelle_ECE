@@ -840,6 +840,107 @@
                         </div>
                     </section>
 
+                    <!-- Propriétés Item -->
+                    <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
+                        <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
+                            <span class="text-2xl">⚙️</span> Propriétés
+                        </h2>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Max Stack Size -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1" for="item-max-stack-size">
+                                    Taille max de stack
+                                </label>
+                                <input
+                                    type="number"
+                                    id="item-max-stack-size"
+                                    name="max_stack_size"
+                                    value="64"
+                                    min="1"
+                                    max="64"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30"
+                                >
+                            </div>
+
+                            <!-- Max Durability -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1" for="item-max-durability">
+                                    Durabilité max
+                                </label>
+                                <input
+                                    type="number"
+                                    id="item-max-durability"
+                                    name="max_durability"
+                                    min="0"
+                                    placeholder="Ex: 1750"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30"
+                                >
+                            </div>
+
+                            <!-- Item Tier -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1" for="item-tier">
+                                    Niveau de tool (tier)
+                                </label>
+                                <input
+                                    type="number"
+                                    id="item-tier"
+                                    name="item_tier"
+                                    min="0"
+                                    max="10"
+                                    placeholder="Ex: 5"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30"
+                                >
+                            </div>
+
+                            <!-- Item Multiplier -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1" for="item-multiplier">
+                                    Multiplicateur de vitesse
+                                </label>
+                                <input
+                                    type="number"
+                                    id="item-multiplier"
+                                    name="item_multiplier"
+                                    step="0.1"
+                                    min="0"
+                                    placeholder="Ex: 14.0"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30"
+                                >
+                            </div>
+
+                            <!-- Damage -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1" for="item-damage">
+                                    Dégâts
+                                </label>
+                                <input
+                                    type="number"
+                                    id="item-damage"
+                                    name="damage"
+                                    min="0"
+                                    max="100"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30"
+                                >
+                            </div>
+
+                            <!-- Hand Equipped -->
+                            <div class="flex items-end">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        id="item-hand-equipped"
+                                        name="hand_equipped"
+                                        value="1"
+                                        class="w-4 h-4 accent-green-500 rounded cursor-pointer"
+                                    >
+                                    <span class="text-sm font-medium text-gray-300">Équipable en main</span>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+
                     <!-- Texture de l'item -->
                     <section class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
                         <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
@@ -2911,6 +3012,25 @@
                 });
             };
             reader.readAsDataURL(file);
+        }
+
+        // Validation pour max stack size
+        const itemMaxStackSize = document.getElementById('item-max-stack-size');
+        if (itemMaxStackSize) {
+            itemMaxStackSize.addEventListener('input', (e) => {
+                let value = parseInt(e.target.value);
+                if (value > 64) {
+                    e.target.value = 64;
+                } else if (value < 1 && e.target.value !== '') {
+                    e.target.value = 1;
+                }
+            });
+
+            itemMaxStackSize.addEventListener('blur', (e) => {
+                if (e.target.value === '') {
+                    e.target.value = 64;
+                }
+            });
         }
 
         // Setup when DOM is ready

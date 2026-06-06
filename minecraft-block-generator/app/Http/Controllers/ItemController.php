@@ -39,6 +39,12 @@ class ItemController extends Controller
             'identifier'          => $identifier,
             'creator_identifier'  => $creatorIdentifier,
             'texture_path'        => $texturePath,
+            'max_stack_size'      => $request->input('max_stack_size'),
+            'max_durability'      => $request->input('max_durability'),
+            'item_tier'           => $request->input('item_tier'),
+            'item_multiplier'     => $request->input('item_multiplier'),
+            'damage'              => $request->input('damage'),
+            'hand_equipped'       => (bool) $request->input('hand_equipped'),
         ]);
 
         if ($creatorIdentifier) {
@@ -48,9 +54,15 @@ class ItemController extends Controller
         }
 
         $zipPath = $this->zipService->generate(
-            name:       $request->input('name'),
-            identifier: $identifier,
-            texture:    $request->file('texture'),
+            name:            $request->input('name'),
+            identifier:      $identifier,
+            texture:         $request->file('texture'),
+            maxStackSize:    $request->input('max_stack_size') ? (int)$request->input('max_stack_size') : null,
+            maxDurability:   $request->input('max_durability') ? (int)$request->input('max_durability') : null,
+            itemTier:        $request->input('item_tier') ? (int)$request->input('item_tier') : null,
+            itemMultiplier:  $request->input('item_multiplier') ? (float)$request->input('item_multiplier') : null,
+            damage:          $request->input('damage') ? (int)$request->input('damage') : null,
+            handEquipped:    (bool)$request->input('hand_equipped'),
         );
 
         return response()->download($zipPath, $identifier . '_item_pack.zip', [
@@ -73,14 +85,26 @@ class ItemController extends Controller
         }
 
         $item->update([
-            'name'          => $request->input('name'),
-            'texture_path'  => $texturePath,
+            'name'                => $request->input('name'),
+            'texture_path'        => $texturePath,
+            'max_stack_size'      => $request->input('max_stack_size'),
+            'max_durability'      => $request->input('max_durability'),
+            'item_tier'           => $request->input('item_tier'),
+            'item_multiplier'     => $request->input('item_multiplier'),
+            'damage'              => $request->input('damage'),
+            'hand_equipped'       => (bool) $request->input('hand_equipped'),
         ]);
 
         $zipPath = $this->zipService->generateFromPath(
-            name:       $item->name,
-            identifier: $identifier,
-            texturePath: Storage::path($texturePath),
+            name:            $item->name,
+            identifier:      $identifier,
+            texturePath:     Storage::path($texturePath),
+            maxStackSize:    $item->max_stack_size,
+            maxDurability:   $item->max_durability,
+            itemTier:        $item->item_tier,
+            itemMultiplier:  $item->item_multiplier,
+            damage:          $item->damage,
+            handEquipped:    $item->hand_equipped,
         );
 
         return response()->download($zipPath, $identifier . '_item_pack.zip', [
@@ -109,9 +133,15 @@ class ItemController extends Controller
         }
 
         $zipPath = $this->zipService->generateFromPath(
-            name:       $item->name,
-            identifier: $item->identifier,
-            texturePath: $texturePath,
+            name:            $item->name,
+            identifier:      $item->identifier,
+            texturePath:     $texturePath,
+            maxStackSize:    $item->max_stack_size,
+            maxDurability:   $item->max_durability,
+            itemTier:        $item->item_tier,
+            itemMultiplier:  $item->item_multiplier,
+            damage:          $item->damage,
+            handEquipped:    $item->hand_equipped,
         );
 
         return response()->download($zipPath, $item->identifier . '_item_pack.zip', [

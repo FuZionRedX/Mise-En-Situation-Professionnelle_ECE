@@ -12,23 +12,61 @@ class ItemZipService
     public function generate(
         string       $name,
         string       $identifier,
-        UploadedFile $texture
+        UploadedFile $texture,
+        ?int         $maxStackSize = null,
+        ?int         $maxDurability = null,
+        ?int         $itemTier = null,
+        ?float       $itemMultiplier = null,
+        ?int         $damage = null,
+        ?bool        $handEquipped = null,
     ): string {
-        return $this->buildZip($name, $identifier, $texture->getRealPath());
+        return $this->buildZip(
+            $name,
+            $identifier,
+            $texture->getRealPath(),
+            $maxStackSize,
+            $maxDurability,
+            $itemTier,
+            $itemMultiplier,
+            $damage,
+            $handEquipped,
+        );
     }
 
     public function generateFromPath(
         string $name,
         string $identifier,
-        string $texturePath
+        string $texturePath,
+        ?int   $maxStackSize = null,
+        ?int   $maxDurability = null,
+        ?int   $itemTier = null,
+        ?float $itemMultiplier = null,
+        ?int   $damage = null,
+        ?bool  $handEquipped = null,
     ): string {
-        return $this->buildZip($name, $identifier, $texturePath);
+        return $this->buildZip(
+            $name,
+            $identifier,
+            $texturePath,
+            $maxStackSize,
+            $maxDurability,
+            $itemTier,
+            $itemMultiplier,
+            $damage,
+            $handEquipped,
+        );
     }
 
     private function buildZip(
         string $name,
         string $identifier,
-        string $texturePath
+        string $texturePath,
+        ?int   $maxStackSize = null,
+        ?int   $maxDurability = null,
+        ?int   $itemTier = null,
+        ?float $itemMultiplier = null,
+        ?int   $damage = null,
+        ?bool  $handEquipped = null,
     ): string {
         $zipPath = tempnam(sys_get_temp_dir(), 'mc_items_') . '.zip';
 
@@ -50,7 +88,15 @@ class ItemZipService
         // Item behavior JSON
         $zip->addFromString(
             $root . 'behavior_pack/items/' . $identifier . '.json',
-            $this->jsonService->encode($this->jsonService->itemBehavior($identifier))
+            $this->jsonService->encode($this->jsonService->itemBehavior(
+                $identifier,
+                $maxStackSize,
+                $maxDurability,
+                $itemTier,
+                $itemMultiplier,
+                $damage,
+                $handEquipped,
+            ))
         );
 
         // Resource pack structure

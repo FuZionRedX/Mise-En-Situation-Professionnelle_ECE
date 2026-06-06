@@ -173,6 +173,112 @@
                         </div>
                     </section>
 
+                    <!-- Propriétés -->
+                    <section class="bg-gray-800 rounded-xl p-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
+                        <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">
+                            <span class="text-2xl">⚙️</span> Propriétés
+                        </h2>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Max Stack Size -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1" for="max_stack_size">
+                                    Taille max de stack
+                                </label>
+                                <input
+                                    type="number"
+                                    id="max_stack_size"
+                                    name="max_stack_size"
+                                    value="{{ old('max_stack_size', $item->max_stack_size ?? 64) }}"
+                                    min="1"
+                                    max="64"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30 input-enhanced"
+                                >
+                            </div>
+
+                            <!-- Max Durability -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1" for="max_durability">
+                                    Durabilité max
+                                </label>
+                                <input
+                                    type="number"
+                                    id="max_durability"
+                                    name="max_durability"
+                                    value="{{ old('max_durability', $item->max_durability ?? '') }}"
+                                    min="0"
+                                    placeholder="Ex: 1750"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30 input-enhanced"
+                                >
+                            </div>
+
+                            <!-- Item Tier -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1" for="item_tier">
+                                    Niveau de tool (tier)
+                                </label>
+                                <input
+                                    type="number"
+                                    id="item_tier"
+                                    name="item_tier"
+                                    value="{{ old('item_tier', $item->item_tier ?? '') }}"
+                                    min="0"
+                                    max="10"
+                                    placeholder="Ex: 5"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30 input-enhanced"
+                                >
+                            </div>
+
+                            <!-- Item Multiplier -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1" for="item_multiplier">
+                                    Multiplicateur de vitesse
+                                </label>
+                                <input
+                                    type="number"
+                                    id="item_multiplier"
+                                    name="item_multiplier"
+                                    value="{{ old('item_multiplier', $item->item_multiplier ?? '') }}"
+                                    step="0.1"
+                                    min="0"
+                                    placeholder="Ex: 14.0"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30 input-enhanced"
+                                >
+                            </div>
+
+                            <!-- Damage -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1" for="damage">
+                                    Dégâts
+                                </label>
+                                <input
+                                    type="number"
+                                    id="damage"
+                                    name="damage"
+                                    value="{{ old('damage', $item->damage ?? 0) }}"
+                                    min="0"
+                                    max="100"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30 input-enhanced"
+                                >
+                            </div>
+
+                            <!-- Hand Equipped -->
+                            <div class="flex items-end">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        id="hand_equipped"
+                                        name="hand_equipped"
+                                        value="1"
+                                        {{ old('hand_equipped', $item->hand_equipped ?? false) ? 'checked' : '' }}
+                                        class="w-4 h-4 accent-green-500 rounded cursor-pointer"
+                                    >
+                                    <span class="text-sm font-medium text-gray-300">Équipable en main</span>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+
                     <!-- Texture -->
                     <section class="bg-gray-800 rounded-xl p-6 border border-gray-700 card-hover hover:border-green-500/50 transition-all">
                         <h2 class="text-lg font-semibold text-green-400 mb-4 minecraft-font flex items-center gap-2">

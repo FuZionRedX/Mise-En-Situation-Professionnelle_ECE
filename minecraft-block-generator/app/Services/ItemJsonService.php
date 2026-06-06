@@ -54,8 +54,44 @@ class ItemJsonService
         ];
     }
 
-    public function itemBehavior(string $identifier): array
-    {
+    public function itemBehavior(
+        string $identifier,
+        ?int $maxStackSize = null,
+        ?int $maxDurability = null,
+        ?int $itemTier = null,
+        ?float $itemMultiplier = null,
+        ?int $damage = null,
+        ?bool $handEquipped = null,
+    ): array {
+        $components = [
+            'minecraft:display_name' => [
+                'value' => '§r' . $identifier,
+            ],
+        ];
+
+        if ($maxStackSize !== null) {
+            $components['minecraft:max_stack_size'] = ['value' => $maxStackSize];
+        }
+
+        if ($maxDurability !== null) {
+            $components['minecraft:durability'] = ['max_durability' => $maxDurability];
+        }
+
+        if ($itemTier !== null && $itemMultiplier !== null) {
+            $components['minecraft:axe'] = [
+                'tier' => $itemTier,
+                'multiplier' => $itemMultiplier,
+            ];
+        }
+
+        if ($damage !== null && $damage > 0) {
+            $components['minecraft:damage'] = ['damage' => $damage];
+        }
+
+        if ($handEquipped === true) {
+            $components['minecraft:hand_equipped'] = ['enabled' => true];
+        }
+
         return [
             'format_version' => '1.16.100',
             'minecraft:item' => [
@@ -63,12 +99,7 @@ class ItemJsonService
                     'identifier' => 'custom:' . $identifier,
                     'category'   => 'equipment',
                 ],
-                'components' => [
-                    'minecraft:max_stack_size' => 64,
-                    'minecraft:display_name'   => [
-                        'value' => '§r' . $identifier,
-                    ],
-                ],
+                'components' => $components,
             ],
         ];
     }
