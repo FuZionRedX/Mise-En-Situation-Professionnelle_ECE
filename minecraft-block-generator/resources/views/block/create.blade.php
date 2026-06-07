@@ -1237,16 +1237,27 @@
 
                     // Handle minecraft:geometry format (model file)
                     const geoArray = geometryJsonData['minecraft:geometry'];
+                    const legacyKey = !geoArray?.length && Object.keys(geometryJsonData).find(k => k.startsWith('geometry.'));
                     if (geoArray?.length) {
-                        const desc = geoArray[0].description;
+                        const desc = geoArray[0].description || {};
                         const identifier = desc.identifier || 'unknown';
-                        const tw = desc.texture_width || 16;
-                        const th = desc.texture_height || 16;
+                        const tw = desc.texture_width || 64;
+                        const th = desc.texture_height || 64;
                         const cubeCount = (geoArray[0].bones || [])
                             .reduce((n, b) => n + (b.cubes || []).length, 0);
 
                         document.getElementById('geometry-file-name').textContent = file.name;
                         document.getElementById('geo-identifier').textContent = identifier;
+                        document.getElementById('geo-collision').textContent = `${cubeCount} cubes — texture: ${tw}×${th}`;
+                    } else if (legacyKey) {
+                        const legacyGeo = geometryJsonData[legacyKey];
+                        const tw = legacyGeo.texture_width || 64;
+                        const th = legacyGeo.texture_height || 64;
+                        const cubeCount = (legacyGeo.bones || [])
+                            .reduce((n, b) => n + (b.cubes || []).length, 0);
+
+                        document.getElementById('geometry-file-name').textContent = file.name;
+                        document.getElementById('geo-identifier').textContent = legacyKey;
                         document.getElementById('geo-collision').textContent = `${cubeCount} cubes — texture: ${tw}×${th}`;
                     } else if (geometryJsonData['minecraft:block']) {
                         // Handle minecraft:block format (block behavior file)
@@ -1335,13 +1346,21 @@
                 geometryJsonData = JSON.parse(geometryDataInput.value);
                 const geoArray = geometryJsonData['minecraft:geometry'];
                 const blockDef = geometryJsonData['minecraft:block'];
+                const legacyKey2 = !geoArray?.length && Object.keys(geometryJsonData).find(k => k.startsWith('geometry.'));
 
                 if (geoArray?.length) {
-                    const desc = geoArray[0].description;
-                    document.getElementById('geo-identifier').textContent = desc?.identifier || 'unknown';
-                    const tw = desc?.texture_width || 16;
-                    const th = desc?.texture_height || 16;
+                    const desc = geoArray[0].description || {};
+                    document.getElementById('geo-identifier').textContent = desc.identifier || 'unknown';
+                    const tw = desc.texture_width || 64;
+                    const th = desc.texture_height || 64;
                     const cubeCount = (geoArray[0].bones || []).reduce((n, b) => n + (b.cubes || []).length, 0);
+                    document.getElementById('geo-collision').textContent = `${cubeCount} cubes — texture: ${tw}×${th}`;
+                } else if (legacyKey2) {
+                    const legacyGeo = geometryJsonData[legacyKey2];
+                    const tw = legacyGeo.texture_width || 64;
+                    const th = legacyGeo.texture_height || 64;
+                    const cubeCount = (legacyGeo.bones || []).reduce((n, b) => n + (b.cubes || []).length, 0);
+                    document.getElementById('geo-identifier').textContent = legacyKey2;
                     document.getElementById('geo-collision').textContent = `${cubeCount} cubes — texture: ${tw}×${th}`;
                 } else if (blockDef) {
                     document.getElementById('geo-identifier').textContent = blockDef?.description?.identifier || 'unknown';
@@ -2519,16 +2538,29 @@
                 return;
             }
 
-            const geoArr = geoData['minecraft:geometry'];
-            if (!geoArr || !geoArr[0] || !geoArr[0].bones) {
-                buildMobMesh(textureDataUrl, getMobModelType());
-                return;
-            }
+            // Normalise both format variants into { bones, TW, TH }
+            // Modern (1.12+): { "minecraft:geometry": [{ "description": {...}, "bones": [...] }] }
+            // Legacy (1.8):   { "geometry.name": { "texture_width": N, "bones": [...] } }
+            let geo, TW, TH;
 
-            const geo  = geoArr[0];
-            const desc = geo.description || {};
-            const TW   = desc.texture_width  || 64;
-            const TH   = desc.texture_height || 64;
+            const modernArr = geoData['minecraft:geometry'];
+            if (modernArr && modernArr[0] && modernArr[0].bones) {
+                geo = modernArr[0];
+                const desc = geo.description || {};
+                TW = desc.texture_width  || 64;
+                TH = desc.texture_height || 64;
+            } else {
+                // Try legacy: find the first key starting with "geometry."
+                const legacyKey = Object.keys(geoData).find(k => k.startsWith('geometry.'));
+                if (legacyKey && geoData[legacyKey].bones) {
+                    geo = geoData[legacyKey];
+                    TW  = geo.texture_width  || 64;
+                    TH  = geo.texture_height || 64;
+                } else {
+                    buildMobMesh(textureDataUrl, getMobModelType());
+                    return;
+                }
+            }
 
             const img = new Image();
             img.onload = function () {
