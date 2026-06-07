@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 Route::get('/', [BlockController::class, 'history'])->name('block.index');
 
 Route::get('/block/new', function () {
-    if (auth()->check()) {
+    if (Auth::check()) {
         return app(BlockController::class)->index();
     }
     return redirect()->route('auth.choice');
@@ -20,7 +20,7 @@ Route::get('/block/new', function () {
 Route::get('/items', [ItemController::class, 'history'])->name('item.index');
 
 Route::get('/item/new', function () {
-    if (auth()->check()) {
+    if (Auth::check()) {
         return app(ItemController::class)->index();
     }
     return redirect()->route('auth.choice');
