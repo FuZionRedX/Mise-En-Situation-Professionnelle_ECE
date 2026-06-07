@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résumé Soutenance - Création de Blocks & Items Minecraft</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+            padding: 20px;
+        }
+
+        @media print {
+            body { padding: 0; }
+            .page-break { page-break-after: always; }
+            h1, h2 { page-break-after: avoid; }
+            table { page-break-inside: avoid; }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+        }
+
+        /* COVER PAGE */
+        .cover {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            page-break-after: always;
+            padding: 40px;
+        }
+
+        .cover h1 {
+            font-size: 48px;
+            color: #1a472a;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .cover p {
+            font-size: 18px;
+            color: #555;
+            margin: 10px 0;
+        }
+
+        .cover .subtitle {
+            font-size: 24px;
+            color: #2d5a3d;
+            margin: 40px 0 20px;
+            font-weight: 600;
+        }
+
+        .cover .meta {
+            margin-top: 100px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* TABLE OF CONTENTS */
+        .toc {
+            page-break-after: always;
+            margin: 40px 0;
+        }
+
+        .toc h2 {
+            font-size: 28px;
+            color: #1a472a;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #2d5a3d;
+            padding-bottom: 15px;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            margin: 12px 0;
+            font-size: 16px;
+        }
+
+        .toc a {
+            color: #2d5a3d;
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        /* HEADERS */
+        h1 {
+            font-size: 36px;
+            color: #1a472a;
+            margin: 50px 0 30px;
+            border-bottom: 3px solid #2d5a3d;
+            padding-bottom: 15px;
+            page-break-after: avoid;
+        }
+
+        h2 {
+            font-size: 28px;
+            color: #2d5a3d;
+            margin: 40px 0 25px;
+            page-break-after: avoid;
+        }
+
+        h3 {
+            font-size: 22px;
+            color: #3a6b4d;
+            margin: 30px 0 15px;
+            page-break-after: avoid;
+        }
+
+        /* PARAGRAPH & TEXT */
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        strong {
+            color: #1a472a;
+            font-weight: 600;
+        }
+
+        em {
+            font-style: italic;
+            color: #555;
+        }
+
+        /* LISTS */
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* TABLES */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: #2d5a3d;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* BOXES & HIGHLIGHTS */
+        .box {
+            border-left: 4px solid #2d5a3d;
+            background-color: #f0f5f3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .box.warning {
+            border-left-color: #d9534f;
+            background-color: #fff5f5;
+        }
+
+        .piege {
+            background-color: #fff3cd;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .piege strong {
+            color: #ff6b00;
+        }
+
+        /* CODE & PREFORMATTED */
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d73a49;
+        }
+
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 15px 0;
+            border-left: 3px solid #2d5a3d;
+        }
+
+        pre code {
+            color: #333;
+            padding: 0;
+            background: none;
+        }
+
+        /* FLOW DIAGRAM */
+        .flow {
+            text-align: center;
+            margin: 30px 0;
+            font-size: 16px;
+        }
+
+        .flow div {
+            padding: 15px;
+            margin: 10px;
+            background-color: #e8f1ed;
+            border: 1px solid #2d5a3d;
+            border-radius: 4px;
+            display: inline-block;
+            min-width: 150px;
+        }
+
+        .flow .arrow {
+            color: #2d5a3d;
+            font-size: 24px;
+            margin: 0 10px;
+        }
+
+        /* EMOJIS & ICONS */
+        .emoji {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        /* SECTION DIVIDER */
+        .page-break {
+            page-break-after: always;
+        }
+
+        /* FOOTER */
+        footer {
+            margin-top: 100px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            page-break-before: avoid;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            h1 { font-size: 28px; }
+            h2 { font-size: 22px; }
+            table { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============ COVER PAGE ============ -->
+<div class="cover">
+    <h1>🎮 Création de Blocks & Items Minecraft</h1>
+    <p class="subtitle">Résumé Technique pour Soutenance</p>
+    <p><strong>Projet ECE</strong> — Mise En Situation Professionnelle</p>
+    <p><strong>Auteur</strong> : Olivier (FuZionRedX)</p>
+    <div class="meta">
+        <p><strong>Stack</strong> : Laravel 12 • PHP 8.2 • Minecraft Bedrock Edition</p>
+        <p><strong>Focus</strong> : Système de création et validation de blocks/items</p>
+    </div>
+</div>
+
+<!-- ============ TABLE OF CONTENTS ============ -->
+<div class="toc">
+    <h2>📑 Table des matières</h2>
+    <ul>
+        <li><a href="#arch">1. Architecture générale</a></li>
+        <li><a href="#flux">2. Flux de création d'un block</a></li>
+        <li><a href="#geometrie">3. Détection géométrie automatique</a></li>
+        <li><a href="#comportement">4. Comportement du block (logique)</a></li>
+        <li><a href="#textures">5. Gestion des textures</a></li>
+        <li><a href="#validation">6. Validation des inputs</a></li>
+        <li><a href="#items">7. Création d'items</a></li>
+        <li><a href="#pieges">8. Questions piègues probables</a></li>
+    </ul>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ============ SECTION 1 ============ -->
+<h1 id="arch">1. Architecture générale</h1>
+
+<p>Le système gère la <strong>création et configuration de blocks et items Minecraft Bedrock Edition</strong>. Architecture simplifiée :</p>
+
+<ul>
+    <li><strong>3 entités</strong> : Blocks, Items, Mobs (même système)</li>
+    <li><strong>Authentification</strong> : Login/Register + roles (Admin pour édition)</li>
+    <li><strong>Base de données</strong> : SQLite avec tables <code>blocks</code>, <code>items</code>, <code>mobs</code></li>
+    <li><strong>Frontend</strong> : Blade templates + Tailwind CSS</li>
+</ul>
+
+<h3>Modèle de données (Block)</h3>
+
+<table>
+    <tr>
+        <th>Colonne</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><code>name</code></td>
+        <td>string</td>
+        <td>Nom affiché (ex: "Mon Block")</td>
+    </tr>
+    <tr>
+        <td><code>identifier</code></td>
+        <td>string</td>
+        <td>ID unique (ex: "mon_block")</td>
+    </tr>
+    <tr>
+        <td><code>solid</code></td>
+        <td>boolean</td>
+        <td>Le bloc est-il solide (collision) ?</td>
+    </tr>
+    <tr>
+        <td><code>destructible</code></td>
+        <td>boolean</td>
+        <td>Peut-on le miner ?</td>
+    </tr>
+    <tr>
+        <td><code>resistance</code></td>
+        <td>float (0-100)</td>
+        <td>Dureté du bloc</td>
+    </tr>
+    <tr>
+        <td><code>light_emission</code></td>
+        <td>int (0-15)</td>
+        <td>Luminosité émise</td>
+    </tr>
+    <tr>
+        <td><code>geometry</code></td>
+        <td>string</td>
+        <td>Forme détectée (cube, net, glass, cross)</td>
+    </tr>
+    <tr>
+        <td><code>texture_path</code></td>
+        <td>string</td>
+        <td>Chemin stockage permanent</td>
+    </tr>
+    <tr>
+        <td><code>geometry_json_path</code></td>
+        <td>string</td>
+        <td>Géométrie custom (optionnel)</td>
+    </tr>
+    <tr>
+        <td><code>creator_identifier</code></td>
+        <td>string</td>
+        <td>Qui a créé le bloc</td>
+    </tr>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ============ SECTION 2 ============ -->
+<h1 id="flux">2. Flux de création d'un block</h1>
+
+<p>Voici l'étape par étape quand un utilisateur crée un bloc :</p>
+
+<div class="flow">
+    <div>Utilisateur accède formulaire</div>
+    <div class="arrow">↓</div>
+    <div>Remplit champs (name, identifier, texture, etc.)</div>
+    <div class="arrow">↓</div>
+    <div><strong>Validation stricte</strong> (BlockRequest)</div>
+    <div class="arrow">↓</div>
+    <div><strong>Upload texture PNG</strong></div>
+    <div class="arrow">↓</div>
+    <div><strong>Détection géométrie auto</strong></div>
+    <div class="arrow">↓</div>
+    <div>Sauvegarde texture en storage</div>
+    <div class="arrow">↓</div>
+    <div>Sauvegarde géométrie custom (optionnel)</div>
+    <div class="arrow">↓</div>
+    <div><strong>Génération comportement JSON</strong></div>
+    <div class="arrow">↓</div>
+    <div>Création enregistrement en BDD</div>
+    <div class="arrow">↓</div>
+    <div>Affichage confirmation</div>
+</div>
+
+<h3>Inputs utilisateur (BlockRequest validation)</h3>
+
+<table>
+    <tr>
+        <th>Champ</th>
+        <th>Validation</th>
+        <th>Exemple</th>
+    </tr>
+    <tr>
+        <td><code>name</code></td>
+        <td>1-50 chars, <code>/^[a-zA-Z0-9 ]+$/</code></td>
+        <td>"Mon Block Perso"</td>
+    </tr>
+    <tr>
+        <td><code>identifier</code></td>
+        <td><code>/^[a-z0-9_]+$/</code></td>
+        <td>"mon_block_perso"</td>
+    </tr>
+    <tr>
+        <td><code>texture</code></td>
+        <td>PNG, carré, max 512 KB</td>
+        <td>64×64 PNG</td>
+    </tr>
+    <tr>
+        <td><code>solid</code></td>
+        <td>boolean (0 ou 1)</td>
+        <td>1 = solide</td>
+    </tr>
+    <tr>
+        <td><code>destructible</code></td>
+        <td>boolean (0 ou 1)</td>
+        <td>1 = mineable</td>
+    </tr>
+    <tr>
+        <td><code>resistance</code></td>
+        <td>float 0-100</td>
+        <td>25.5</td>
+    </tr>
+    <tr>
+        <td><code>light_emission</code></td>
+        <td>int 0-15</td>
+        <td>8</td>
+    </tr>
+    <tr>
+        <td><code>geometry_file</code></td>
+        <td>JSON (optionnel)</td>
+        <td>Géométrie custom</td>
+    </tr>
+</table>
+
+<div class="box">
+    <strong>💾 Stockage de la texture</strong><br/>
+    La texture est sauvegardée de façon <strong>permanente</strong> dans <code>storage/app/textures/</code>
+    avec le nom <code>{identifier}_{timestamp}.png</code>. Exemple : <code>mon_block_1718964000.png</code>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ============ SECTION 3 ============ -->
+<h1 id="geometrie">3. <span class="emoji">🚨</span> Détection géométrie automatique</h1>
+
+<p><strong>C'est le cœur du système de création.</strong> L'app analyse la texture fournie et <u>détecte automatiquement</u> la forme du bloc :</p>
+
+<table>
+    <tr>
+        <th>Condition</th>
+        <th>Géométrie</th>
+        <th>Interprétation</th>
+        <th>Usage</th>
+    </tr>
+    <tr>
+        <td>Ratio <strong>4:3 exact</strong> (64×48, 32×24)<br/>OU cross pattern détecté</td>
+        <td><code>net</code></td>
+        <td>Texture dépliée (croix)</td>
+        <td>6 faces différentes</td>
+    </tr>
+    <tr>
+        <td>Transparence <strong>continue > 5%</strong><br/>(alpha canal graduel)</td>
+        <td><code>glass</code></td>
+        <td>Semi-transparent</td>
+        <td>Verre, glaçons</td>
+    </tr>
+    <tr>
+        <td>Transparence <strong>binaire > 20%</strong><br/>(pixels transparent/opaque)</td>
+        <td><code>cross</code></td>
+        <td>Plante, herbe</td>
+        <td>2 plans croisés</td>
+    </tr>
+    <tr>
+        <td>Sinon (opaque entièrement)</td>
+        <td><code>cube</code></td>
+        <td>Bloc solide normal</td>
+        <td>Pierre, brique, etc.</td>
+    </tr>
+</table>
+
+<h3>Détail de la détection</h3>
+
+<p><strong>Net texture (4:3)</strong> :</p>
+<ul>
+    <li>Ratio exact détecté : <code>if ($w % 4 === 0 && $h % 3 === 0 && ($w/4) === ($h/3))</code></li>
+    <li>Format standard Minecraft unfold (croix dépliée)</li>
+    <li>Sera traitée comme 6 faces différentes</li>
+</ul>
+
+<p><strong>Transparence</strong> :</p>
+<ul>
+    <li>Scanne chaque pixel du PNG</li>
+    <li>Compte transparent (<code>alpha > 10</code>) et partiellement transparent (<code>5 < alpha < 122</code>)</li>
+    <li>Glass si continu > 5%, Cross si binaire > 20%</li>
+</ul>
+
+<div class="piege">
+    <strong>❌ PIÈGE #1 : Ratio 4:3 strict</strong><br/>
+    La détection cherche un ratio <u>4:3 exact</u>. Exemples valides : 64×48, 128×96, 32×24.
+    <br/>Pas de 3:2, pas de carré, pas d'approximation. Si ta texture est 65×49, ce sera traité comme cube, pas net.
+</div>
+
+<div class="piege">
+    <strong>❌ PIÈGE #2 : Géométrie détectée ≠ réalité visuelle</strong><br/>
+    La détection automatique se base uniquement sur l'analyse pixel.
+    Si tu uploades une image opaque mais veux un cross → tu dois fournir un JSON géométrie personnalisé.
+</div>
+
+<div class="page-break"></div>
+
+<!-- ============ SECTION 4 ============ -->
+<h1 id="comportement">4. Comportement du block (logique)</h1>
+
+<p>Une fois créé, le système génère les <strong>propriétés comportementales</strong> du bloc basées sur les inputs :</p>
+
+<h3>Propriétés générées</h3>
+
+<pre>
+{
+  "identifier": "custom:{identifier}",
+  "properties": {
+    "solid": {input},
+    "destructible": {input},
+    "resistance": {input},
+    "light_emission": {input},
+    "geometry": {détecté},
+    "hardness": {calculé = resistance / 20}
+  }
+}
+</pre>
+
+<h3>Interprétation Minecraft</h3>
+
+<table>
+    <tr>
+        <th>Propriété</th>
+        <th>Valeur</th>
+        <th>Effet</th>
+    </tr>
+    <tr>
+        <td><code>solid: true</code></td>
+        <td>boolean</td>
+        <td>Bloc a une collision (joueur ne peut pas passer)</td>
+    </tr>
+    <tr>
+        <td><code>solid: false</code></td>
+        <td>boolean</td>
+        <td>Pas de collision (pas de hitbox)</td>
+    </tr>
+    <tr>
+        <td><code>destructible: true</code></td>
+        <td>boolean</td>
+        <td>Joueur peut le miner avec outil</td>
+    </tr>
+    <tr>
+        <td><code>resistance: 25</code></td>
+        <td>0-100</td>
+        <td>Explosion resistance (plus élevé = plus dur à casser)</td>
+    </tr>
+    <tr>
+        <td><code>hardness: 1.25</code></td>
+        <td>résistance ÷ 20</td>
+        <td>Temps de mine (formule Minecraft)</td>
+    </tr>
+    <tr>
+        <td><code>light_emission: 8</code></td>
+        <td>0-15</td>
+        <td>Bloc émet de la lumière (comme glowstone)</td>
+    </tr>
+</table>
+
+<div class="piege">
+    <strong>❌ PIÈGE #3 : Hardness = Resistance ÷ 20</strong><br/>
+    C'est une <u>formule fixe</u>. L'input utilisateur "resistance" (0-100) est converti en "hardness" pour Minecraft.
+    <br/>Exemple : resistance=40 → hardness=2.0 (le bloc se mine 2x plus vite qu'en mode normal)
+</div>
+
+<div class="piege">
+    <strong>❌ PIÈGE #4 : Identifier doit avoir "custom:" prefix</strong><br/>
+    Dans Minecraft, les identifiants sont namespacés. Les built-ins utilisent <code>minecraft:stone</code>.
+    <br/>Tes customs blocks DOIVENT utiliser <code>custom:{identifier}</code>.
+    Sans le prefix "custom:", Minecraft ignorera silencieusement le bloc.
+</div>
+
+<h3>Géométrie et rendu</h3>
+
+<p>Selon la géométrie détectée, le bloc a un comportement de rendu différent :</p>
+
+<table>
+    <tr>
+        <th>Géométrie</th>
+        <th>Render method</th>
+        <th>Textures</th>
+        <th>Propriétés spéciales</th>
+    </tr>
+    <tr>
+        <td><code>cube</code></td>
+        <td>opaque</td>
+        <td>1 (appliquée x6)</td>
+        <td>Normal</td>
+    </tr>
+    <tr>
+        <td><code>net</code></td>
+        <td>opaque</td>
+        <td>6 différentes (top, bottom, left, right, front, back)</td>
+        <td>6 faces uniques</td>
+    </tr>
+    <tr>
+        <td><code>glass</code></td>
+        <td>blend</td>
+        <td>1 (semi-transparent)</td>
+        <td>Dégradé alpha</td>
+    </tr>
+    <tr>
+        <td><code>cross</code></td>
+        <td>alpha_test</td>
+        <td>1 (avec transparence binaire)</td>
+        <td>Pas de face dimming</td>
+    </tr>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ============ SECTION 5 ============ -->
+<h1 id="textures">5. Gestion des textures</h1>
+
+<h3>Traitement selon géométrie</h3>
+
+<p>Après détection, la texture est stockée et traitée différemment selon la forme :</p>
+
+<table>
+    <tr>
+        <th>Géométrie</th>
+        <th>Input utilisateur</th>
+        <th>Stockage</th>
+        <th>Résultat</th>
+    </tr>
+    <tr>
+        <td><code>net</code></td>
+        <td>1 PNG (4:3)</td>
+        <td>1 fichier permanent</td>
+        <td>Split en 6 PNG (top, bottom, left, right, front, back)</td>
+    </tr>
+    <tr>
+        <td><code>cube</code> / <code>glass</code> / <code>cross</code></td>
+        <td>1 PNG (carré)</td>
+        <td>1 fichier permanent</td>
+        <td>1 PNG inchangée, appliquée x6 faces</td>
+    </tr>
+</table>
+
+<h3>Net texture splitting</h3>
+
+<p>Quand la texture est détectée comme <code>net</code>, elle suit ce pattern :</p>
+
+<pre>
+Input (64×48):
+   [top]
+[L][F][R][B]
+  [bottom]
+
+Calcul:
+  C = width / 4 = 64 / 4 = 16
+
+Chaque région = 16×16:
+  top    @ (16, 0)
+  left   @ (0, 16)
+  front  @ (16, 16)
+  right  @ (32, 16)
+  back   @ (48, 16)
+  bottom @ (16, 32)
+</pre>
+
+<div class="piege">
+    <strong>❌ PIÈGE #5 : Net texture splitting</strong><br/>
+    Si tu fournis une texture 4:3, l'app la découpe <u>automatiquement</u> en 6 régions carrées.
+    <br/>Chaque région devient une face du cube. Si ta découpe n'est pas parfaite (ex: contours mal alignés),
+    le résultat visuel sera cassé.
+</div>
+
+<div class="piege">
+    <strong>❌ PIÈGE #6 : Texture carrée ≠ Texture net</strong><br/>
+    Une texture 64×64 (carré) ne sera JAMAIS détectée comme net, même si elle ressemble à une croix.
+    Pourquoi ? Parce que 64÷4 ≠ 64÷3 (pas de ratio 4:3).
+    <br/>Pour net, tu DOIS un ratio 4:3 strict : 64×48, 80×60, 128×96, etc.
+</div>
+
+<h3>Géométrie custom (optionnel)</h3>
+
+<p>L'utilisateur peut uploader un fichier JSON de géométrie personnalisée au lieu de l'auto-détection :</p>
+
+<ul>
+    <li>Format : <code>.json</code> (Minecraft geometry format v1.12.0+)</li>
+    <li>Stockage : <code>storage/app/geometry/{identifier}_{timestamp}.json</code></li>
+    <li>Optionnel : si absent, la géométrie détectée est utilisée</li>
+</ul>
+
+<div class="page-break"></div>
+
+<!-- ============ SECTION 6 ============ -->
+<h1 id="validation">6. Validation des inputs</h1>
+
+<h3>Règles strictes (BlockRequest)</h3>
+
+<table>
+    <tr>
+        <th>Champ</th>
+        <th>Règle</th>
+        <th>Raison</th>
+    </tr>
+    <tr>
+        <td><code>name</code></td>
+        <td>1-50 chars, <code>/^[a-zA-Z0-9 ]+$/</code></td>
+        <td>Éviter injection, caractères spéciaux</td>
+    </tr>
+    <tr>
+        <td><code>identifier</code></td>
+        <td><code>/^[a-z0-9_]+$/</code></td>
+        <td>Standard Minecraft (minuscule + underscore)</td>
+    </tr>
+    <tr>
+        <td><code>texture</code></td>
+        <td>PNG, carré, max 512 KB</td>
+        <td>Éviter malveillance, format compatible</td>
+    </tr>
+    <tr>
+        <td><code>solid</code></td>
+        <td><code>in:0,1</code> (booléan)</td>
+        <td>Valeur stricte</td>
+    </tr>
+    <tr>
+        <td><code>destructible</code></td>
+        <td><code>in:0,1</code> (booléan)</td>
+        <td>Valeur stricte</td>
+    </tr>
+    <tr>
+        <td><code>resistance</code></td>
+        <td>numeric, 0-100</td>
+        <td>Plage Minecraft acceptable</td>
+    </tr>
+    <tr>
+        <td><code>light_emission</code></td>
+        <td>int 0-15</td>
+        <td>Standard Minecraft (niveau de lumière)</td>
+    </tr>
+</table>
+
+<div class="box warning">
+    <strong>⚠️ Sécurité</strong><br/>
+    Tous les inputs passent par validation Laravel (Eloquent + rules).
+    Pas de SQL injection, pas de XXE, pas de path traversal.
+</div>
+
+<div class="piege">
+    <strong>❌ PIÈGE #7 : Texture DOIT carré</strong><br/>
+    La validation <code>ratio=1</code> signifie : width = height.
+    <br/>Une texture 64×48 sera REJETÉE (ce n'est pas carré, c'est 4:3).
+    Pour 4:3, tu dois utiliser la détection net (pas la validation carré).
+</div>
+
+<div class="piege">
+    <strong>❌ PIÈGE #8 : Identifier minuscule + underscore ONLY</strong><br/>
+    <code>/^[a-z0-9_]+$/</code> signifie :
+    <ul>
+        <li>✅ <code>mon_block</code>, <code>mon_block_2</code></li>
+        <li>❌ <code>Mon_Block</code> (majuscules non autorisées)</li>
+        <li>❌ <code>mon-block</code> (tirets non autorisés)</li>
+        <li>❌ <code>mon block</code> (espaces non autorisés)</li>
+    </ul>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ============ SECTION 7 ============ -->
+<h1 id="items">7. Création d'items</h1>
+
+<p>Le système gère aussi la création d'<strong>items Minecraft</strong> (outils, armes, ressources, etc.). Contrairement aux blocks, les items n'ont <u>pas de géométrie</u> — ce sont des objets plats dans l'inventaire.</p>
+
+<h3>Modèle de données (Item)</h3>
+
+<table>
+    <tr>
+        <th>Colonne</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><code>name</code></td>
+        <td>string</td>
+        <td>Nom affiché (ex: "Épée Magique")</td>
+    </tr>
+    <tr>
+        <td><code>identifier</code></td>
+        <td>string (unique)</td>
+        <td>ID unique (ex: "epee_magique")</td>
+    </tr>
+    <tr>
+        <td><code>texture_path</code></td>
+        <td>string</td>
+        <td>Chemin stockage permanent (item_textures/)</td>
+    </tr>
+    <tr>
+        <td><code>max_stack_size</code></td>
+        <td>int (1-64)</td>
+        <td>Nombre max d'items empilables (null = pas limité)</td>
+    </tr>
+    <tr>
+        <td><code>max_durability</code></td>
+        <td>int</td>
+        <td>Durabilité (null = indestructible)</td>
+    </tr>
+    <tr>
+        <td><code>item_tier</code></td>
+        <td>int (0-10)</td>
+        <td>Niveau de tool (vitesse de minage)</td>
+    </tr>
+    <tr>
+        <td><code>item_multiplier</code></td>
+        <td>float</td>
+        <td>Multiplicateur de vitesse d'outil</td>
+    </tr>
+    <tr>
+        <td><code>damage</code></td>
+        <td>int (0-100)</td>
+        <td>Dégâts infligés (pour armes)</td>
+    </tr>
+    <tr>
+        <td><code>hand_equipped</code></td>
+        <td>boolean</td>
+        <td>L'item est-il équippable en main ?</td>
+    </tr>
+    <tr>
+        <td><code>creator_identifier</code></td>
+        <td>string</td>
+        <td>Qui a créé l'item</td>
+    </tr>
+</table>
+
+<h3>Flux de création d'un item</h3>
+
+<div class="flow">
+    <div>Utilisateur accède formulaire</div>
+    <div class="arrow">↓</div>
+    <div>Remplit champs (name, identifier, texture, stats)</div>
+    <div class="arrow">↓</div>
+    <div><strong>Validation (ItemRequest)</strong></div>
+    <div class="arrow">↓</div>
+    <div>Upload texture PNG (carrée)</div>
+    <div class="arrow">↓</div>
+    <div>Sauvegarde texture en storage</div>
+    <div class="arrow">↓</div>
+    <div><strong>Génération comportement JSON</strong></div>
+    <div class="arrow">↓</div>
+    <div>Création enregistrement en BDD</div>
+    <div class="arrow">↓</div>
+    <div>Affichage confirmation</div>
+</div>
+
+<h3>Validation des inputs (ItemRequest)</h3>
+
+<table>
+    <tr>
+        <th>Champ</th>
+        <th>Validation</th>
+        <th>Optionnel ?</th>
+    </tr>
+    <tr>
+        <td><code>name</code></td>
+        <td>1-50 chars, <code>/^[a-zA-Z0-9 ]+$/</code></td>
+        <td>Obligatoire</td>
+    </tr>
+    <tr>
+        <td><code>identifier</code></td>
+        <td><code>/^[a-z0-9_]+$/</code>, unique en BDD</td>
+        <td>Obligatoire</td>
+    </tr>
+    <tr>
+        <td><code>texture</code></td>
+        <td>PNG, max 512 KB</td>
+        <td>Obligatoire (création), optionnel (edit)</td>
+    </tr>
+    <tr>
+        <td><code>max_stack_size</code></td>
+        <td>int 1-64</td>
+        <td>Optionnel</td>
+    </tr>
+    <tr>
+        <td><code>max_durability</code></td>
+        <td>int ≥ 0</td>
+        <td>Optionnel</td>
+    </tr>
+    <tr>
+        <td><code>item_tier</code></td>
+        <td>int 0-10</td>
+        <td>Optionnel</td>
+    </tr>
+    <tr>
+        <td><code>item_multiplier</code></td>
+        <td>float ≥ 0</td>
+        <td>Optionnel (avec tier)</td>
+    </tr>
+    <tr>
+        <td><code>damage</code></td>
+        <td>int 0-100</td>
+        <td>Optionnel</td>
+    </tr>
+    <tr>
+        <td><code>hand_equipped</code></td>
+        <td>boolean</td>
+        <td>Optionnel</td>
+    </tr>
+</table>
+
+<h3>Propriétés d'item Minecraft</h3>
+
+<p>Une fois créé, l'item génère un JSON avec ces composants :</p>
+
+<table>
+    <tr>
+        <th>Propriété</th>
+        <th>Condition</th>
+        <th>Effet</th>
+    </tr>
+    <tr>
+        <td><code>minecraft:max_stack_size</code></td>
+        <td>Si <code>max_stack_size</code> fourni</td>
+        <td>Nombre max empilable (1-64)</td>
+    </tr>
+    <tr>
+        <td><code>minecraft:durability</code></td>
+        <td>Si <code>max_durability</code> fourni</td>
+        <td>Item se casse après N utilisations</td>
+    </tr>
+    <tr>
+        <td><code>minecraft:axe</code></td>
+        <td>Si <code>tier</code> ET <code>multiplier</code></td>
+        <td>Tool : vitesse de minage selon tier</td>
+    </tr>
+    <tr>
+        <td><code>minecraft:damage</code></td>
+        <td>Si <code>damage</code> > 0</td>
+        <td>Arme : dégâts infligés en combat</td>
+    </tr>
+    <tr>
+        <td><code>minecraft:hand_equipped</code></td>
+        <td>Si <code>hand_equipped = true</code></td>
+        <td>Item visible quand équippé en main</td>
+    </tr>
+    <tr>
+        <td><code>minecraft:display_name</code></td>
+        <td>Toujours</td>
+        <td>Nom affiché dans inventaire</td>
+    </tr>
+</table>
+
+<h3>Texture d'item</h3>
+
+<p>Contrairement aux blocks :</p>
+
+<ul>
+    <li><strong>Pas de détection géométrie</strong> — l'item est toujours une image carrée simple</li>
+    <li><strong>Une seule texture</strong> — pas de split en faces</li>
+    <li><strong>Stockage</strong> : <code>storage/app/item_textures/{identifier}_{timestamp}.png</code></li>
+    <li><strong>Format</strong> : PNG carré (pas de ratio 4:3)</li>
+</ul>
+
+<div class="box">
+    <strong>📦 Item behavior JSON (exemple)</strong><br/>
+    <pre>{
+  "minecraft:item": {
+    "description": {
+      "identifier": "custom:epee_magique",
+      "category": "equipment"
+    },
+    "components": {
+      "minecraft:display_name": { "value": "epee_magique" },
+      "minecraft:damage": { "damage": 8 },
+      "minecraft:durability": { "max_durability": 256 },
+      "minecraft:hand_equipped": { "enabled": true }
+    }
+  }
+}</pre>
+</div>
+
+<h3>Différences blocks vs items</h3>
+
+<table>
+    <tr>
+        <th>Aspect</th>
+        <th>Blocks</th>
+        <th>Items</th>
+    </tr>
+    <tr>
+        <td>Géométrie</td>
+        <td>Auto-détectée (net, cube, glass, cross)</td>
+        <td>Aucune (image carrée simple)</td>
+    </tr>
+    <tr>
+        <td>Texture</td>
+        <td>Peut être 4:3 (net) ou carrée</td>
+        <td>Toujours carrée</td>
+    </tr>
+    <tr>
+        <td>Propriétés</td>
+        <td>solid, destructible, resistance, light_emission</td>
+        <td>stack_size, durability, damage, tier, multiplier</td>
+    </tr>
+    <tr>
+        <td>Storage</td>
+        <td><code>storage/app/textures/</code></td>
+        <td><code>storage/app/item_textures/</code></td>
+    </tr>
+    <tr>
+        <td>Identifier check</td>
+        <td>Pas de unique check</td>
+        <td>Unique en BDD</td>
+    </tr>
+</table>
+
+<div class="piege">
+    <strong>❌ PIÈGE #9 : Items identifier UNIQUE</strong><br/>
+    Contrairement aux blocks, les identifiants d'items DOIVENT être uniques en base de données.
+    Tu peux avoir 2 blocks avec le même identifier (si créés rapidement), mais PAS 2 items.
+</div>
+
+<div class="piege">
+    <strong>❌ PIÈGE #10 : Pas de géométrie custom pour items</strong><br/>
+    Les items n'ont pas de détection géométrie ou de JSON géométrie.
+    C'est juste une image 2D dans l'inventaire. Si tu veux une forme spéciale, ce sera un block, pas un item.
+</div>
+
+<div class="piege">
+    <strong>❌ PIÈGE #11 : Tier + Multiplier doivent coexister</strong><br/>
+    Si tu fournis un <code>item_tier</code> (0-10), tu DOIS aussi fournir un <code>item_multiplier</code>.
+    Sans les deux, la propriété "minecraft:axe" ne sera pas générée.
+</div>
+
+<div class="piege">
+    <strong>❌ PIÈGE #12 : Stack size 1-64 seulement</strong><br/>
+    La validation accepte 1-64. Tu ne peux pas avoir 128 items dans une stack.
+    Max = 64 (limitation Minecraft Bedrock).
+</div>
+
+<div class="page-break"></div>
+
+<!-- ============ SECTION 8 ============ -->
+<h1 id="pieges">8. Questions piègues probables</h1>
+
+<table>
+    <tr>
+        <th>#</th>
+        <th>Question piègue</th>
+        <th>Réponse clé</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>Comment détectes-tu la géométrie automatiquement ?</td>
+        <td>Analyse du PNG : ratio 4:3 (net), transparence continue (glass), binaire (cross), sinon cube</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>Pourquoi 4:3 exactement pour net ?</td>
+        <td>C'est l'unfold standard d'un cube Minecraft. Format : [top][4 sides][bottom]</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>Comment splittes-tu une net texture en 6 faces ?</td>
+        <td>Calcul C = width/4, puis extract 6 régions carrées (C×C) à positions spécifiques</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>Texture 64×48 vs 64×64 : différence ?</td>
+        <td>64×48 = 4:3 (net) → 6 faces. 64×64 = carré → cube. Format détermine détection</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>Hardness = Resistance ?</td>
+        <td>NON ! hardness = resistance ÷ 20. Exemple : resistance=40 → hardness=2.0</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>Pourquoi "custom:" dans l'identifier ?</td>
+        <td>Minecraft namespace. Sans ça, bloc ignoré silencieusement. Built-ins = "minecraft:", customs = "custom:"</td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>Identifier minuscule obligatoire ?</td>
+        <td>OUI. Regex <code>/^[a-z0-9_]+$/</code> strict. Pas de majuscules, pas de tirets</td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>Où stockes-tu les textures ?</td>
+        <td>Permanent : <code>storage/app/textures/{identifier}_{timestamp}.png</code></td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td>Géométrie custom (JSON) obligatoire ?</td>
+        <td>Non, optionnel. Si absent, la géométrie auto-détectée est utilisée</td>
+    </tr>
+    <tr>
+        <td>10</td>
+        <td>Glass vs Cross render method</td>
+        <td>Glass = blend (semi-transparent continu). Cross = alpha_test (transparent/opaque net)</td>
+    </tr>
+    <tr>
+        <td>11</td>
+        <td>Texture non-carrée acceptée ?</td>
+        <td>JAMAIS. Validation <code>ratio=1</code> = carré obligatoire. Exception : net (4:3) détecté spécifiquement</td>
+    </tr>
+    <tr>
+        <td>12</td>
+        <td>Light emission : 0-15 pourquoi ?</td>
+        <td>Standard Minecraft (15 = brightness max, comme glowstone)</td>
+    </tr>
+    <tr>
+        <td>13</td>
+        <td>Solid=false : qu'est-ce qui change ?</td>
+        <td>Pas de collision/hitbox. Joueur peut passer à travers. Comme air ou fleur</td>
+    </tr>
+    <tr>
+        <td>14</td>
+        <td>Destructible=false : qui peut le casser ?</td>
+        <td>Personne (même en mode créatif, dépend du gamemode Minecraft)</td>
+    </tr>
+    <tr>
+        <td>15</td>
+        <td>Max texture size 512 KB : pourquoi ?</td>
+        <td>Performance Minecraft + limitation ressources serveur</td>
+    </tr>
+    <tr>
+        <td>16</td>
+        <td>Items : géométrie auto-détectée ?</td>
+        <td>NON. Items = images carrées simples, pas de détection</td>
+    </tr>
+    <tr>
+        <td>17</td>
+        <td>Item identifier unique obligatoire ?</td>
+        <td>OUI, unique en BDD. Blocks : non unique. Items : unique obligatoire</td>
+    </tr>
+    <tr>
+        <td>18</td>
+        <td>Stack size item : max value ?</td>
+        <td>64 (limitation Minecraft). Min 1</td>
+    </tr>
+    <tr>
+        <td>19</td>
+        <td>Tier + Multiplier obligatoires ensemble ?</td>
+        <td>OUI. Si tier fourni, multiplier DOIT être fourni aussi</td>
+    </tr>
+    <tr>
+        <td>20</td>
+        <td>Item sans durability c'est indestructible ?</td>
+        <td>OUI. Si max_durability = null, item ne se casse jamais</td>
+    </tr>
+    <tr>
+        <td>21</td>
+        <td>Hand equipped : à quoi ça sert ?</td>
+        <td>Afficher l'item visiblement quand équippé en main (comme épée, arc)</td>
+    </tr>
+    <tr>
+        <td>22</td>
+        <td>Items storage vs blocks storage ?</td>
+        <td>Items : <code>storage/app/item_textures/</code>. Blocks : <code>storage/app/textures/</code></td>
+    </tr>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ============ RÉSUMÉ ============ -->
+<h1>📌 Résumé</h1>
+
+<p>Le système de création de blocks/items repose sur <strong>3 mécanismes clés</strong> :</p>
+
+<ol>
+    <li><strong>Validation stricte</strong> des inputs (identifier, texture, props)</li>
+    <li><strong>Détection géométrie intelligente</strong> (auto-analyse du PNG)</li>
+    <li><strong>Génération de comportement</strong> (conversion inputs → propriétés Minecraft)</li>
+</ol>
+
+<div class="box success">
+    <strong>✅ Points clés à retenir pour la soutenance</strong>
+    <ul>
+        <li>Géométrie détectée via analyse pixel (4:3, transparence)</li>
+        <li>Hardness = resistance ÷ 20 (pas direct)</li>
+        <li>Identifier DOIT avoir "custom:" prefix + regex minuscule</li>
+        <li>Texture stockée permanent, mais géométrie peut être custom</li>
+        <li>Validation stricte empêche les inputs malveillants</li>
+    </ul>
+</div>
+
+<div class="box warning">
+    <strong>🚨 Pièges les plus courants</strong>
+    <ul>
+        <li><strong>Net 4:3 strict</strong> — pas de ratio approximatif</li>
+        <li><strong>Hardness = resistance÷20</strong> — la formule n'est pas linéaire</li>
+        <li><strong>Identifier "custom:"</strong> — obligatoire pour Minecraft</li>
+        <li><strong>Texture carré</strong> — validation stricte, exception net</li>
+        <li><strong>Détection auto vs custom</strong> — confusion entre les deux</li>
+    </ul>
+</div>
+
+<p style="text-align: center; margin-top: 100px; font-style: italic; color: #666;">
+    <strong>Bonne chance pour ta soutenance ! 🎮</strong>
+</p>
+
+<footer>
+    <p>Création de Blocks & Items Minecraft — Résumé Technique</p>
+    <p>Document généré le 6 juin 2026</p>
+    <p>Auteur : FuZionRedX (Olivier) — Projet ECE</p>
+</footer>
+
+</body>
+</html>
