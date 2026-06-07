@@ -190,7 +190,7 @@
 
                             <div class="flex gap-2 items-stretch">
                                 @auth
-                                    @if(Auth::user()->isAdmin())
+                                    @if(Auth::user()->isAdmin() || Auth::user()->isOwnerOf($block->creator_identifier))
                                         <a href="{{ route('block.edit', $block->id) }}"
                                            class="flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg whitespace-nowrap">
                                             ✏️ Modifier
@@ -316,7 +316,7 @@
 
                             <div class="flex gap-2 items-stretch">
                                 @auth
-                                    @if(Auth::user()->isAdmin())
+                                    @if(Auth::user()->isAdmin() || Auth::user()->isOwnerOf($mob->creator_identifier))
                                         <a href="{{ route('mob.edit', $mob->id) }}"
                                            class="flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-all hover:scale-[1.02] hover:shadow-lg whitespace-nowrap">
                                             ✏️ Modifier

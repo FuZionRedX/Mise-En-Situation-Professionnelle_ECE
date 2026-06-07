@@ -76,15 +76,18 @@ Route::middleware('auth')->group(function () {
     Route::delete('/mob/{mob}', [MobController::class, 'destroy'])->name('mob.destroy');
 });
 
-// Admin only: edit any block/mob/item + user management
-Route::middleware(['auth', \App\Http\Middleware\EnsureAdmin::class])->group(function () {
+// Edit/update: owner or admin
+Route::middleware(['auth', \App\Http\Middleware\EnsureOwnerOrAdmin::class])->group(function () {
     Route::get('/block/{block}/edit', [BlockController::class, 'edit'])->name('block.edit');
     Route::post('/block/{block}/update', [BlockController::class, 'update'])->name('block.update');
     Route::get('/item/{item}/edit', [ItemController::class, 'edit'])->name('item.edit');
     Route::post('/item/{item}/update', [ItemController::class, 'update'])->name('item.update');
     Route::get('/mob/{mob}/edit', [MobController::class, 'edit'])->name('mob.edit');
     Route::post('/mob/{mob}/update', [MobController::class, 'update'])->name('mob.update');
+});
 
+// Admin only: user management
+Route::middleware(['auth', \App\Http\Middleware\EnsureAdmin::class])->group(function () {
     Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users');
     Route::get('/admin/users/{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
     Route::post('/admin/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
