@@ -17,15 +17,6 @@ Route::get('/block/new', function () {
     return redirect()->route('auth.choice');
 })->name('block.new');
 
-Route::get('/items', [ItemController::class, 'history'])->name('item.index');
-
-Route::get('/item/new', function () {
-    if (Auth::check()) {
-        return app(ItemController::class)->index();
-    }
-    return redirect()->route('auth.choice');
-})->name('item.new');
-
 // Download routes (public — anyone can download)
 Route::get('/block/{block}/download', [BlockController::class, 'download'])->name('block.download');
 Route::get('/item/{item}/download', [ItemController::class, 'download'])->name('item.download');

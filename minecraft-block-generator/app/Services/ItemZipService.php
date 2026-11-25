@@ -2,36 +2,11 @@
 
 namespace App\Services;
 
-use Illuminate\Http\UploadedFile;
 use ZipArchive;
 
 class ItemZipService
 {
     public function __construct(private ItemJsonService $jsonService) {}
-
-    public function generate(
-        string       $name,
-        string       $identifier,
-        UploadedFile $texture,
-        ?int         $maxStackSize = null,
-        ?int         $maxDurability = null,
-        ?int         $itemTier = null,
-        ?float       $itemMultiplier = null,
-        ?int         $damage = null,
-        ?bool        $handEquipped = null,
-    ): string {
-        return $this->buildZip(
-            $name,
-            $identifier,
-            $texture->getRealPath(),
-            $maxStackSize,
-            $maxDurability,
-            $itemTier,
-            $itemMultiplier,
-            $damage,
-            $handEquipped,
-        );
-    }
 
     public function generateFromPath(
         string $name,
@@ -68,7 +43,7 @@ class ItemZipService
         ?int   $damage = null,
         ?bool  $handEquipped = null,
     ): string {
-        $zipPath = tempnam(sys_get_temp_dir(), 'mc_items_') . '.zip';
+        $zipPath = tempnam(sys_get_temp_dir(), 'mc_items_');
 
         $zip = new ZipArchive();
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {

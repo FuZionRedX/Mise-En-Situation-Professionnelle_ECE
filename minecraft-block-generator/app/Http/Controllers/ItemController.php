@@ -6,18 +6,12 @@ use App\Http\Requests\ItemRequest;
 use App\Models\Item;
 use App\Services\ItemZipService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ItemController extends Controller
 {
     public function __construct(private ItemZipService $zipService) {}
-
-    public function index()
-    {
-        return view('item.create');
-    }
 
     public function edit(Item $item)
     {
@@ -53,10 +47,10 @@ class ItemController extends Controller
             session()->flash('success', 'Item créé avec succès');
         }
 
-        $zipPath = $this->zipService->generate(
+        $zipPath = $this->zipService->generateFromPath(
             name:            $request->input('name'),
             identifier:      $identifier,
-            texture:         $request->file('texture'),
+            texturePath:     Storage::path($texturePath),
             maxStackSize:    $request->input('max_stack_size') ? (int)$request->input('max_stack_size') : null,
             maxDurability:   $request->input('max_durability') ? (int)$request->input('max_durability') : null,
             itemTier:        $request->input('item_tier') ? (int)$request->input('item_tier') : null,
@@ -96,43 +90,6 @@ class ItemController extends Controller
         ]);
 
         return redirect()->route('block.index')->with('success', 'Informations bien mises à jour');
-    }
-
-    public function downloadUpdated(Item $item): BinaryFileResponse
-    {
-        $texturePath = Storage::path($item->texture_path);
-
-        if (!file_exists($texturePath)) {
-            abort(404, 'Texture introuvable pour cet item.');
-        }
-
-        $zipPath = $this->zipService->generateFromPath(
-            name:            $item->name,
-            identifier:      $item->identifier,
-            texturePath:     $texturePath,
-            maxStackSize:    $item->max_stack_size,
-            maxDurability:   $item->max_durability,
-            itemTier:        $item->item_tier,
-            itemMultiplier:  $item->item_multiplier,
-            damage:          $item->damage,
-            handEquipped:    $item->hand_equipped,
-        );
-
-        return response()->download($zipPath, $item->identifier . '_item_pack.zip', [
-            'Content-Type' => 'application/zip',
-        ])->deleteFileAfterSend(true);
-    }
-
-    public function history(Request $request)
-    {
-        $mine      = $request->query('filter') === 'mine' && Auth::check();
-        $creatorId = $mine ? Auth::user()->identifier : null;
-
-        $items = Item::latest()
-            ->when($creatorId, fn ($q) => $q->where('creator_identifier', $creatorId))
-            ->paginate(12);
-
-        return view('item.history', compact('items', 'mine'));
     }
 
     public function download(Item $item): BinaryFileResponse
