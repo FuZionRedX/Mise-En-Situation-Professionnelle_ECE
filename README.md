@@ -63,8 +63,8 @@ Un générateur web intuitif pour créer des **blocs, items et mobs personnalis�
 - **PHP 8.2+** (si installation locale)
 - **Laravel 12.56.0+** (si installation locale)
 - **Composer** (si installation locale)
-- **SQLite** (base de données incluse)
-- **Node.js** (pour Vite, si installation locale)
+- **SQLite** (la base est créée au premier `migrate`)
+- **Node.js** (pour `composer run dev`, si installation locale)
 
 ### Installation avec Docker (Recommandé)
 
@@ -74,25 +74,8 @@ git clone https://github.com/FuZionRedX/Mise-En-Situation-Professionnelle_ECE.gi
 cd Mise-En-Situation-Professionnelle_ECE/minecraft-block-generator
 
 # 2. Construire et démarrer les conteneurs Docker
-docker-compose up -d
-
-# 3. Installer les dépendances PHP
-docker-compose exec app composer install
-
-# 4. Copier le fichier .env
-docker-compose exec app cp .env.example .env
-
-# 5. Générer la clé d'application
-docker-compose exec app php artisan key:generate
-
-# 6. Migrer la base de données
-docker-compose exec app php artisan migrate
-
-# 7. Installer les dépendances Node
-docker-compose exec app npm install
-
-# 8. Lancer le serveur de développement
-docker-compose exec app composer run dev
+#    (le conteneur installe les dépendances, crée .env et la clé, et migre la base au démarrage)
+docker compose up -d --build
 ```
 
 L'application sera disponible sur **[http://localhost:8000](http://localhost:8000)**
@@ -128,7 +111,7 @@ L'application sera disponible sur **[http://localhost:8000](http://localhost:800
 ## 📋 Commandes Disponibles
 
 ```bash
-# Démarrer le serveur de développement (serve + queue + pail + vite)
+# Démarrer le serveur de développement (serve + queue + pail)
 composer run dev
 
 # Lancer les tests
@@ -246,10 +229,9 @@ storage/app/
 
 - **Framework Backend**: Laravel 12 (PHP 8.2)
 - **Framework Frontend**: Blade Templates
-- **CSS**: Tailwind CSS v3
+- **CSS**: Tailwind CSS (CDN, sans build)
 - **JavaScript**: Vanilla JS + Three.js (prévisualisation 3D)
 - **Base de Données**: SQLite
-- **Build Tool**: Vite
 - **Compression**: ZipArchive (PHP natif)
 
 ## 📄 Structure des Packs Générés
