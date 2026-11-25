@@ -43,6 +43,9 @@ class BlockController extends Controller
     {
         $identifier = $request->input('identifier');
 
+        // Sauvegarder le fichier JSON de géométrie en premier : il est validé ici
+        $geometryJsonPath = $this->storeGeometryJson($request, $identifier);
+
         // Stocker la texture de façon permanente
         $texturePath = $request->file('texture')->storeAs(
             'textures',
@@ -50,9 +53,6 @@ class BlockController extends Controller
         );
 
         $geometry = $this->detectGeometry($request->file('texture')->getRealPath());
-
-        // Sauvegarder le fichier JSON de géométrie sur le disque
-        $geometryJsonPath = $this->storeGeometryJson($request, $identifier);
 
         // Sauvegarder en base
         $creatorIdentifier = Auth::check() ? Auth::user()->identifier : null;
@@ -101,6 +101,9 @@ class BlockController extends Controller
     {
         $identifier = $request->input('identifier');
 
+        // Sauvegarder le nouveau JSON de géométrie en premier : il est validé ici
+        $newGeometryJsonPath = $this->storeGeometryJson($request, $identifier);
+
         // Si une nouvelle texture est fournie, supprimer l'ancienne et en sauvegarder une nouvelle
         if ($request->hasFile('texture')) {
             Storage::delete($block->texture_path);
@@ -114,8 +117,7 @@ class BlockController extends Controller
             $geometry = $block->geometry ?? 'cube';
         }
 
-        // Sauvegarder le nouveau JSON de géométrie si fourni, sinon conserver l'ancien
-        $newGeometryJsonPath = $this->storeGeometryJson($request, $identifier);
+        // Nouveau JSON de géométrie si fourni, sinon conserver l'ancien
         if ($newGeometryJsonPath && $block->geometry_json_path) {
             Storage::delete($block->geometry_json_path);
         }
@@ -222,6 +224,12 @@ class BlockController extends Controller
 
         if ($json === null) {
             return null;
+        }
+
+        if (!is_array(json_decode($json, true))) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'geometry_file' => 'Le fichier de géométrie doit être un JSON valide.',
+            ]);
         }
 
         $filename = $identifier . '_' . time() . '.json';

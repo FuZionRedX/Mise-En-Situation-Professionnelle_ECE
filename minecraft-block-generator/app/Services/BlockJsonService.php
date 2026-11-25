@@ -57,6 +57,11 @@ class BlockJsonService
             $components['minecraft:selection_box'] = $box ?? false;
         }
 
+        // Modèle 3D uploadé : remplace la forme générée
+        if ($modelId) {
+            $components['minecraft:geometry'] = ['identifier' => $modelId];
+        }
+
         if ($destructible) {
             $components['minecraft:destructible_by_mining'] = [
                 'hardness' => max(0.05, $resistance / 20),

@@ -73,12 +73,12 @@ class BlockZipService
             }
 
             // Behavior JSON (use stored custom geometry file if available)
-            $customGeometryJson = $block->geometry_json_path ? Storage::get($block->geometry_json_path) : null;
-            $blockJson = $customGeometryJson
-                ? $customGeometryJson
-                : $this->jsonService->encode(
-                    $this->jsonService->blockBehavior($identifier, $block->solid, $block->destructible, $block->resistance, $geometry, $block->light_emission ?? 0)
-                );
+            [$blockJson, $modelJson, $modelId] = $this->splitCustomJson(
+                $block->geometry_json_path ? Storage::get($block->geometry_json_path) : null
+            );
+            $blockJson ??= $this->jsonService->encode(
+                $this->jsonService->blockBehavior($identifier, $block->solid, $block->destructible, $block->resistance, $geometry, $block->light_emission ?? 0, $modelId)
+            );
             $zip->addFromString($root . 'behavior_pack/blocks/' . $identifier . '.json', $blockJson);
 
             // Textures
@@ -102,17 +102,15 @@ class BlockZipService
             // lang entry
             $langLines[] = "tile.custom:{$identifier}.name={$block->name}";
 
-            // Custom geometry file
-            if ($geometry !== 'cube' && $geometry !== 'net' && $geometry !== 'glass') {
+            // Custom geometry file (uploaded model, or generated shape)
+            $modelJson ??= $this->generatedModel($identifier, $geometry);
+            if ($modelJson) {
                 if (!$hasCustomGeometry) {
                     $zip->addEmptyDir($root . 'resource_pack/models/');
                     $zip->addEmptyDir($root . 'resource_pack/models/blocks/');
                     $hasCustomGeometry = true;
                 }
-                $zip->addFromString(
-                    $root . "resource_pack/models/blocks/{$identifier}.geo.json",
-                    $this->jsonService->encode($this->jsonService->geometryJson($identifier, $geometry))
-                );
+                $zip->addFromString($root . "resource_pack/models/blocks/{$identifier}.geo.json", $modelJson);
             }
         }
 
@@ -171,20 +169,14 @@ class BlockZipService
             $this->jsonService->encode($this->jsonService->behaviorManifest($name))
         );
 
-        // Utiliser le fichier géométrie personnalisée si fourni, sinon générer le comportement
-        if ($customGeometryJson) {
-            $zip->addFromString(
-                $root . 'behavior_pack/blocks/' . $identifier . '.json',
-                $customGeometryJson
-            );
-        } else {
-            $zip->addFromString(
-                $root . 'behavior_pack/blocks/' . $identifier . '.json',
-                $this->jsonService->encode(
-                    $this->jsonService->blockBehavior($identifier, $solid, $destructible, $resistance, $geometry, $lightEmission)
-                )
-            );
-        }
+        // Fichier bloc fourni (minecraft:block) ou modèle 3D (minecraft:geometry) ; sinon comportement généré
+        [$blockJson, $modelJson, $modelId] = $this->splitCustomJson($customGeometryJson);
+        $zip->addFromString(
+            $root . 'behavior_pack/blocks/' . $identifier . '.json',
+            $blockJson ?? $this->jsonService->encode(
+                $this->jsonService->blockBehavior($identifier, $solid, $destructible, $resistance, $geometry, $lightEmission, $modelId)
+            )
+        );
 
         // --- Resource Pack ---
         $zip->addEmptyDir($root . 'resource_pack/');
@@ -235,19 +227,46 @@ class BlockZipService
             $zip->addFile($texturePath, $root . 'resource_pack/textures/blocks/' . $identifier . '.png');
         }
 
-        // Geometry file for non-cube, non-net, non-glass shapes (slab, pillar, plate, cross)
-        if ($geometry !== 'cube' && $geometry !== 'net' && $geometry !== 'glass') {
+        // Geometry file: uploaded model, or generated shape (slab, pillar, plate, cross)
+        $modelJson ??= $this->generatedModel($identifier, $geometry);
+        if ($modelJson) {
             $zip->addEmptyDir($root . 'resource_pack/models/');
             $zip->addEmptyDir($root . 'resource_pack/models/blocks/');
-            $zip->addFromString(
-                $root . 'resource_pack/models/blocks/' . $identifier . '.geo.json',
-                $this->jsonService->encode($this->jsonService->geometryJson($identifier, $geometry))
-            );
+            $zip->addFromString($root . 'resource_pack/models/blocks/' . $identifier . '.geo.json', $modelJson);
         }
 
         $zip->close();
 
         return $zipPath;
+    }
+
+    /**
+     * Sépare le JSON uploadé : [fichier bloc, modèle 3D, identifiant du modèle].
+     * Un fichier minecraft:block remplace le comportement ; un modèle va dans le resource pack.
+     */
+    private function splitCustomJson(?string $json): array
+    {
+        $data = $json ? json_decode($json, true) : null;
+        if (!is_array($data)) {
+            return [null, null, null];
+        }
+        if (isset($data['minecraft:block'])) {
+            return [$json, null, null];
+        }
+        $modelId = $data['minecraft:geometry'][0]['description']['identifier']
+            ?? collect(array_keys($data))->first(fn ($key) => str_starts_with($key, 'geometry.'));
+
+        return $modelId ? [null, $json, $modelId] : [null, null, null];
+    }
+
+    /**
+     * Modèle généré pour les formes non cubiques (slab, pillar, plate, cross), sinon null.
+     */
+    private function generatedModel(string $identifier, string $geometry): ?string
+    {
+        return in_array($geometry, ['cube', 'net', 'glass'], true)
+            ? null
+            : $this->jsonService->encode($this->jsonService->geometryJson($identifier, $geometry));
     }
 
     /**
