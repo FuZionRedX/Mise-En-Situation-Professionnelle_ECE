@@ -2,48 +2,11 @@
 
 namespace App\Services;
 
-use Illuminate\Http\UploadedFile;
 use ZipArchive;
 
 class MobZipService
 {
     public function __construct(private MobJsonService $jsonService) {}
-
-    public function generate(
-        string       $name,
-        string       $identifier,
-        int          $health,
-        float        $speed,
-        string       $behaviorType,
-        ?int         $attackDamage,
-        bool         $isSpawnable,
-        bool         $isSummonable,
-        float        $collisionWidth,
-        float        $collisionHeight,
-        string       $modelType,
-        UploadedFile $texture,
-        string       $spawnEggPrimary,
-        string       $spawnEggSecondary,
-        ?string      $customGeometryJson = null
-    ): string {
-        return $this->buildZip(
-            name: $name,
-            identifier: $identifier,
-            health: $health,
-            speed: $speed,
-            behaviorType: $behaviorType,
-            attackDamage: $attackDamage,
-            isSpawnable: $isSpawnable,
-            isSummonable: $isSummonable,
-            collisionWidth: $collisionWidth,
-            collisionHeight: $collisionHeight,
-            modelType: $modelType,
-            texturePath: $texture->getRealPath(),
-            spawnEggPrimary: $spawnEggPrimary,
-            spawnEggSecondary: $spawnEggSecondary,
-            customGeometryJson: $customGeometryJson
-        );
-    }
 
     public function generateFromPath(
         string  $name,
@@ -56,6 +19,7 @@ class MobZipService
         bool    $isSummonable,
         float   $collisionWidth,
         float   $collisionHeight,
+        float   $scale,
         string  $modelType,
         string  $texturePath,
         string  $spawnEggPrimary,
@@ -73,6 +37,7 @@ class MobZipService
             isSummonable: $isSummonable,
             collisionWidth: $collisionWidth,
             collisionHeight: $collisionHeight,
+            scale: $scale,
             modelType: $modelType,
             texturePath: $texturePath,
             spawnEggPrimary: $spawnEggPrimary,
@@ -88,7 +53,7 @@ class MobZipService
      */
     public function generateMulti(array $mobs): string
     {
-        $zipPath = tempnam(sys_get_temp_dir(), 'mc_mobs_') . '.zip';
+        $zipPath = tempnam(sys_get_temp_dir(), 'mc_mobs_');
 
         $zip = new ZipArchive();
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
@@ -109,7 +74,6 @@ class MobZipService
         $zip->addEmptyDir($root . 'resource_pack/models/');
         $zip->addEmptyDir($root . 'resource_pack/models/entity/');
         $zip->addEmptyDir($root . 'resource_pack/render_controllers/');
-        $zip->addEmptyDir($root . 'resource_pack/animation_controllers/');
         $zip->addEmptyDir($root . 'resource_pack/textures/');
         $zip->addEmptyDir($root . 'resource_pack/textures/entity/');
         $zip->addEmptyDir($root . 'resource_pack/texts/');
@@ -140,7 +104,7 @@ class MobZipService
                 $this->jsonService->encode(
                     $this->jsonService->entityBehavior(
                         $id, $mob->health, $mob->speed, $mob->behavior_type, $mob->attack_damage,
-                        $mob->is_spawnable, $mob->is_summonable, $mob->collision_width, $mob->collision_height
+                        $mob->is_spawnable, $mob->is_summonable, $mob->collision_width, $mob->collision_height, $mob->scale
                     )
                 )
             );
@@ -159,11 +123,6 @@ class MobZipService
             $zip->addFromString(
                 $root . 'resource_pack/render_controllers/' . $id . '.render_controller.json',
                 $this->jsonService->encode($this->jsonService->renderController($id))
-            );
-
-            $zip->addFromString(
-                $root . 'resource_pack/animation_controllers/' . $id . '.animation_controllers.json',
-                $this->jsonService->encode($this->jsonService->animationController($id, $mob->model_type))
             );
 
             $zip->addFile($texturePath, $root . 'resource_pack/textures/entity/' . $id . '.png');
@@ -190,13 +149,14 @@ class MobZipService
         bool    $isSummonable,
         float   $collisionWidth,
         float   $collisionHeight,
+        float   $scale,
         string  $modelType,
         string  $texturePath,
         string  $spawnEggPrimary,
         string  $spawnEggSecondary,
         ?string $customGeometryJson = null
     ): string {
-        $zipPath = tempnam(sys_get_temp_dir(), 'mc_mob_') . '.zip';
+        $zipPath = tempnam(sys_get_temp_dir(), 'mc_mob_');
 
         $zip = new ZipArchive();
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
@@ -217,7 +177,7 @@ class MobZipService
             $this->jsonService->encode(
                 $this->jsonService->entityBehavior(
                     $identifier, $health, $speed, $behaviorType, $attackDamage,
-                    $isSpawnable, $isSummonable, $collisionWidth, $collisionHeight
+                    $isSpawnable, $isSummonable, $collisionWidth, $collisionHeight, $scale
                 )
             )
         );
@@ -228,7 +188,6 @@ class MobZipService
         $zip->addEmptyDir($root . 'resource_pack/models/');
         $zip->addEmptyDir($root . 'resource_pack/models/entity/');
         $zip->addEmptyDir($root . 'resource_pack/render_controllers/');
-        $zip->addEmptyDir($root . 'resource_pack/animation_controllers/');
         $zip->addEmptyDir($root . 'resource_pack/textures/');
         $zip->addEmptyDir($root . 'resource_pack/textures/entity/');
         $zip->addEmptyDir($root . 'resource_pack/texts/');
@@ -250,10 +209,6 @@ class MobZipService
         $zip->addFromString(
             $root . 'resource_pack/render_controllers/' . $identifier . '.render_controller.json',
             $this->jsonService->encode($this->jsonService->renderController($identifier))
-        );
-        $zip->addFromString(
-            $root . 'resource_pack/animation_controllers/' . $identifier . '.animation_controllers.json',
-            $this->jsonService->encode($this->jsonService->animationController($identifier, $modelType))
         );
         $zip->addFile($texturePath, $root . 'resource_pack/textures/entity/' . $identifier . '.png');
         $zip->addFromString(

@@ -46,7 +46,7 @@ class MobController extends Controller
 
         $customGeometryJson = $geometryJsonPath ? Storage::get($geometryJsonPath) : null;
 
-        $zipPath = $this->zipService->generate(
+        $zipPath = $this->zipService->generateFromPath(
             name:               $request->input('name'),
             identifier:         $identifier,
             health:             (int)   $request->input('health'),
@@ -57,8 +57,9 @@ class MobController extends Controller
             isSummonable:       (bool)  $request->input('is_summonable'),
             collisionWidth:     (float) $request->input('collision_width'),
             collisionHeight:    (float) $request->input('collision_height'),
+            scale:              (float) $request->input('scale'),
             modelType:          $request->input('model_type'),
-            texture:            $request->file('texture'),
+            texturePath:        Storage::path($texturePath),
             spawnEggPrimary:    $request->input('spawn_egg_primary'),
             spawnEggSecondary:  $request->input('spawn_egg_secondary'),
             customGeometryJson: $customGeometryJson,
@@ -114,43 +115,24 @@ class MobController extends Controller
 
         $customGeometryJson = $geometryJsonPath ? Storage::get($geometryJsonPath) : null;
 
-        if ($request->hasFile('texture')) {
-            $zipPath = $this->zipService->generate(
-                name:               $request->input('name'),
-                identifier:         $identifier,
-                health:             (int)   $request->input('health'),
-                speed:              (float) $request->input('speed'),
-                behaviorType:       $request->input('behavior_type'),
-                attackDamage:       $request->input('attack_damage') ? (int) $request->input('attack_damage') : null,
-                isSpawnable:        (bool)  $request->input('is_spawnable'),
-                isSummonable:       (bool)  $request->input('is_summonable'),
-                collisionWidth:     (float) $request->input('collision_width'),
-                collisionHeight:    (float) $request->input('collision_height'),
-                modelType:          $request->input('model_type'),
-                texture:            $request->file('texture'),
-                spawnEggPrimary:    $request->input('spawn_egg_primary'),
-                spawnEggSecondary:  $request->input('spawn_egg_secondary'),
-                customGeometryJson: $customGeometryJson,
-            );
-        } else {
-            $zipPath = $this->zipService->generateFromPath(
-                name:               $request->input('name'),
-                identifier:         $identifier,
-                health:             (int)   $request->input('health'),
-                speed:              (float) $request->input('speed'),
-                behaviorType:       $request->input('behavior_type'),
-                attackDamage:       $request->input('attack_damage') ? (int) $request->input('attack_damage') : null,
-                isSpawnable:        (bool)  $request->input('is_spawnable'),
-                isSummonable:       (bool)  $request->input('is_summonable'),
-                collisionWidth:     (float) $request->input('collision_width'),
-                collisionHeight:    (float) $request->input('collision_height'),
-                modelType:          $request->input('model_type'),
-                texturePath:        Storage::path($texturePath),
-                spawnEggPrimary:    $request->input('spawn_egg_primary'),
-                spawnEggSecondary:  $request->input('spawn_egg_secondary'),
-                customGeometryJson: $customGeometryJson,
-            );
-        }
+        $zipPath = $this->zipService->generateFromPath(
+            name:               $request->input('name'),
+            identifier:         $identifier,
+            health:             (int)   $request->input('health'),
+            speed:              (float) $request->input('speed'),
+            behaviorType:       $request->input('behavior_type'),
+            attackDamage:       $request->input('attack_damage') ? (int) $request->input('attack_damage') : null,
+            isSpawnable:        (bool)  $request->input('is_spawnable'),
+            isSummonable:       (bool)  $request->input('is_summonable'),
+            collisionWidth:     (float) $request->input('collision_width'),
+            collisionHeight:    (float) $request->input('collision_height'),
+            scale:              (float) $request->input('scale'),
+            modelType:          $request->input('model_type'),
+            texturePath:        Storage::path($texturePath),
+            spawnEggPrimary:    $request->input('spawn_egg_primary'),
+            spawnEggSecondary:  $request->input('spawn_egg_secondary'),
+            customGeometryJson: $customGeometryJson,
+        );
 
         return response()->download($zipPath, $identifier . '_mob_pack.zip', [
             'Content-Type' => 'application/zip',
@@ -178,6 +160,7 @@ class MobController extends Controller
             isSummonable:       $mob->is_summonable,
             collisionWidth:     $mob->collision_width,
             collisionHeight:    $mob->collision_height,
+            scale:              $mob->scale,
             modelType:          $mob->model_type,
             texturePath:        $texturePath,
             spawnEggPrimary:    $mob->spawn_egg_primary,

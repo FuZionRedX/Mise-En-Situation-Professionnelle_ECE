@@ -15,7 +15,8 @@ class MobJsonService
         bool   $isSpawnable,
         bool   $isSummonable,
         float  $collisionWidth,
-        float  $collisionHeight
+        float  $collisionHeight,
+        float  $scale = 1.0
     ): array {
         $components = [
             'minecraft:health'        => ['value' => $health, 'max' => $health],
@@ -24,6 +25,7 @@ class MobJsonService
             'minecraft:jump.basic'    => (object)[],
             'minecraft:navigation.walk' => ['can_path_over_water' => true],
             'minecraft:collision_box' => ['width' => $collisionWidth, 'height' => $collisionHeight],
+            'minecraft:scale'         => ['value' => $scale],
             'minecraft:behavior.random_stroll'    => ['priority' => 7, 'speed_multiplier' => 1.0],
             'minecraft:behavior.look_at_player'   => ['priority' => 8, 'look_distance' => 8.0],
             'minecraft:behavior.random_look_around' => ['priority' => 9],
@@ -217,29 +219,6 @@ class MobJsonService
             [
                 'name' => 'leg3', 'parent' => 'root', 'pivot' => [2, 6, 2],
                 'cubes' => [['origin' => [0, 0, 0], 'size' => [4, 6, 4], 'uv' => [0, 16]]],
-            ],
-        ];
-    }
-
-    public function animationController(string $identifier, string $modelType): array
-    {
-        $baseAnim = match ($modelType) {
-            'quadruped' => 'animation.pig.walk',
-            'creeper'   => 'animation.creeper.walk',
-            default     => 'animation.humanoid.base_pose',
-        };
-
-        return [
-            'format_version' => '1.10.0',
-            'animation_controllers' => [
-                'controller.animation.' . $identifier . '.general' => [
-                    'initial_state' => 'default',
-                    'states' => [
-                        'default' => [
-                            'animations' => [$baseAnim],
-                        ],
-                    ],
-                ],
             ],
         ];
     }

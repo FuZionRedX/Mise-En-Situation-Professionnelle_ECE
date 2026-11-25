@@ -17,7 +17,7 @@ class MobRequest extends FormRequest
         $mobId    = $isUpdate ? $this->route('mob')->id : null;
 
         return [
-            'name'              => ['required', 'string', 'min:1', 'max:50'],
+            'name'              => ['required', 'string', 'min:1', 'max:50', 'regex:/^[a-zA-Z0-9 ]+$/'],
             'identifier'        => ['required', 'regex:/^[a-z0-9_]+$/', $isUpdate ? 'unique:mobs,identifier,' . $mobId : 'unique:mobs,identifier'],
             'texture'           => [$isUpdate ? 'nullable' : 'required', 'file', 'mimes:png', 'max:512'],
             'model_type'        => ['required', 'in:humanoid,quadruped,creeper'],
@@ -39,6 +39,7 @@ class MobRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'name.regex'        => 'Le nom ne peut contenir que des lettres, chiffres et espaces.',
             'identifier.regex'  => 'L\'identifiant ne peut contenir que des minuscules, chiffres et underscores.',
             'identifier.unique' => 'Cet identifiant est déjà utilisé.',
             'texture.mimes'     => 'La texture doit être un fichier PNG.',
