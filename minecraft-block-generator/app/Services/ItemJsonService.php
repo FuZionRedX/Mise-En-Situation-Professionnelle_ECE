@@ -16,8 +16,8 @@ class ItemJsonService
         ?bool $handEquipped = null,
     ): array {
         $components = [
-            'minecraft:display_name' => [
-                'value' => '§r' . $identifier,
+            'minecraft:icon' => [
+                'texture' => $identifier,
             ],
         ];
 
@@ -62,7 +62,7 @@ class ItemJsonService
             'resource_pack_name' => 'custom_items',
             'texture_name'       => 'atlas.items',
             'texture_data'       => [
-                'custom:' . $identifier => [
+                $identifier => [
                     'textures' => 'textures/items/' . $identifier,
                 ],
             ],
@@ -74,7 +74,7 @@ class ItemJsonService
         return [
             'format_version' => '1.21.40',
             'custom:' . $identifier => [
-                'textures' => 'custom:' . $identifier,
+                'textures' => $identifier,
             ],
         ];
     }
