@@ -25,29 +25,15 @@ Route::post('/blocks/download-selected', [BlockController::class, 'downloadSelec
 Route::get('/blocks/textures', [BlockController::class, 'downloadAllTextures'])->name('block.download-textures');
 
 // Texture serving (public)
-Route::get('/block/{id}/texture', function (int $id) {
-    $block = \App\Models\Block::findOrFail($id);
-    if (!Storage::exists($block->texture_path)) {
-        abort(404);
-    }
-    return response()->file(Storage::path($block->texture_path), ['Content-Type' => 'image/png']);
-})->name('block.texture');
-
-Route::get('/item/{id}/texture', function (int $id) {
-    $item = \App\Models\Item::findOrFail($id);
-    if (!Storage::exists($item->texture_path)) {
-        abort(404);
-    }
-    return response()->file(Storage::path($item->texture_path), ['Content-Type' => 'image/png']);
-})->name('item.texture');
-
-Route::get('/mob/{id}/texture', function (int $id) {
-    $mob = \App\Models\Mob::findOrFail($id);
-    if (!Storage::exists($mob->texture_path)) {
-        abort(404);
-    }
-    return response()->file(Storage::path($mob->texture_path), ['Content-Type' => 'image/png']);
-})->name('mob.texture');
+foreach (['block' => \App\Models\Block::class, 'item' => \App\Models\Item::class, 'mob' => \App\Models\Mob::class] as $type => $model) {
+    Route::get("/{$type}/{id}/texture", function (int $id) use ($model) {
+        $entity = $model::findOrFail($id);
+        if (!Storage::exists($entity->texture_path)) {
+            abort(404);
+        }
+        return response()->file(Storage::path($entity->texture_path), ['Content-Type' => 'image/png']);
+    })->name("{$type}.texture");
+}
 
 // Auth routes
 Route::get('/auth/choice', [\App\Http\Controllers\AuthController::class, 'choice'])->name('auth.choice');
