@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liste Texture — Minecraft Block Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.theme')
     <style>
         .minecraft-font { font-family: 'Courier New', monospace; }
         
@@ -14,8 +15,8 @@
             50% { transform: translateY(-5px); }
         }
         @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.6); }
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 106, 0, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(255, 106, 0, 0.6); }
         }
         .animate-float { animation: float 3s ease-in-out infinite; }
         
@@ -35,17 +36,10 @@
     <header class="bg-gray-800 border-b border-gray-700 py-4 px-6 sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-5xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-green-600 rounded-lg grid grid-cols-2 gap-0.5 p-1.5 animate-float shadow-lg">
-                    <div class="bg-green-400 rounded-sm"></div>
-                    <div class="bg-green-700 rounded-sm"></div>
-                    <div class="bg-green-700 rounded-sm"></div>
-                    <div class="bg-green-400 rounded-sm"></div>
-                </div>
+                @include('partials.brand-mark')
                 <div>
-                    <h1 class="text-xl font-bold minecraft-font text-green-400 flex items-center gap-2">
-                        <span class="text-2xl">⛏️</span> Minecraft Block Generator
-                    </h1>
-                    <p class="text-xs text-gray-400">Blocs &amp; Mobs générés</p>
+                    <p class="pal-eyebrow">Blocs, mobs &amp; items</p>
+                    <h1 class="text-xl font-extrabold text-white leading-tight">Minecraft Block Generator</h1>
                 </div>
             </div>
             <div class="flex items-center gap-3">

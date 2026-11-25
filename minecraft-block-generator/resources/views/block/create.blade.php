@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Générateur de Blocs Minecraft</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.theme')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         .minecraft-font { font-family: 'Courier New', monospace; }
@@ -15,8 +16,8 @@
             50% { transform: translateY(-5px); }
         }
         @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.6); }
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 106, 0, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(255, 106, 0, 0.6); }
         }
         @keyframes slide-in {
             from { opacity: 0; transform: translateY(20px); }
@@ -46,7 +47,7 @@
         .cube-face {
             position: absolute;
             width: 64px; height: 64px;
-            background-color: #4b5563;
+            background-color: #383838;
             background-size: cover;
             background-position: center;
             image-rendering: pixelated;
@@ -66,7 +67,7 @@
         }
         .input-enhanced:focus {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+            box-shadow: 0 4px 12px rgba(255, 106, 0, 0.2);
         }
 
         /* Card hover effects */
@@ -103,17 +104,10 @@
     <header class="bg-gray-800 border-b border-gray-700 py-4 px-6 sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-green-600 rounded-lg grid grid-cols-2 gap-0.5 p-1.5 animate-float shadow-lg">
-                    <div class="bg-green-400 rounded-sm"></div>
-                    <div class="bg-green-700 rounded-sm"></div>
-                    <div class="bg-green-700 rounded-sm"></div>
-                    <div class="bg-green-400 rounded-sm"></div>
-                </div>
+                @include('partials.brand-mark')
                 <div>
-                    <h1 class="text-xl font-bold minecraft-font text-green-400 flex items-center gap-2">
-                        <span class="text-2xl">🧱</span> Générateur de blocs Minecraft
-                    </h1>
-                    <p class="text-xs text-gray-400">Bedrock Edition — Créez votre bloc personnalisé</p>
+                    <p class="pal-eyebrow">Bedrock Edition</p>
+                    <h1 class="text-xl font-extrabold text-white leading-tight">Générateur de blocs Minecraft</h1>
                 </div>
             </div>
             <a href="{{ route('block.index') }}"
@@ -213,7 +207,7 @@
                                 @error('identifier')
                                     <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                                 @enderror
-                                <p class="text-gray-500 text-xs mt-1">{{ isset($block) ? 'Cet identifiant ne peut pas être modifié.' : 'Minuscules et underscores uniquement (ex: <code class="text-green-400">my_block</code>).' }}</p>
+                                <p class="text-gray-500 text-xs mt-1">@if (isset($block))Cet identifiant ne peut pas être modifié.@else Minuscules et underscores uniquement (ex : <code class="text-green-400">my_block</code>).@endif</p>
                             </div>
                         </div>
                     </section>
@@ -1023,7 +1017,7 @@
 
                         <!-- Cube 3D Three.js -->
                         <div class="mb-4">
-                            <canvas id="cube-canvas" style="width: 100%; height: 200px; border: 1px solid #374151; border-radius: 0.5rem;"></canvas>
+                            <canvas id="cube-canvas" style="width: 100%; height: 200px; border: 1px solid #2a2a2a; border-radius: 0.5rem;"></canvas>
                             <p id="cube-placeholder-text" class="text-center text-gray-500 text-xs mt-2">Uploadez une texture pour voir l'aperçu 3D</p>
                         <p id="mob-preview-label" class="text-center text-purple-400 text-xs mt-1 hidden">Aperçu du mob</p>
                         </div>
@@ -2040,7 +2034,7 @@
 
         function initThreeJs() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a2e3a);
+            scene.background = new THREE.Color(0x161616);
 
             const w = canvas.clientWidth;
             const h = canvas.clientHeight;

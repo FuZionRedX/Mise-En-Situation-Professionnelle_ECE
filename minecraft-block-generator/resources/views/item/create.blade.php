@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Générateur d'Items Minecraft</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.theme')
     <style>
         .minecraft-font { font-family: 'Courier New', monospace; }
 
@@ -13,8 +14,8 @@
             50% { transform: translateY(-5px); }
         }
         @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.6); }
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 106, 0, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(255, 106, 0, 0.6); }
         }
         @keyframes slide-in {
             from { opacity: 0; transform: translateY(20px); }
@@ -29,7 +30,7 @@
         }
         .input-enhanced:focus {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+            box-shadow: 0 4px 12px rgba(255, 106, 0, 0.2);
         }
 
         .card-hover {
@@ -61,11 +62,11 @@
         .texture-preview {
             width: 96px;
             height: 96px;
-            background-color: #4b5563;
+            background-color: #383838;
             background-size: cover;
             background-position: center;
             image-rendering: pixelated;
-            border: 3px solid #22c55e;
+            border: 3px solid #ff6a00;
             border-radius: 0.5rem;
             margin: 0 auto;
         }
@@ -76,14 +77,10 @@
     <header class="bg-gray-800 border-b border-gray-700 py-4 px-6 sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center text-2xl animate-float shadow-lg">
-                    🎁
-                </div>
+                @include('partials.brand-mark')
                 <div>
-                    <h1 class="text-xl font-bold minecraft-font text-green-400 flex items-center gap-2">
-                        <span class="text-2xl">🎁</span> Générateur d'items Minecraft
-                    </h1>
-                    <p class="text-xs text-gray-400">Bedrock Edition — Créez votre item personnalisé</p>
+                    <p class="pal-eyebrow">Bedrock Edition</p>
+                    <h1 class="text-xl font-extrabold text-white leading-tight">Générateur d'items Minecraft</h1>
                 </div>
             </div>
             <div class="flex items-center gap-2">

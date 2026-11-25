@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des utilisateurs — Minecraft Block Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.theme')
     <style>.minecraft-font { font-family: 'Courier New', monospace; }</style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
@@ -13,9 +14,11 @@
         <div class="max-w-5xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <a href="{{ route('block.index') }}" class="text-gray-400 hover:text-white transition-colors text-sm">← Retour</a>
-                <h1 class="text-xl font-bold minecraft-font text-purple-400 flex items-center gap-2">
-                    👥 Gestion des utilisateurs
-                </h1>
+                @include('partials.brand-mark')
+                <div>
+                    <p class="pal-eyebrow">Administration</p>
+                    <h1 class="text-xl font-extrabold text-white leading-tight">Gestion des utilisateurs</h1>
+                </div>
             </div>
             <span class="text-xs text-gray-500 bg-gray-700 border border-gray-600 rounded-full px-3 py-1">
                 Admin : {{ Auth::user()->name }}
