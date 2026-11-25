@@ -77,13 +77,13 @@ class BlockController extends Controller
 
         // Générer le ZIP
         $customGeometryJson = $geometryJsonPath ? Storage::get($geometryJsonPath) : null;
-        $zipPath = $this->zipService->generate(
+        $zipPath = $this->zipService->generateFromPath(
             name:                  $request->input('name'),
             identifier:            $identifier,
             solid:                 (bool) $request->input('solid'),
             destructible:          (bool) $request->input('destructible'),
             resistance:            (float) $request->input('resistance'),
-            texture:               $request->file('texture'),
+            texturePath:           Storage::path($texturePath),
             geometry:              $geometry,
             customGeometryJson:    $customGeometryJson,
             lightEmission:         (int) $request->input('light_emission', 0),
@@ -136,32 +136,17 @@ class BlockController extends Controller
 
         // Générer le ZIP
         $customGeometryJson = $geometryJsonPath ? Storage::get($geometryJsonPath) : null;
-        $lightEmission = (int) $request->input('light_emission', 0);
-        if ($request->hasFile('texture')) {
-            $zipPath = $this->zipService->generate(
-                name:                  $request->input('name'),
-                identifier:            $identifier,
-                solid:                 (bool) $request->input('solid'),
-                destructible:          (bool) $request->input('destructible'),
-                resistance:            (float) $request->input('resistance'),
-                texture:               $request->file('texture'),
-                geometry:              $geometry,
-                customGeometryJson:    $customGeometryJson,
-                lightEmission:         $lightEmission,
-            );
-        } else {
-            $zipPath = $this->zipService->generateFromPath(
-                name:                  $request->input('name'),
-                identifier:            $identifier,
-                solid:                 (bool) $request->input('solid'),
-                destructible:          (bool) $request->input('destructible'),
-                resistance:            (float) $request->input('resistance'),
-                texturePath:           Storage::path($texturePath),
-                geometry:              $geometry,
-                customGeometryJson:    $customGeometryJson,
-                lightEmission:         $lightEmission,
-            );
-        }
+        $zipPath = $this->zipService->generateFromPath(
+            name:                  $request->input('name'),
+            identifier:            $identifier,
+            solid:                 (bool) $request->input('solid'),
+            destructible:          (bool) $request->input('destructible'),
+            resistance:            (float) $request->input('resistance'),
+            texturePath:           Storage::path($texturePath),
+            geometry:              $geometry,
+            customGeometryJson:    $customGeometryJson,
+            lightEmission:         (int) $request->input('light_emission', 0),
+        );
 
         return response()->download($zipPath, $identifier . '_pack.zip', [
             'Content-Type' => 'application/zip',
@@ -379,7 +364,7 @@ class BlockController extends Controller
         }
 
         // Both exist — merge into one combined archive
-        $combinedPath = tempnam(sys_get_temp_dir(), 'mc_all_') . '.zip';
+        $combinedPath = tempnam(sys_get_temp_dir(), 'mc_all_');
         $combined     = new ZipArchive();
         $combined->open($combinedPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
 

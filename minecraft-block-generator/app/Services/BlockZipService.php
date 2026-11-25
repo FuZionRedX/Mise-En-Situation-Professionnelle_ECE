@@ -3,27 +3,12 @@
 namespace App\Services;
 
 use App\Models\Block;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
 class BlockZipService
 {
     public function __construct(private BlockJsonService $jsonService) {}
-
-    public function generate(
-        string       $name,
-        string       $identifier,
-        bool         $solid,
-        bool         $destructible,
-        float        $resistance,
-        UploadedFile $texture,
-        string       $geometry = 'cube',
-        ?string      $customGeometryJson = null,
-        int          $lightEmission = 0
-    ): string {
-        return $this->buildZip($name, $identifier, $solid, $destructible, $resistance, $texture->getRealPath(), $geometry, $customGeometryJson, $lightEmission);
-    }
 
     public function generateFromPath(
         string $name,
@@ -46,7 +31,7 @@ class BlockZipService
      */
     public function generateMulti(array $blocks): string
     {
-        $zipPath = tempnam(sys_get_temp_dir(), 'mc_blocks_') . '.zip';
+        $zipPath = tempnam(sys_get_temp_dir(), 'mc_blocks_');
 
         $zip = new ZipArchive();
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
@@ -168,7 +153,7 @@ class BlockZipService
         ?string $customGeometryJson = null,
         int    $lightEmission = 0
     ): string {
-        $zipPath = tempnam(sys_get_temp_dir(), 'mc_block_') . '.zip';
+        $zipPath = tempnam(sys_get_temp_dir(), 'mc_block_');
 
         $zip = new ZipArchive();
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
