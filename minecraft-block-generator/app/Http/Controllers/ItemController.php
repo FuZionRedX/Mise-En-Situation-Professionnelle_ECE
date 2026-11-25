@@ -162,6 +162,11 @@ class ItemController extends Controller
 
     public function destroy(Item $item)
     {
+        $user = Auth::user();
+        if (!$user->isAdmin() && !$user->isOwnerOf($item->creator_identifier)) {
+            abort(403);
+        }
+
         Storage::delete($item->texture_path);
         $item->delete();
 

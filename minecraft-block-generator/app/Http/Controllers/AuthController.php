@@ -27,8 +27,6 @@ class AuthController extends Controller
         ]);
 
         // Attempt to login either by identifier or by email
-        $credentials = ['password' => $data['password']];
-
         // Try identifier first
         $user = User::where('identifier', $data['identifier'])->first();
         if (!$user) {
@@ -37,6 +35,7 @@ class AuthController extends Controller
 
         if ($user && Hash::check($data['password'], $user->password)) {
             Auth::login($user);
+            $request->session()->regenerate();
             return redirect()->intended(route('block.new'));
         }
 
@@ -73,6 +72,7 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
+        $request->session()->regenerate();
 
         // Après inscription, montrer l'identifiant
         return view('auth.registered', ['identifier' => $data['identifier']]);

@@ -61,7 +61,7 @@ Route::get('/mob/{id}/texture', function (int $id) {
 // Auth routes
 Route::get('/auth/choice', [\App\Http\Controllers\AuthController::class, 'choice'])->name('auth.choice');
 Route::get('/auth/login', [\App\Http\Controllers\AuthController::class, 'showLogin'])->name('auth.login');
-Route::post('/auth/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('auth.login.post');
+Route::post('/auth/login', [\App\Http\Controllers\AuthController::class, 'login'])->middleware('throttle:5,1')->name('auth.login.post');
 Route::get('/auth/register', [\App\Http\Controllers\AuthController::class, 'showRegister'])->name('auth.register');
 Route::post('/auth/register', [\App\Http\Controllers\AuthController::class, 'register'])->name('auth.register.post');
 Route::post('/auth/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('auth.logout');
