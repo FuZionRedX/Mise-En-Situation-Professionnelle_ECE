@@ -28,7 +28,7 @@ services:
     container_name: sqlite-web
     restart: unless-stopped
     ports:
-      - "8081:8080"
+      - "127.0.0.1:8081:8080"
     volumes:
       - ./database:/data
     command: sqlite_web -H 0.0.0.0 /data/database.sqlite

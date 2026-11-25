@@ -12,7 +12,7 @@ if [ ! -f .env ]; then
 fi
 
 # Generate app key if not already set
-php artisan key:generate --force
+grep -q "^APP_KEY=." .env || php artisan key:generate --force
 
 # Ensure SQLite database file exists
 touch database/database.sqlite
